@@ -55,8 +55,7 @@ export default function Presell() {
         {/* Logo */}
         <div className="mt-3 text-center">
           <div className="inline-flex items-center gap-2 mb-1">
-            <span className="text-2xl font-black text-white tracking-tight">PANINI</span>
-            <span className="bg-gradient-to-r from-yellow-400 to-amber-500 text-[#0a1628] text-xs font-black px-2 py-0.5 rounded-md tracking-widest">FIFA WC26</span>
+            <span className="bg-gradient-to-r from-yellow-400 to-amber-500 text-[#0a1628] text-2xl font-black px-3 py-1 rounded-lg tracking-widest">FIFA WC26</span>
           </div>
           <p className="text-white/50 text-xs">Edição Oficial Portugal</p>
         </div>
