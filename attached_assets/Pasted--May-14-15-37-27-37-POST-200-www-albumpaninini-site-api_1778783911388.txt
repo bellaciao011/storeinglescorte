@@ -1,0 +1,80 @@
+
+May 14 15:37:27.37
+POST
+200
+www.albumpaninini.site
+/api/public/waymb-webhook
+[Webhook] received status="pending" isPaid=false transactionID=s2BgHfCwD0yAsRY98fGv
+May 14 15:37:25.01
+POST
+200
+www.albumpaninini.site
+/api/payment/upsell
+May 14 15:36:55.46
+GET
+500
+www.albumpaninini.site
+/api/public/rastreio
+[Rastreio] error: Error: Connection terminated due to connection timeout at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:96:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { [cause]: Error: Connection terminated unexpectedly at Connection.<anonymous> (/var/task/node_modules/.pnpm/pg@8.20.0/node_modules/pg/lib/client.js:180:73) at Object.onceWrapper (node:events:622:28) at Connection.emit (node:events:508:28) at Socket.<anonymous> (/var/task/node_modules/.pnpm/pg@8.20.0/node_modules/pg/lib/connection.js:61:12) at Socket.emit (node:events:508:28) at TCP.<anonymous> (node:net:346:12) }
+May 14 15:36:42.43
+GET
+500
+www.albumpaninini.site
+/api/public/rastreio
+[Rastreio] error: Error: Connection terminated due to connection timeout at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:96:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { [cause]: Error: Connection terminated unexpectedly at Connection.<anonymous> (/var/task/node_modules/.pnpm/pg@8.20.0/node_modules/pg/lib/client.js:180:73) at Object.onceWrapper (node:events:622:28) at Connection.emit (node:events:508:28) at Socket.<anonymous> (/var/task/node_modules/.pnpm/pg@8.20.0/node_modules/pg/lib/connection.js:61:12) at Socket.emit (node:events:508:28) at TCP.<anonymous> (node:net:346:12) }
+May 14 15:35:37.66
+POST
+200
+www.albumpaninini.site
+/api/public/waymb-webhook
+[Webhook] received status="pending" isPaid=false transactionID=s2G8J6B8r0r4hys31FSW
+May 14 15:35:21.33
+POST
+200
+www.albumpaninini.site
+/api/payment/create
+[UTMify] OK — order s2G8J6B8r0r4hys31FSW status=waiting_payment response={"OK":true,"data":{},"result":"SUCCESS"}
+May 14 15:30:47.29
+GET
+500
+www.albumpaninini.site
+/api/public/rastreio
+[Rastreio] error: Error: Connection terminated due to connection timeout at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:96:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { [cause]: Error: Connection terminated unexpectedly at Connection.<anonymous> (/var/task/node_modules/.pnpm/pg@8.20.0/node_modules/pg/lib/client.js:180:73) at Object.onceWrapper (node:events:622:28) at Connection.emit (node:events:508:28) at Socket.<anonymous> (/var/task/node_modules/.pnpm/pg@8.20.0/node_modules/pg/lib/connection.js:61:12) at Socket.emit (node:events:508:28) at TCP.<anonymous> (node:net:346:12) }
+May 14 15:24:48.87
+POST
+200
+www.albumpaninini.site
+/api/public/waymb-webhook
+[Webhook] received status="pending" isPaid=false transactionID=s2i9mFJecQ5dTGS2S5Ja
+May 14 15:24:34.97
+POST
+200
+www.albumpaninini.site
+/api/payment/create
+May 14 15:17:10.90
+POST
+200
+www.albumpaninini.site
+/api/public/waymb-webhook
+[Webhook] received status="pending" isPaid=false transactionID=s21rivfvW8592G0epq4M
+May 14 15:17:07.71
+POST
+200
+www.albumpaninini.site
+/api/payment/create
+2
+[DB] createOrder error: AggregateError [ETIMEDOUT]: at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async createOrder (/vercel/path0/api/lib/orders.ts:58:3) at async Promise.allSettled (index 1) at async Object.handler (/vercel/path0/api/payment/create.ts:133:5) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { code: 'ETIMEDOUT', [errors]: [ Error: connect ETIMEDOUT 172.64.149.246:5432 at createConnectionError (node:net:1686:14) at Timeout.internalConnectMultipleTimeout (node:net:1745:38) at listOnTimeout (node:internal/timers:607:11) at process.processTimers (node:internal/timers:541:7) { errno: -110, code: 'ETIMEDOUT', syscall: 'connect', address: '172.64.149.246', port: 5432 }, Error: connect ETIMEDOUT 104.18.38.10:5432 at createConnectionError (node:net:1686:14) at afterConnectMultiple (node:net:1716:16) { errno: -110, code: 'ETIMEDOUT', syscall: 'connect', address: '104.18.38.10', port: 5432 } ] }
+May 14 15:14:04.44
+POST
+200
+www.albumpaninini.site
+/api/public/waymb-webhook
+[Webhook] received status="pending" isPaid=false transactionID=s2AAr206855fAaGPU95k
+May 14 15:14:02.00
+POST
+200
+www.albumpaninini.site
+/api/payment/create
+2
+[DB] createOrder error: AggregateError [ETIMEDOUT]: at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async createOrder (/vercel/path0/api/lib/orders.ts:58:3) at async Promise.allSettled (index 1) at async Object.handler (/vercel/path0/api/payment/create.ts:133:5) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { code: 'ETIMEDOUT', [errors]: [ Error: connect ETIMEDOUT 172.64.149.246:5432 at createConnectionError (node:net:1686:14) at Timeout.internalConnectMultipleTimeout (node:net:1745:38) at listOnTimeout (node:internal/timers:607:11) at process.processTimers (node:internal/timers:541:7) { errno: -110, code: 'ETIMEDOUT', syscall: 'connect', address: '172.64.149.246', port: 5432 }, Error: connect ETIMEDOUT 104.18.38.10:5432 at createConnectionError (node:net:1686:14) at afterConnectMultiple (node:net:1716:16) { errno: -110, code: 'ETIMEDOUT', syscall: 'connect', address: '104.18.38.10', port: 5432 } ] }
+No more logs to show within selected timeline
