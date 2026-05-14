@@ -1,0 +1,38 @@
+
+May 14 15:17:10.90
+POST
+200
+www.albumpaninini.site
+/api/public/waymb-webhook
+[Webhook] received status="pending" isPaid=false transactionID=s21rivfvW8592G0epq4M
+May 14 15:17:07.71
+POST
+200
+www.albumpaninini.site
+/api/payment/create
+2
+[DB] createOrder error: AggregateError [ETIMEDOUT]: at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async createOrder (/vercel/path0/api/lib/orders.ts:58:3) at async Promise.allSettled (index 1) at async Object.handler (/vercel/path0/api/payment/create.ts:133:5) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { code: 'ETIMEDOUT', [errors]: [ Error: connect ETIMEDOUT 172.64.149.246:5432 at createConnectionError (node:net:1686:14) at Timeout.internalConnectMultipleTimeout (node:net:1745:38) at listOnTimeout (node:internal/timers:607:11) at process.processTimers (node:internal/timers:541:7) { errno: -110, code: 'ETIMEDOUT', syscall: 'connect', address: '172.64.149.246', port: 5432 }, Error: connect ETIMEDOUT 104.18.38.10:5432 at createConnectionError (node:net:1686:14) at afterConnectMultiple (node:net:1716:16) { errno: -110, code: 'ETIMEDOUT', syscall: 'connect', address: '104.18.38.10', port: 5432 } ] }
+May 14 15:14:04.44
+POST
+200
+www.albumpaninini.site
+/api/public/waymb-webhook
+[Webhook] received status="pending" isPaid=false transactionID=s2AAr206855fAaGPU95k
+May 14 15:14:02.00
+POST
+200
+www.albumpaninini.site
+/api/payment/create
+2
+[DB] createOrder error: AggregateError [ETIMEDOUT]: at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async createOrder (/vercel/path0/api/lib/orders.ts:58:3) at async Promise.allSettled (index 1) at async Object.handler (/vercel/path0/api/payment/create.ts:133:5) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { code: 'ETIMEDOUT', [errors]: [ Error: connect ETIMEDOUT 172.64.149.246:5432 at createConnectionError (node:net:1686:14) at Timeout.internalConnectMultipleTimeout (node:net:1745:38) at listOnTimeout (node:internal/timers:607:11) at process.processTimers (node:internal/timers:541:7) { errno: -110, code: 'ETIMEDOUT', syscall: 'connect', address: '172.64.149.246', port: 5432 }, Error: connect ETIMEDOUT 104.18.38.10:5432 at createConnectionError (node:net:1686:14) at afterConnectMultiple (node:net:1716:16) { errno: -110, code: 'ETIMEDOUT', syscall: 'connect', address: '104.18.38.10', port: 5432 } ] }
+May 14 15:01:47.20
+POST
+200
+www.albumpaninini.site
+/api/public/waymb-webhook
+[Webhook] received status="pending" isPaid=false transactionID=s2PvgA0mWChmkbjGqwD5
+May 14 15:01:44.61
+POST
+200
+www.albumpaninini.site
+/api/payment/create
