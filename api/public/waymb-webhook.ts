@@ -1,5 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { sendToUtmify, toUtcString, toCents, mapPaymentMethod } from "../lib/utmify";
+import { markOrderPaid, getOrderById, markEmailSent } from "../lib/orders";
+import { sendConfirmationEmail } from "../lib/email";
 
 export default async function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {
   if (req.method !== "POST") {
@@ -31,6 +33,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     const now = toUtcString(new Date());
     const totalCents = toCents(amountEur);
 
+    // Send to UTMify
     await sendToUtmify({
       orderId: String(transactionId),
       platform: "WayMB",
@@ -73,9 +76,34 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
         currency: "BRL",
       },
     });
+
+    // Mark order as paid in DB and get tracking code
+    try {
+      const trackingCode = await markOrderPaid(String(transactionId));
+
+      if (trackingCode) {
+        // Get full order details for email
+        const order = await getOrderById(String(transactionId));
+        if (order && order.customer_email && !order.email_sent) {
+          await sendConfirmationEmail({
+            customer_name: order.customer_name,
+            customer_email: order.customer_email,
+            tracking_code: order.tracking_code,
+            product_name: order.product_name,
+            amount_eur: Number(order.amount_eur),
+            payment_method: order.payment_method,
+          });
+          await markEmailSent(String(transactionId));
+        }
+      } else {
+        console.log(`[Webhook] Order ${transactionId} not found in DB — may have been created before DB setup`);
+      }
+    } catch (dbErr) {
+      console.error("[Webhook] DB/email error:", dbErr);
+    }
+
   } catch (err) {
     console.error("[Webhook] error:", err);
-    // Response may already be sent; only write headers if not
     if (!res.headersSent) {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Internal server error" }));

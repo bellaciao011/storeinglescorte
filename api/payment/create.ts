@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { sendToUtmify, toUtcString, toCents, mapPaymentMethod } from "../lib/utmify";
+import { createOrder, generateTrackingCode } from "../lib/orders";
 
 const WAYMB_BASE = "https://api.waymb.com";
 
@@ -157,6 +158,31 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
         currency: "BRL",
       },
     });
+
+    // Save order to DB (non-blocking — never affect the payment response)
+    const transactionId = data.transactionID ?? `order-${Date.now()}`;
+    const trackingCode = generateTrackingCode();
+    const productName = kitName ?? "Kit Panini FIFA WC26";
+
+    createOrder({
+      id: transactionId,
+      tracking_code: trackingCode,
+      customer_name: payer.name,
+      customer_email: payer.email ?? null,
+      customer_phone: payer.phone ?? null,
+      customer_document: payer.document ?? null,
+      customer_address: null,
+      product_name: productName,
+      amount_eur: amount,
+      payment_method: method,
+      utm_source: utmParams?.utm_source ?? null,
+      utm_campaign: utmParams?.utm_campaign ?? null,
+      utm_medium: utmParams?.utm_medium ?? null,
+      utm_content: utmParams?.utm_content ?? null,
+      utm_term: utmParams?.utm_term ?? null,
+      src: utmParams?.src ?? null,
+      sck: utmParams?.sck ?? null,
+    }).catch(err => console.error("[DB] createOrder error:", err));
 
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(data));

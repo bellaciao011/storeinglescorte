@@ -6,6 +6,8 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Checkout from "@/pages/checkout";
 import Presell from "@/pages/presell";
+import Admin from "@/pages/admin";
+import Rastreio from "@/pages/rastreio";
 
 const queryClient = new QueryClient();
 
@@ -15,6 +17,8 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/presell" component={Presell} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/admin" component={Admin} />
+      <Route path="/rastreio" component={Rastreio} />
       <Route component={NotFound} />
     </Switch>
   );
