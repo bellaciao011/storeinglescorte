@@ -44,7 +44,8 @@ export default function Rastreio() {
     setData(null);
     try {
       const res = await fetch(`/api/public/rastreio?codigo=${encodeURIComponent(code.trim())}`);
-      if (res.status === 404) { setError("Código de rastreio não encontrado."); return; }
+      if (res.status === 404) { setError("Código de rastreio não encontrado. Confirma que introduziste o código correto."); return; }
+      if (res.status >= 500) { setError("A base de dados ainda está a ser configurada. Tenta novamente em alguns minutos."); return; }
       if (!res.ok) { setError("Erro ao pesquisar. Tenta novamente."); return; }
       const json = await res.json();
       setData(json);
