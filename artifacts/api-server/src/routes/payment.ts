@@ -31,10 +31,6 @@ router.post("/payment/create", async (req: Request, res: Response) => {
       return;
     }
 
-    const domains = process.env.REPLIT_DOMAINS?.split(",")[0];
-    const baseUrl = process.env.APP_URL
-      ?? (domains ? `https://${domains}` : "https://paniniofc-pt.com");
-
     const payload = {
       client_id: config.clientId,
       client_secret: config.clientSecret,
@@ -44,8 +40,6 @@ router.post("/payment/create", async (req: Request, res: Response) => {
       currency: "EUR",
       payer,
       paymentDescription: paymentDescription ?? "Kit Panini FIFA World Cup 2026",
-      success_url: `${baseUrl}/checkout/success`,
-      failed_url: `${baseUrl}/checkout/failed`,
     };
 
     const response = await fetch(`${WAYMB_BASE}/transactions/create`, {
