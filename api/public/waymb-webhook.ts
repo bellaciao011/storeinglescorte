@@ -103,9 +103,10 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
 
   } catch (err) {
     console.error("[Webhook] error:", err);
+    // Always return 200 to WayMB — never let them retry due to our internal errors
     if (!res.headersSent) {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Internal server error" }));
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ received: true }));
     }
   }
 }
