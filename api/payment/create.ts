@@ -129,8 +129,12 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     const trackingCode = generateTrackingCode();
     const productName = kitName ?? "Kit Panini FIFA WC26";
 
-    // Run UTMify + DB in parallel, awaited before responding so Vercel doesn't kill them early
-    await Promise.allSettled([
+    // Respond to the client immediately — payment URL is ready, no need to wait for tracking/DB
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(data));
+
+    // Fire UTMify + DB in background after responding (neither can block the payment)
+    Promise.allSettled([
       sendToUtmify({
         orderId: transactionId,
         platform: "Front",
@@ -182,10 +186,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
         src: utmParams?.src ?? null,
         sck: utmParams?.sck ?? null,
       }).catch(err => console.error("[DB] createOrder error:", err)),
-    ]);
-
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(data));
+    ]).catch(() => {});
   } catch (err) {
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Internal server error" }));
