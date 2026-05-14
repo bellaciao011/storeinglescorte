@@ -15,16 +15,16 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     // Vercel pre-parses JSON into req.body; fall back to stream for other runtimes.
     const body = (req.body !== undefined ? req.body : await parseBody(req)) as Record<string, any>;
 
-    // Respond 200 immediately so WayMB doesn't retry
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ received: true }));
-
     const rawStatus = (body.status ?? body.Status ?? body.payment_status ?? "").toLowerCase();
     const isPaid = rawStatus === "paid" || rawStatus === "success" || rawStatus === "completed" || rawStatus === "approved";
 
     console.log(`[Webhook] received status="${rawStatus}" isPaid=${isPaid} transactionID=${body.transactionID ?? body.transaction_id ?? body.id ?? "?"}`);
 
-    if (!isPaid) return;
+    if (!isPaid) {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ received: true }));
+      return;
+    }
 
     const transactionId = body.transactionID ?? body.transaction_id ?? body.id ?? `wh-${Date.now()}`;
     const amountEur = Number(body.amount ?? body.value ?? 0);
@@ -96,6 +96,10 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     } catch (dbErr) {
       console.error("[Webhook] DB/email error:", dbErr);
     }
+
+    // Respond AFTER all operations complete — Vercel kills the function after res.end()
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ received: true }));
 
   } catch (err) {
     console.error("[Webhook] error:", err);
