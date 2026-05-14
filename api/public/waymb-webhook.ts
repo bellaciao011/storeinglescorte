@@ -1,33 +1,37 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { sendToUtmify, toUtcString, toCents, mapPaymentMethod } from "../lib/utmify";
 
-export default async function handler(req: IncomingMessage, res: ServerResponse) {
+export default async function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {
   if (req.method !== "POST") {
     res.writeHead(405, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Method not allowed" }));
     return;
   }
 
-  // Always respond 200 immediately so WayMB never retries due to timeout
-  res.writeHead(200, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ received: true }));
-
   try {
-    const body = await parseBody(req) as Record<string, any>;
+    // IMPORTANT: read body BEFORE sending response.
+    // Vercel pre-parses JSON into req.body; fall back to stream for other runtimes.
+    const body = (req.body !== undefined ? req.body : await parseBody(req)) as Record<string, any>;
+
+    // Respond 200 immediately so WayMB doesn't retry
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ received: true }));
 
     const rawStatus = (body.status ?? body.Status ?? body.payment_status ?? "").toLowerCase();
     const isPaid = rawStatus === "paid" || rawStatus === "success" || rawStatus === "completed" || rawStatus === "approved";
 
+    console.log(`[Webhook] received status="${rawStatus}" isPaid=${isPaid} transactionID=${body.transactionID ?? body.transaction_id ?? body.id ?? "?"}`);
+
     if (!isPaid) return;
 
-    const transactionId = body.transactionID ?? body.transaction_id ?? body.id ?? "";
+    const transactionId = body.transactionID ?? body.transaction_id ?? body.id ?? `wh-${Date.now()}`;
     const amountEur = Number(body.amount ?? body.value ?? 0);
     const method = (body.method ?? body.payment_method ?? "mbway").toLowerCase();
     const payer = body.payer ?? body.customer ?? {};
     const now = toUtcString(new Date());
     const totalCents = toCents(amountEur);
 
-    sendToUtmify({
+    await sendToUtmify({
       orderId: String(transactionId),
       platform: "WayMB",
       paymentMethod: mapPaymentMethod(method),
@@ -54,13 +58,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         },
       ],
       trackingParameters: {
-        src: null,
-        sck: null,
-        utm_source: null,
-        utm_campaign: null,
-        utm_medium: null,
-        utm_content: null,
-        utm_term: null,
+        src: body.src ?? null,
+        sck: body.sck ?? null,
+        utm_source: body.utm_source ?? null,
+        utm_campaign: body.utm_campaign ?? null,
+        utm_medium: body.utm_medium ?? null,
+        utm_content: body.utm_content ?? null,
+        utm_term: body.utm_term ?? null,
       },
       commission: {
         totalPriceInCents: totalCents,
@@ -69,8 +73,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         currency: "BRL",
       },
     });
-  } catch {
-    // silent — response already sent
+  } catch (err) {
+    console.error("[Webhook] error:", err);
+    // Response may already be sent; only write headers if not
+    if (!res.headersSent) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Internal server error" }));
+    }
   }
 }
 

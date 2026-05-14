@@ -55,10 +55,13 @@ export interface UtmifyOrder {
 
 export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
   const token = process.env.UTMIFY_API_TOKEN;
-  if (!token) return;
+  if (!token) {
+    console.error("[UTMify] UTMIFY_API_TOKEN not set — skipping");
+    return;
+  }
 
   try {
-    await fetch(UTMIFY_ENDPOINT, {
+    const res = await fetch(UTMIFY_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -66,8 +69,14 @@ export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
       },
       body: JSON.stringify({ ...order, isTest: false }),
     });
-  } catch {
-    // non-blocking — never fail the payment flow because of analytics
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`[UTMify] API error ${res.status}:`, text);
+    } else {
+      console.log(`[UTMify] order ${order.orderId} sent — status: ${order.status}`);
+    }
+  } catch (err) {
+    console.error("[UTMify] fetch failed:", err);
   }
 }
 

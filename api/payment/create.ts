@@ -166,7 +166,9 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
   }
 }
 
-function parseBody(req: IncomingMessage): Promise<unknown> {
+function parseBody(req: IncomingMessage & { body?: unknown }): Promise<unknown> {
+  // Vercel pre-parses JSON bodies into req.body — use it when available
+  if (req.body !== undefined) return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => (data += chunk));
