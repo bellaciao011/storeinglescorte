@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { sendToUtmify, toUtcString, toCents, mapPaymentMethod } from "../lib/utmify";
-import { markOrderPaid, getOrderById, markEmailSent } from "../lib/orders";
+import { markOrderPaid, markEmailSent } from "../lib/orders";
 import { sendConfirmationEmail } from "../lib/email";
 
 export default async function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {
@@ -76,25 +76,21 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       },
     });
 
-    // Mark order as paid in DB and get tracking code
+    // Mark order as paid in DB and send confirmation email
     try {
-      const trackingCode = await markOrderPaid(String(transactionId));
+      const paid = await markOrderPaid(String(transactionId));
 
-      if (trackingCode) {
-        // Get full order details for email
-        const order = await getOrderById(String(transactionId));
-        if (order && order.customer_email && !order.email_sent) {
-          await sendConfirmationEmail({
-            customer_name: order.customer_name,
-            customer_email: order.customer_email,
-            tracking_code: order.tracking_code,
-            product_name: order.product_name,
-            amount_eur: Number(order.amount_eur),
-            payment_method: order.payment_method,
-          });
-          await markEmailSent(String(transactionId));
-        }
-      } else {
+      if (paid && paid.customer_email) {
+        await sendConfirmationEmail({
+          customer_name: paid.customer_name,
+          customer_email: paid.customer_email,
+          tracking_code: paid.tracking_code,
+          product_name: paid.product_name,
+          amount_eur: Number(paid.amount_eur),
+          payment_method: method,
+        });
+        await markEmailSent(String(transactionId));
+      } else if (!paid) {
         console.log(`[Webhook] Order ${transactionId} not found in DB — may have been created before DB setup`);
       }
     } catch (dbErr) {

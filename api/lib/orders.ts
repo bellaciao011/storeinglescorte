@@ -1,4 +1,4 @@
-import { getDb } from "./db";
+import { query } from "./db";
 
 export interface Order {
   id: string;
@@ -54,8 +54,7 @@ export async function createOrder(order: {
   src?: string | null;
   sck?: string | null;
 }): Promise<void> {
-  const db = getDb();
-  await db.query(
+  await query(
     `INSERT INTO panini_orders (
       id, tracking_code, customer_name, customer_email, customer_phone,
       customer_document, customer_address, product_name, amount_eur,
@@ -74,30 +73,27 @@ export async function createOrder(order: {
   );
 }
 
-export async function markOrderPaid(id: string): Promise<string | null> {
-  const db = getDb();
-  const res = await db.query(
+export async function markOrderPaid(id: string): Promise<{ tracking_code: string; customer_name: string; customer_email: string; product_name: string; amount_eur: number } | null> {
+  const res = await query<{ tracking_code: string; customer_name: string; customer_email: string; product_name: string; amount_eur: number }>(
     `UPDATE panini_orders
      SET payment_status = 'paid', order_status = 'preparing', paid_at = NOW(), updated_at = NOW()
      WHERE id = $1
      RETURNING tracking_code, customer_name, customer_email, product_name, amount_eur`,
     [id]
   );
-  if (res.rowCount && res.rowCount > 0) return res.rows[0].tracking_code;
+  if (res.rowCount && res.rowCount > 0) return res.rows[0];
   return null;
 }
 
 export async function markEmailSent(id: string): Promise<void> {
-  const db = getDb();
-  await db.query(
+  await query(
     `UPDATE panini_orders SET email_sent = true, updated_at = NOW() WHERE id = $1`,
     [id]
   );
 }
 
 export async function getOrderByTrackingCode(code: string): Promise<Order | null> {
-  const db = getDb();
-  const res = await db.query(
+  const res = await query<Order>(
     `SELECT * FROM panini_orders WHERE tracking_code = $1`,
     [code.toUpperCase()]
   );
@@ -105,23 +101,23 @@ export async function getOrderByTrackingCode(code: string): Promise<Order | null
 }
 
 export async function getAllOrders(): Promise<Order[]> {
-  const db = getDb();
-  const res = await db.query(
+  const res = await query<Order>(
     `SELECT * FROM panini_orders ORDER BY created_at DESC`
   );
   return res.rows;
 }
 
 export async function updateOrderStatus(id: string, status: string): Promise<void> {
-  const db = getDb();
-  await db.query(
+  await query(
     `UPDATE panini_orders SET order_status = $1, updated_at = NOW() WHERE id = $2`,
     [status, id]
   );
 }
 
 export async function getOrderById(id: string): Promise<Order | null> {
-  const db = getDb();
-  const res = await db.query(`SELECT * FROM panini_orders WHERE id = $1`, [id]);
+  const res = await query<Order>(
+    `SELECT * FROM panini_orders WHERE id = $1`,
+    [id]
+  );
   return res.rows[0] ?? null;
 }
