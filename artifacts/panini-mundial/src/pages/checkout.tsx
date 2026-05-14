@@ -134,6 +134,22 @@ export default function Checkout() {
       }
 
       setPaymentResult(data);
+      // Save customer data for upsell page
+      try {
+        const addr = [
+          formData.morada,
+          formData.numero && `nº ${formData.numero}`,
+          formData.andar || null,
+          [formData.codigoPostal, formData.localidade].filter(Boolean).join(" "),
+        ].filter(Boolean).join(", ");
+        sessionStorage.setItem("upsell_customer", JSON.stringify({
+          name: formData.nome,
+          email: formData.email,
+          phone: formData.telemovel,
+          mbwayPhone: formData.mbwayPhone || formData.telemovel,
+          address: addr,
+        }));
+      } catch {}
       // Purchase — usa transactionID como eventID para evitar duplicados
       (window as any).fbq?.("track", "Purchase", {
         value: orderTotal,
@@ -226,10 +242,16 @@ export default function Checkout() {
           <p className="text-xs text-gray-400 mb-6">Confirmaremos a encomenda por email assim que o pagamento for processado.</p>
 
           <button
-            onClick={() => setLocation("/")}
-            className="text-primary font-bold hover:underline text-sm"
+            onClick={() => setLocation("/upsell")}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-black text-base py-4 rounded-xl mb-3 flex items-center justify-center gap-2"
           >
-            ← Voltar à loja
+            Continuar — Ver oferta especial →
+          </button>
+          <button
+            onClick={() => setLocation("/")}
+            className="text-gray-400 hover:text-gray-600 text-xs underline"
+          >
+            ← Voltar à loja sem aproveitar a oferta
           </button>
         </main>
       </div>

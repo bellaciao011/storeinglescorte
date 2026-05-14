@@ -1,6 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { sendToUtmify, toUtcString, toCents, mapPaymentMethod } from "../lib/utmify";
-import { createOrder, generateTrackingCode } from "../lib/orders";
 
 const WAYMB_BASE = "https://api.waymb.com";
 
@@ -31,25 +30,12 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
 
   try {
     const body = await parseBody(req);
-    const {
-      amount,
-      method,
-      payer,
-      paymentDescription,
-      kitId,
-      kitName,
-      quantity,
-      bumps,
-      utmParams,
-    } = body as {
+    const { amount, method, shippingOption, phone, payer, utmParams } = body as {
       amount: number;
       method: "mbway" | "multibanco";
-      payer: { email: string; name: string; document: string; phone: string };
-      paymentDescription?: string;
-      kitId?: string;
-      kitName?: string;
-      quantity?: number;
-      bumps?: Array<{ id: string; name: string; price: number }>;
+      shippingOption: string;
+      phone: string;
+      payer: { name: string; email: string; document: string; phone: string };
       utmParams?: {
         src?: string | null;
         sck?: string | null;
@@ -58,17 +44,16 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
         utm_medium?: string | null;
         utm_content?: string | null;
         utm_term?: string | null;
-        fbclid?: string | null;
-        gclid?: string | null;
-        ttclid?: string | null;
       };
     };
 
     if (!amount || !method || !payer) {
       res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Missing required fields: amount, method, payer" }));
+      res.end(JSON.stringify({ error: "Missing required fields" }));
       return;
     }
+
+    const payerPhone = method === "mbway" ? phone : payer.phone;
 
     const payload = {
       client_id: clientId,
@@ -77,8 +62,8 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       amount,
       method,
       currency: "EUR",
-      payer,
-      paymentDescription: paymentDescription ?? "Kit Panini FIFA World Cup 2026",
+      payer: { ...payer, phone: payerPhone },
+      paymentDescription: `Frete — ${shippingOption}`,
     };
 
     const response = await fetch(`${WAYMB_BASE}/transactions/create`, {
@@ -94,40 +79,19 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     if (!response.ok) {
       const details = isJson ? JSON.parse(rawBody) : rawBody;
       res.writeHead(502, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Erro na plataforma de pagamento. Tenta novamente em instantes.", details }));
+      res.end(JSON.stringify({ error: "Erro na plataforma de pagamento. Tenta novamente.", details }));
       return;
     }
 
     const data = isJson ? JSON.parse(rawBody) : { raw: rawBody };
 
-    // Build UTMify payload (non-blocking)
+    // Send to UTMify as "upsell1"
     const now = toUtcString(new Date());
-    const qty = quantity ?? 1;
-    const kitCents = toCents((amount - (bumps ?? []).reduce((s, b) => s + b.price, 0)));
     const totalCents = toCents(amount);
 
-    const products = [
-      {
-        id: kitId ?? "kit",
-        name: kitName ?? "Kit Panini FIFA WC26",
-        planId: null,
-        planName: null,
-        quantity: qty,
-        priceInCents: kitCents,
-      },
-      ...((bumps ?? []).map(b => ({
-        id: b.id,
-        name: b.name,
-        planId: null,
-        planName: null,
-        quantity: 1,
-        priceInCents: toCents(b.price),
-      }))),
-    ];
-
     sendToUtmify({
-      orderId: data.transactionID ?? `order-${Date.now()}`,
-      platform: "Front",
+      orderId: data.transactionID ?? `upsell-${Date.now()}`,
+      platform: "upsell1",
       paymentMethod: mapPaymentMethod(method),
       status: "waiting_payment",
       createdAt: now,
@@ -136,12 +100,21 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       customer: {
         name: payer.name,
         email: payer.email,
-        phone: payer.phone ?? null,
+        phone: payerPhone ?? null,
         document: payer.document ?? null,
         country: "PT",
         ip,
       },
-      products,
+      products: [
+        {
+          id: "upsell-frete",
+          name: `Frete — ${shippingOption}`,
+          planId: null,
+          planName: null,
+          quantity: 1,
+          priceInCents: totalCents,
+        },
+      ],
       trackingParameters: {
         src: utmParams?.src ?? null,
         sck: utmParams?.sck ?? null,
@@ -159,31 +132,6 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       },
     });
 
-    // Save order to DB (non-blocking — never affect the payment response)
-    const transactionId = data.transactionID ?? `order-${Date.now()}`;
-    const trackingCode = generateTrackingCode();
-    const productName = kitName ?? "Kit Panini FIFA WC26";
-
-    createOrder({
-      id: transactionId,
-      tracking_code: trackingCode,
-      customer_name: payer.name,
-      customer_email: payer.email ?? null,
-      customer_phone: payer.phone ?? null,
-      customer_document: payer.document ?? null,
-      customer_address: null,
-      product_name: productName,
-      amount_eur: amount,
-      payment_method: method,
-      utm_source: utmParams?.utm_source ?? null,
-      utm_campaign: utmParams?.utm_campaign ?? null,
-      utm_medium: utmParams?.utm_medium ?? null,
-      utm_content: utmParams?.utm_content ?? null,
-      utm_term: utmParams?.utm_term ?? null,
-      src: utmParams?.src ?? null,
-      sck: utmParams?.sck ?? null,
-    }).catch(err => console.error("[DB] createOrder error:", err));
-
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(data));
   } catch (err) {
@@ -193,17 +141,12 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
 }
 
 function parseBody(req: IncomingMessage & { body?: unknown }): Promise<unknown> {
-  // Vercel pre-parses JSON bodies into req.body — use it when available
   if (req.body !== undefined) return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => (data += chunk));
     req.on("end", () => {
-      try {
-        resolve(JSON.parse(data));
-      } catch {
-        reject(new Error("Invalid JSON"));
-      }
+      try { resolve(JSON.parse(data)); } catch { reject(new Error("Invalid JSON")); }
     });
     req.on("error", reject);
   });
