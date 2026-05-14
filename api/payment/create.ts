@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "http";
+import { sendToUtmify, toUtcString } from "../lib/utmify";
 
 const WAYMB_BASE = "https://api.waymb.com";
 
@@ -21,11 +22,34 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
 
   try {
     const body = await parseBody(req);
-    const { amount, method, payer, paymentDescription } = body as {
+    const {
+      amount,
+      method,
+      payer,
+      paymentDescription,
+      kitId,
+      kitName,
+      quantity,
+      bumps,
+      utmParams,
+    } = body as {
       amount: number;
       method: "mbway" | "multibanco";
       payer: { email: string; name: string; document: string; phone: string };
       paymentDescription?: string;
+      kitId?: string;
+      kitName?: string;
+      quantity?: number;
+      bumps?: Array<{ id: string; name: string; price: number }>;
+      utmParams?: {
+        src?: string;
+        sck?: string;
+        utm_source?: string;
+        utm_campaign?: string;
+        utm_medium?: string;
+        utm_content?: string;
+        utm_term?: string;
+      };
     };
 
     if (!amount || !method || !payer) {
@@ -63,6 +87,62 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     }
 
     const data = isJson ? JSON.parse(rawBody) : { raw: rawBody };
+
+    // Send waiting_payment event to UTMify (non-blocking)
+    const now = toUtcString(new Date());
+    const totalCents = Math.round(amount * 100);
+    const products = [
+      {
+        id: kitId ?? "kit",
+        name: kitName ?? "Kit Panini FIFA WC26",
+        planId: null,
+        planName: null,
+        quantity: quantity ?? 1,
+        priceInCents: totalCents,
+      },
+      ...((bumps ?? []).map(b => ({
+        id: b.id,
+        name: b.name,
+        planId: null,
+        planName: null,
+        quantity: 1,
+        priceInCents: Math.round(b.price * 100),
+      }))),
+    ];
+
+    sendToUtmify({
+      orderId: data.transactionID ?? `order-${Date.now()}`,
+      platform: "WayMB",
+      paymentMethod: method === "mbway" ? "pix" : "boleto",
+      status: "waiting_payment",
+      createdAt: now,
+      approvedDate: null,
+      refundedAt: null,
+      customer: {
+        name: payer.name,
+        email: payer.email,
+        phone: payer.phone ?? null,
+        document: payer.document ?? null,
+        country: "PT",
+      },
+      products,
+      trackingParameters: {
+        src: utmParams?.src ?? null,
+        sck: utmParams?.sck ?? null,
+        utm_source: utmParams?.utm_source ?? null,
+        utm_campaign: utmParams?.utm_campaign ?? null,
+        utm_medium: utmParams?.utm_medium ?? null,
+        utm_content: utmParams?.utm_content ?? null,
+        utm_term: utmParams?.utm_term ?? null,
+      },
+      commission: {
+        totalPriceInCents: totalCents,
+        gatewayFeeInCents: 0,
+        userCommissionInCents: totalCents,
+        currency: "EUR",
+      },
+    });
+
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(data));
   } catch (err) {

@@ -22,6 +22,16 @@ export default function Checkout() {
   const kitId = searchParams.get("kit") || "campeao";
   const kit = kits.find((k) => k.id === kitId) || kits[2];
 
+  const utmParams = {
+    src: searchParams.get("src"),
+    sck: searchParams.get("sck"),
+    utm_source: searchParams.get("utm_source"),
+    utm_campaign: searchParams.get("utm_campaign"),
+    utm_medium: searchParams.get("utm_medium"),
+    utm_content: searchParams.get("utm_content"),
+    utm_term: searchParams.get("utm_term"),
+  };
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +119,15 @@ export default function Checkout() {
             document: formData.nif,
             phone,
           },
+          kitId: kit.id,
+          kitName: kit.name,
+          quantity,
+          bumps: orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({
+            id: b.id,
+            name: b.label,
+            price: b.price,
+          })),
+          utmParams,
         }),
       });
 
