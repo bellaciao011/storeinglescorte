@@ -125,64 +125,65 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       }))),
     ];
 
-    sendToUtmify({
-      orderId: data.transactionID ?? `order-${Date.now()}`,
-      platform: "Front",
-      paymentMethod: mapPaymentMethod(method),
-      status: "waiting_payment",
-      createdAt: now,
-      approvedDate: null,
-      refundedAt: null,
-      customer: {
-        name: payer.name,
-        email: payer.email,
-        phone: payer.phone ?? null,
-        document: payer.document ?? null,
-        country: "PT",
-        ip,
-      },
-      products,
-      trackingParameters: {
-        src: utmParams?.src ?? null,
-        sck: utmParams?.sck ?? null,
+    const transactionId = data.transactionID ?? `order-${Date.now()}`;
+    const trackingCode = generateTrackingCode();
+    const productName = kitName ?? "Kit Panini FIFA WC26";
+
+    // Run UTMify + DB in parallel, awaited before responding so Vercel doesn't kill them early
+    await Promise.allSettled([
+      sendToUtmify({
+        orderId: transactionId,
+        platform: "Front",
+        paymentMethod: mapPaymentMethod(method),
+        status: "waiting_payment",
+        createdAt: now,
+        approvedDate: null,
+        refundedAt: null,
+        customer: {
+          name: payer.name,
+          email: payer.email,
+          phone: payer.phone ?? null,
+          document: payer.document ?? null,
+          country: "PT",
+          ip,
+        },
+        products,
+        trackingParameters: {
+          src: utmParams?.src ?? null,
+          sck: utmParams?.sck ?? null,
+          utm_source: utmParams?.utm_source ?? null,
+          utm_campaign: utmParams?.utm_campaign ?? null,
+          utm_medium: utmParams?.utm_medium ?? null,
+          utm_content: utmParams?.utm_content ?? null,
+          utm_term: utmParams?.utm_term ?? null,
+        },
+        commission: {
+          totalPriceInCents: totalCents,
+          gatewayFeeInCents: Math.round(totalCents * 0.35),
+          userCommissionInCents: Math.round(totalCents * 0.65),
+          currency: "BRL",
+        },
+      }),
+      createOrder({
+        id: transactionId,
+        tracking_code: trackingCode,
+        customer_name: payer.name,
+        customer_email: payer.email ?? null,
+        customer_phone: payer.phone ?? null,
+        customer_document: payer.document ?? null,
+        customer_address: null,
+        product_name: productName,
+        amount_eur: amount,
+        payment_method: method,
         utm_source: utmParams?.utm_source ?? null,
         utm_campaign: utmParams?.utm_campaign ?? null,
         utm_medium: utmParams?.utm_medium ?? null,
         utm_content: utmParams?.utm_content ?? null,
         utm_term: utmParams?.utm_term ?? null,
-      },
-      commission: {
-        totalPriceInCents: totalCents,
-        gatewayFeeInCents: Math.round(totalCents * 0.35),
-        userCommissionInCents: Math.round(totalCents * 0.65),
-        currency: "BRL",
-      },
-    });
-
-    // Save order to DB (non-blocking — never affect the payment response)
-    const transactionId = data.transactionID ?? `order-${Date.now()}`;
-    const trackingCode = generateTrackingCode();
-    const productName = kitName ?? "Kit Panini FIFA WC26";
-
-    createOrder({
-      id: transactionId,
-      tracking_code: trackingCode,
-      customer_name: payer.name,
-      customer_email: payer.email ?? null,
-      customer_phone: payer.phone ?? null,
-      customer_document: payer.document ?? null,
-      customer_address: null,
-      product_name: productName,
-      amount_eur: amount,
-      payment_method: method,
-      utm_source: utmParams?.utm_source ?? null,
-      utm_campaign: utmParams?.utm_campaign ?? null,
-      utm_medium: utmParams?.utm_medium ?? null,
-      utm_content: utmParams?.utm_content ?? null,
-      utm_term: utmParams?.utm_term ?? null,
-      src: utmParams?.src ?? null,
-      sck: utmParams?.sck ?? null,
-    }).catch(err => console.error("[DB] createOrder error:", err));
+        src: utmParams?.src ?? null,
+        sck: utmParams?.sck ?? null,
+      }).catch(err => console.error("[DB] createOrder error:", err)),
+    ]);
 
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(data));

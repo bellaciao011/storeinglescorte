@@ -36,7 +36,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     // Send to UTMify
     await sendToUtmify({
       orderId: String(transactionId),
-      platform: "WayMB",
+      platform: "Front",
       paymentMethod: mapPaymentMethod(method),
       status: "paid",
       createdAt: now,
