@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
@@ -166,6 +166,37 @@ export default function Checkout() {
     }
   };
 
+  // ── Polling: check payment status after step 4 (MB WAY only) ────────────────
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [pollConfirmed, setPollConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (step !== 4 || !paymentResult || paymentResult.method !== "mbway") return;
+
+    const transactionId = paymentResult.transactionID;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 48; // 4 min × 60s / 5s
+
+    pollingRef.current = setInterval(async () => {
+      attempts++;
+      try {
+        const r = await fetch(`/api/public/payment-status?transactionId=${encodeURIComponent(transactionId)}`);
+        if (r.ok) {
+          const data = await r.json() as { status: string };
+          if (data.status === "paid") {
+            clearInterval(pollingRef.current!);
+            setPollConfirmed(true);
+            setTimeout(() => setLocation("/upsell"), 1500);
+          }
+        }
+      } catch { /* ignore network errors, keep polling */ }
+
+      if (attempts >= MAX_ATTEMPTS) clearInterval(pollingRef.current!);
+    }, 5000);
+
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+  }, [step, paymentResult]);
+
   // ── Success screen ──────────────────────────────────────────────────────────
   if (step === 4 && paymentResult) {
     const isMBWay = paymentResult.method === "mbway";
@@ -179,15 +210,25 @@ export default function Checkout() {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className={`w-20 h-20 rounded-full flex items-center justify-center mb-5 ${isMBWay ? "bg-green-100" : "bg-blue-50"}`}
+            className={`w-20 h-20 rounded-full flex items-center justify-center mb-5 ${pollConfirmed ? "bg-green-100" : isMBWay ? "bg-green-100" : "bg-blue-50"}`}
           >
-            {isMBWay
-              ? <Smartphone className="w-10 h-10 text-green-600" />
-              : <Building2 className="w-10 h-10 text-blue-600" />
+            {pollConfirmed
+              ? <CheckCircle className="w-10 h-10 text-green-600" />
+              : isMBWay
+                ? <Smartphone className="w-10 h-10 text-green-600" />
+                : <Building2 className="w-10 h-10 text-blue-600" />
             }
           </motion.div>
 
-          {isMBWay && (
+          {pollConfirmed && (
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-black text-green-700 mb-2">Pagamento confirmado!</h1>
+              <p className="text-gray-500 text-sm">A redirecionar para a tua oferta especial…</p>
+              <Loader2 className="w-6 h-6 text-green-500 animate-spin mx-auto mt-3" />
+            </div>
+          )}
+
+          {!pollConfirmed && isMBWay && (
             <>
               <h1 className="text-2xl font-black text-gray-900 mb-2">Pedido de pagamento enviado!</h1>
               <p className="text-gray-500 text-sm mb-6 max-w-xs">
@@ -197,10 +238,14 @@ export default function Checkout() {
                 <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Atenção</p>
                 <p className="text-sm text-amber-800">O pedido expira em <strong>4 minutos</strong>. Se não receberes a notificação, abre a app MB WAY manualmente.</p>
               </div>
+              <div className="flex items-center gap-2 text-xs text-gray-400 mb-6">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                A aguardar confirmação do pagamento…
+              </div>
             </>
           )}
 
-          {isMultibanco && paymentResult.referenceData && (
+          {!pollConfirmed && isMultibanco && paymentResult.referenceData && (
             <>
               <h1 className="text-2xl font-black text-gray-900 mb-2">Referência Multibanco gerada!</h1>
               <p className="text-gray-500 text-sm mb-6 max-w-xs">
@@ -223,36 +268,28 @@ export default function Checkout() {
             </>
           )}
 
-          <div className="w-full bg-white border border-gray-100 rounded-xl p-4 mb-6 text-left shadow-sm">
-            <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumo da Encomenda</h3>
-            <div className="flex justify-between mb-1.5 text-sm">
-              <span className="text-gray-500">Produto</span>
-              <span className="font-medium text-gray-900">{kit.name}</span>
+          {!pollConfirmed && (
+            <div className="w-full bg-white border border-gray-100 rounded-xl p-4 mb-6 text-left shadow-sm">
+              <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumo da Encomenda</h3>
+              <div className="flex justify-between mb-1.5 text-sm">
+                <span className="text-gray-500">Produto</span>
+                <span className="font-medium text-gray-900">{kit.name}</span>
+              </div>
+              <div className="flex justify-between mb-1.5 text-sm">
+                <span className="text-gray-500">Total</span>
+                <span className="font-medium text-gray-900">€{orderTotal.toFixed(2).replace(".", ",")}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Referência</span>
+                <span className="font-medium text-gray-400 text-xs">{paymentResult.transactionID}</span>
+              </div>
             </div>
-            <div className="flex justify-between mb-1.5 text-sm">
-              <span className="text-gray-500">Total</span>
-              <span className="font-medium text-gray-900">€{orderTotal.toFixed(2).replace(".", ",")}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Referência</span>
-              <span className="font-medium text-gray-400 text-xs">{paymentResult.transactionID}</span>
-            </div>
-          </div>
+          )}
 
-          <p className="text-xs text-gray-400 mb-6">Confirmaremos a encomenda por email assim que o pagamento for processado.</p>
+          {!pollConfirmed && (
+            <p className="text-xs text-gray-400 mb-4">Confirmaremos a encomenda por email assim que o pagamento for processado.</p>
+          )}
 
-          <button
-            onClick={() => setLocation("/upsell")}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-black text-base py-4 rounded-xl mb-3 flex items-center justify-center gap-2"
-          >
-            Continuar — Ver oferta especial →
-          </button>
-          <button
-            onClick={() => setLocation("/")}
-            className="text-gray-400 hover:text-gray-600 text-xs underline"
-          >
-            ← Voltar à loja sem aproveitar a oferta
-          </button>
         </main>
       </div>
     );
