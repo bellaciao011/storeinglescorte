@@ -27,6 +27,7 @@ export default function Checkout() {
   const [error, setError] = useState<string | null>(null);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [selectedBumps, setSelectedBumps] = useState<Set<string>>(new Set());
+  const [quantity, setQuantity] = useState(1);
 
   const orderBumps = [
     { id: "bump50", label: "+50 saquetas · ~250 cromos", desc: "Desconto de pré-venda com portes grátis em Portugal.", price: 30, oldPrice: 40, img: "/assets/kit-iniciante.png", badge: null },
@@ -35,7 +36,7 @@ export default function Checkout() {
   ];
 
   const bumpsTotal = orderBumps.filter(b => selectedBumps.has(b.id)).reduce((s, b) => s + b.price, 0);
-  const orderTotal = kit.price + bumpsTotal;
+  const orderTotal = kit.price * quantity + bumpsTotal;
 
   const toggleBump = (id: string) => {
     setSelectedBumps(prev => {
@@ -82,7 +83,7 @@ export default function Checkout() {
           currency: "EUR",
           content_ids: [kit.id],
           content_type: "product",
-          num_items: 1 + selectedBumps.size,
+          num_items: quantity + selectedBumps.size,
         });
       }
       return;
@@ -101,7 +102,7 @@ export default function Checkout() {
         body: JSON.stringify({
           amount: orderTotal,
           method: formData.paymentMethod,
-          paymentDescription: `Kit Panini FIFA WC26 — ${kit.name}`.slice(0, 50),
+          paymentDescription: `${quantity}x ${kit.name} — Panini FIFA WC26`.slice(0, 50),
           payer: {
             email: formData.email,
             name: formData.nome,
@@ -127,7 +128,7 @@ export default function Checkout() {
         currency: "EUR",
         content_ids: [kit.id, ...Array.from(selectedBumps)],
         content_type: "product",
-        num_items: 1 + selectedBumps.size,
+        num_items: quantity + selectedBumps.size,
       }, { eventID: data.transactionID });
       setStep(4);
     } catch {
@@ -268,11 +269,36 @@ export default function Checkout() {
                 <div className="flex items-center gap-1 text-yellow-500 text-xs mb-3">
                   ★★★★★ <span className="text-gray-400">4,9 · +2.200 avaliações</span>
                 </div>
+
+                {/* Quantity selector */}
+                <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 mb-3 border border-gray-200">
+                  <span className="text-xs font-semibold text-gray-700">Quantidade</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                      className="w-7 h-7 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 font-black hover:border-primary hover:text-primary transition-all text-sm"
+                    >−</button>
+                    <span className="w-6 text-center font-black text-gray-900 text-sm">{quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(q => Math.min(10, q + 1))}
+                      className="w-7 h-7 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 font-black hover:border-primary hover:text-primary transition-all text-sm"
+                    >+</button>
+                  </div>
+                </div>
+
                 <div className="space-y-1 border-t border-gray-100 pt-2">
                   <div className="flex justify-between text-xs text-gray-400">
                     <span>Preço normal</span>
-                    <span className="line-through">€{kit.oldPrice.toFixed(2).replace(".", ",")}</span>
+                    <span className="line-through">€{(kit.oldPrice * quantity).toFixed(2).replace(".", ",")}</span>
                   </div>
+                  {quantity > 1 && (
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>{kit.name} × {quantity}</span>
+                      <span>€{(kit.price * quantity).toFixed(2).replace(".", ",")}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Portes de envio</span>
                     <span className="text-green-600 font-semibold">Grátis</span>
@@ -507,8 +533,8 @@ export default function Checkout() {
                         <span className="text-primary font-semibold">Grátis</span>
                       </div>
                       <div className="flex justify-between text-sm text-gray-600">
-                        <span>Subtotal kit</span>
-                        <span>{kit.price.toFixed(2).replace(".", ",")} €</span>
+                        <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
+                        <span>{(kit.price * quantity).toFixed(2).replace(".", ",")} €</span>
                       </div>
                       {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
                         <div key={b.id} className="flex justify-between text-sm text-gray-600">
