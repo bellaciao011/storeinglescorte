@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Panini Mundial 2026"
+version = "1.0.0"
+id = "artifacts/panini-mundial"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25109
+
+[services.development]
+run = "pnpm --filter @workspace/panini-mundial run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/panini-mundial", "run", "build" ]
+publicDir = "artifacts/panini-mundial/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25109"
+BASE_PATH = "/"
