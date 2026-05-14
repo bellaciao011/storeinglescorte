@@ -147,7 +147,7 @@ export default function Upsell() {
           </div>
           <div className="bg-red-50 rounded-xl px-4 py-2.5 border border-red-200">
             <p className="text-sm text-red-700 font-medium">
-              🎁 Por causa deste erro, iremos enviar <strong>5 pacotinhos de cromos de brinde</strong> junto com a tua encomenda!
+              🎁 Por causa deste erro, iremos enviar <strong>5 saquetas de cromos de brinde</strong> junto com a tua encomenda!
             </p>
           </div>
           <div className="bg-pink-50 border border-pink-200 rounded-xl px-4 py-2.5 mt-2">
@@ -166,11 +166,11 @@ export default function Upsell() {
         >
           <img
             src="/assets/pacotes-panini.png"
-            alt="5 pacotinhos de brinde"
+            alt="5 saquetas de brinde"
             className="w-52 h-auto object-contain drop-shadow-md"
           />
           <p className="text-sm font-bold text-green-700 mt-2">
-            ✅ +5 pacotinhos de brinde incluídos
+            ✅ +5 saquetas de brinde incluídas
           </p>
           <p className="text-xs text-gray-400">Enviados gratuitamente com a tua encomenda</p>
         </motion.div>
