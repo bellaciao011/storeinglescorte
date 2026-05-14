@@ -1,0 +1,42 @@
+May 14 15:58:38.87
+GET
+500
+www.albumpaninini.site
+/api/public/rastreio
+[Rastreio] error: error: (ENOTFOUND) tenant/user postgres.rtfnzfwysgkmstokjazw not found at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:96:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { length: 84, severity: 'FATAL', code: 'XX000', detail: undefined, hint: undefined, position: undefined, internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: undefined, line: undefined, routine: undefined }
+May 14 15:58:36.08
+GET
+500
+www.albumpaninini.site
+/api/public/rastreio
+[Rastreio] error: error: (ENOTFOUND) tenant/user postgres.rtfnzfwysgkmstokjazw not found at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:96:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { length: 84, severity: 'FATAL', code: 'XX000', detail: undefined, hint: undefined, position: undefined, internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: undefined, line: undefined, routine: undefined }
+May 14 15:58:34.24
+GET
+500
+www.albumpaninini.site
+/api/public/rastreio
+[Rastreio] error: error: (ENOTFOUND) tenant/user postgres.rtfnzfwysgkmstokjazw not found at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:96:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { length: 84, severity: 'FATAL', code: 'XX000', detail: undefined, hint: undefined, position: undefined, internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: undefined, line: undefined, routine: undefined }
+May 14 15:46:23.89
+GET
+500
+www.albumpaninini.site
+/api/public/rastreio
+[Rastreio] error: error: (ENOTFOUND) tenant/user postgres.rtfnzfwysgkmstokjazw not found at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:96:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { length: 84, severity: 'FATAL', code: 'XX000', detail: undefined, hint: undefined, position: undefined, internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: undefined, line: undefined, routine: undefined }
+May 14 15:46:14.20
+GET
+500
+www.albumpaninini.site
+/api/public/rastreio
+[Rastreio] error: error: (ENOTFOUND) tenant/user postgres.rtfnzfwysgkmstokjazw not found at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:96:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { length: 84, severity: 'FATAL', code: 'XX000', detail: undefined, hint: undefined, position: undefined, internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: undefined, line: undefined, routine: undefined }
+May 14 15:46:13.36
+GET
+500
+www.albumpaninini.site
+/api/public/rastreio
+[Rastreio] error: error: (ENOTFOUND) tenant/user postgres.rtfnzfwysgkmstokjazw not found at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:96:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:10685) { length: 84, severity: 'FATAL', code: 'XX000', detail: undefined, hint: undefined, position: undefined, internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: undefined, line: undefined, routine: undefined }
+May 14 15:45:32.48
+POST
+200
+www.albumpaninini.site
+/api/public/waymb-webhook
+[Webhook] received status="pending" isPaid=false transactionID=s2RF4ucjZiJ5H7AiEvEv
