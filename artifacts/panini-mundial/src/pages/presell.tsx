@@ -38,16 +38,11 @@ export default function Presell() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
 
-      {/* Header bar — matches site */}
-      <div className="w-full bg-[#6b0f1a] text-white py-3 px-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="bg-white rounded-md px-2 py-1">
-            <img src="/assets/logo-panini-oficial.png" alt="Panini" className="h-7 w-auto object-contain" />
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+      {/* Header bar */}
+      <div className="w-full bg-[#6b0f1a] text-white py-3 px-4 flex items-center justify-center">
+        <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-4 py-1.5">
           <Lock className="w-3 h-3 text-yellow-300" />
-          <span className="text-xs font-semibold text-white">Acesso restrito</span>
+          <span className="text-xs font-semibold text-white tracking-wide">Área de Acesso Restrito</span>
         </div>
       </div>
 
