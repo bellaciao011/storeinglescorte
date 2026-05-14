@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { sendToUtmify, toUtcString, toCents, mapPaymentMethod } from "../lib/utmify";
-import { markOrderPaid, markEmailSent } from "../lib/orders";
+import { markOrderPaid, markEmailSent, markOrderRefused } from "../lib/orders";
 import { sendConfirmationEmail } from "../lib/email";
 
 export default async function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {
@@ -21,6 +21,18 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     console.log(`[Webhook] received status="${rawStatus}" isPaid=${isPaid} transactionID=${body.transactionID ?? body.transaction_id ?? body.id ?? "?"}`);
 
     if (!isPaid) {
+      // Log full body for refused/expired events to capture reason
+      const isRefused = rawStatus === "refused" || rawStatus === "rejected" || rawStatus === "failed" || rawStatus === "error" || rawStatus === "cancelled" || rawStatus === "expired";
+      if (isRefused) {
+        const transactionIdRef = body.transactionID ?? body.transaction_id ?? body.id ?? "?";
+        const reason = body.reason ?? body.failure_reason ?? body.error ?? body.description ?? body.message ?? null;
+        console.log(`[Webhook] REFUSED transactionID=${transactionIdRef} reason="${reason}" fullBody=${JSON.stringify(body)}`);
+        try {
+          await markOrderRefused(String(transactionIdRef), reason ? String(reason) : null);
+        } catch (e) {
+          console.error("[Webhook] markOrderRefused error:", e);
+        }
+      }
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ received: true }));
       return;

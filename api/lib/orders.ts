@@ -85,6 +85,19 @@ export async function markOrderPaid(id: string): Promise<{ tracking_code: string
   return null;
 }
 
+export async function markOrderRefused(id: string, reason: string | null): Promise<void> {
+  await query(
+    `UPDATE panini_orders SET payment_status = 'refused', failure_reason = $2, updated_at = NOW() WHERE id = $1`,
+    [id, reason ?? null]
+  ).catch(async () => {
+    // Column may not exist yet — fall back without reason
+    await query(
+      `UPDATE panini_orders SET payment_status = 'refused', updated_at = NOW() WHERE id = $1`,
+      [id]
+    );
+  });
+}
+
 export async function markEmailSent(id: string): Promise<void> {
   await query(
     `UPDATE panini_orders SET email_sent = true, updated_at = NOW() WHERE id = $1`,
