@@ -1,15 +1,14 @@
 const UTMIFY_ENDPOINT = "https://api.utmify.com.br/api-credentials/orders";
 
-// UTMify dashboard is typically configured in BRL.
-// We apply a fixed EUR→BRL conversion rate of 6 to get realistic BRL centavos.
-// If your UTMify account is configured in EUR, set this to 1.
+// EUR→BRL fixed rate (UTMify works in BRL cents)
+// 30 EUR → Math.round(30 * 6 * 100) = 18000 cents = R$180
 const EUR_TO_BRL = 6;
 
 export function toCents(amountEur: number): number {
   return Math.round(amountEur * EUR_TO_BRL * 100);
 }
 
-export type UtmifyPaymentMethod = "pix" | "bank_transfer" | "credit_card" | "boleto" | "paypal" | "free_price";
+export type UtmifyPaymentMethod = "pix" | "bank_transfer" | "billet" | "credit_card" | "paypal" | "free_price";
 
 export interface UtmifyOrder {
   orderId: string;
@@ -48,9 +47,7 @@ export interface UtmifyOrder {
     totalPriceInCents: number;
     gatewayFeeInCents: number;
     userCommissionInCents: number;
-    currency?: string;
   };
-  isTest?: boolean;
 }
 
 export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
@@ -60,6 +57,12 @@ export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
     return;
   }
 
+  const payload = {
+    ...order,
+    currency: "EUR",
+    isTest: false,
+  };
+
   try {
     const res = await fetch(UTMIFY_ENDPOINT, {
       method: "POST",
@@ -67,13 +70,13 @@ export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
         "Content-Type": "application/json",
         "x-api-token": token,
       },
-      body: JSON.stringify({ ...order, isTest: false }),
+      body: JSON.stringify(payload),
     });
+    const text = await res.text();
     if (!res.ok) {
-      const text = await res.text();
       console.error(`[UTMify] API error ${res.status}:`, text);
     } else {
-      console.log(`[UTMify] order ${order.orderId} sent — status: ${order.status}`);
+      console.log(`[UTMify] OK — order ${order.orderId} status=${order.status} response=${text}`);
     }
   } catch (err) {
     console.error("[UTMify] fetch failed:", err);
@@ -84,8 +87,13 @@ export function toUtcString(date: Date): string {
   return date.toISOString().replace("T", " ").slice(0, 19);
 }
 
-export function mapPaymentMethod(method: string): UtmifyPaymentMethod {
+// waiting_payment: mbway→pix, multibanco→bank_transfer
+// paid:            mbway→pix, multibanco→billet  (matches reference project)
+export function mapPaymentMethod(
+  method: string,
+  status: "waiting_payment" | "paid" = "waiting_payment"
+): UtmifyPaymentMethod {
   if (method === "mbway") return "pix";
-  if (method === "multibanco") return "bank_transfer";
+  if (method === "multibanco") return status === "paid" ? "billet" : "bank_transfer";
   return "pix";
 }

@@ -1,0 +1,84 @@
+Como o envio para a UTMify funciona
+Há dois eventos enviados para a UTMify, em momentos diferentes do ciclo de vida da doação.
+
+1️⃣ Evento waiting_payment — quando o utilizador clica em "Doar"
+Onde: src/donations.functions.ts (server function submitDonation) Quando: logo após criar a transação na WayMB e gravar a doação na BD (status pending).
+
+Fluxo:
+
+Utilizador preenche o formulário em /doar e submete.
+Servidor cria a transação na WayMB (POST https://api.waymb.com/transactions/create).
+Insere registo em donations com status = 'pending'.
+Envia para UTMify com status: "waiting_payment".
+Marca utmify_waiting_sent = true na BD para não duplicar.
+2️⃣ Evento paid — quando a WayMB confirma o pagamento
+Onde: src/routes/api/public/waymb-webhook.ts Quando: WayMB chama o webhook (/api/public/waymb-webhook) com status: "COMPLETED".
+
+Fluxo:
+
+Webhook recebe payload da WayMB.
+Atualiza donations → status = 'completed', paid_at = now().
+Se utmify_paid_sent ainda for false, envia para UTMify com status: "paid".
+Marca utmify_paid_sent = true.
+Envia também email de confirmação via Resend (se houver email real).
+Endpoint, autenticação e payload
+URL: https://api.utmify.com.br/api-credentials/orders
+Método: POST
+Auth: header x-api-token: $UTMIFY_API_TOKEN (o token está definido em .replit como Sc0Mw2VSKmucCSXby4LXCVD2zzbrEAbaOgaE).
+Estrutura do body enviado
+{
+  "orderId": "<uuid da linha em donations>",
+  "platform": "Lucas",
+  "paymentMethod": "pix" | "billet" | "bank_transfer",
+  "status": "waiting_payment" | "paid",
+  "currency": "EUR",
+  "createdAt": "YYYY-MM-DD HH:MM:SS",
+  "approvedDate": null | "YYYY-MM-DD HH:MM:SS",
+  "refundedAt": null,
+  "customer": {
+    "name", "email", "phone", "document",
+    "country": "PT",
+    "ip": "<IP do doador>"
+  },
+  "products": [{
+    "id": "doacao-lucas",
+    "name": "Bom e novo",
+    "planId": null,
+    "planName": null,
+    "quantity": 1,
+    "priceInCents": <valor convertido>
+  }],
+  "trackingParameters": {
+    "src", "sck",
+    "utm_source", "utm_medium", "utm_campaign",
+    "utm_content", "utm_term"
+  },
+  "commission": {
+    "totalPriceInCents": <valor>,
+    "gatewayFeeInCents": <35% do valor>,
+    "userCommissionInCents": <65% do valor>
+  },
+  "isTest": false
+}
+Mapeamento paymentMethod
+mbway → "pix" (waiting) / "pix" (paid)
+multibanco → "bank_transfer" (waiting) / "billet" (paid) ⚠️ inconsistência: estão diferentes entre os dois eventos
+Conversão do valor (⚠️ importante)
+O valor em EUR é multiplicado por 6 e depois por 100 para virar "centavos BRL":
+
+priceInCents: Math.round(amount * 6 * 100)
+Exemplo: doação de 30 € → enviado como 18 000 cents (= R$ 180,00) para a UTMify. Isto está fixo na regra de memória do projeto — a UTMify trabalha em BRL, então simulamos a conversão.
+
+Comissão fixa
+gatewayFee = 35% do total
+userCommission = 65% do total (É uma estimativa fixa, não vem da WayMB.)
+UTMs / tracking
+Capturadas no browser por captureUtmsFromUrl() (em __root.tsx), guardadas em cookies/localStorage, enviadas no formulário e persistidas em donations. O webhook lê da própria linha guardada — portanto o paid mantém os mesmos UTMs do waiting_payment.
+
+Pontos de atenção / inconsistências
+paymentMethod para multibanco diverge entre waiting (bank_transfer) e paid (billet).
+platform: "Lucas" está hardcoded — ainda não foi atualizado para o abrigo.
+products[0].name: "Bom e novo" e id: "doacao-lucas" também hardcoded e desalinhados com o tema atual (abrigo de cães).
+Fallback de email no webhook usa unknown@unknown.com se não houver — pode poluir métricas.
+Se a UTMify falhar, não há retry — só fica logado em consola ([utmify waiting] / [utmify paid]).
+Os logs podem ser inspecionados com server-function-logs filtrando por utmify

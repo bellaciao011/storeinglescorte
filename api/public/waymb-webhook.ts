@@ -37,7 +37,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     await sendToUtmify({
       orderId: String(transactionId),
       platform: "Front",
-      paymentMethod: mapPaymentMethod(method),
+      paymentMethod: mapPaymentMethod(method, "paid"),
       status: "paid",
       createdAt: now,
       approvedDate: now,
@@ -73,7 +73,6 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
         totalPriceInCents: totalCents,
         gatewayFeeInCents: Math.round(totalCents * 0.35),
         userCommissionInCents: Math.round(totalCents * 0.65),
-        currency: "BRL",
       },
     });
 

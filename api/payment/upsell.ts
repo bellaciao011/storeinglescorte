@@ -128,7 +128,6 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
         totalPriceInCents: totalCents,
         gatewayFeeInCents: Math.round(totalCents * 0.35),
         userCommissionInCents: Math.round(totalCents * 0.65),
-        currency: "BRL",
       },
     });
 
