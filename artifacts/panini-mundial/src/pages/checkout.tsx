@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { kits } from "@/lib/kits";
+import { readUtms } from "@/lib/utm";
 
 type PaymentResult = {
   transactionID: string;
@@ -22,15 +23,7 @@ export default function Checkout() {
   const kitId = searchParams.get("kit") || "campeao";
   const kit = kits.find((k) => k.id === kitId) || kits[2];
 
-  const utmParams = {
-    src: searchParams.get("src"),
-    sck: searchParams.get("sck"),
-    utm_source: searchParams.get("utm_source"),
-    utm_campaign: searchParams.get("utm_campaign"),
-    utm_medium: searchParams.get("utm_medium"),
-    utm_content: searchParams.get("utm_content"),
-    utm_term: searchParams.get("utm_term"),
-  };
+  const utmParams = readUtms();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

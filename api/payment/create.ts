@@ -1,7 +1,13 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { sendToUtmify, toUtcString } from "../lib/utmify";
+import { sendToUtmify, toUtcString, toCents, mapPaymentMethod } from "../lib/utmify";
 
 const WAYMB_BASE = "https://api.waymb.com";
+
+function getIp(req: IncomingMessage): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string") return forwarded.split(",")[0].trim();
+  return req.socket?.remoteAddress ?? "0.0.0.0";
+}
 
 export default async function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {
   if (req.method !== "POST") {
@@ -19,6 +25,8 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     res.end(JSON.stringify({ error: "WayMB credentials not configured" }));
     return;
   }
+
+  const ip = getIp(req);
 
   try {
     const body = await parseBody(req);
@@ -42,13 +50,16 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       quantity?: number;
       bumps?: Array<{ id: string; name: string; price: number }>;
       utmParams?: {
-        src?: string;
-        sck?: string;
-        utm_source?: string;
-        utm_campaign?: string;
-        utm_medium?: string;
-        utm_content?: string;
-        utm_term?: string;
+        src?: string | null;
+        sck?: string | null;
+        utm_source?: string | null;
+        utm_campaign?: string | null;
+        utm_medium?: string | null;
+        utm_content?: string | null;
+        utm_term?: string | null;
+        fbclid?: string | null;
+        gclid?: string | null;
+        ttclid?: string | null;
       };
     };
 
@@ -88,17 +99,20 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
 
     const data = isJson ? JSON.parse(rawBody) : { raw: rawBody };
 
-    // Send waiting_payment event to UTMify (non-blocking)
+    // Build UTMify payload (non-blocking)
     const now = toUtcString(new Date());
-    const totalCents = Math.round(amount * 100);
+    const qty = quantity ?? 1;
+    const kitCents = toCents((amount - (bumps ?? []).reduce((s, b) => s + b.price, 0)));
+    const totalCents = toCents(amount);
+
     const products = [
       {
         id: kitId ?? "kit",
         name: kitName ?? "Kit Panini FIFA WC26",
         planId: null,
         planName: null,
-        quantity: quantity ?? 1,
-        priceInCents: totalCents,
+        quantity: qty,
+        priceInCents: kitCents,
       },
       ...((bumps ?? []).map(b => ({
         id: b.id,
@@ -106,14 +120,14 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
         planId: null,
         planName: null,
         quantity: 1,
-        priceInCents: Math.round(b.price * 100),
+        priceInCents: toCents(b.price),
       }))),
     ];
 
     sendToUtmify({
       orderId: data.transactionID ?? `order-${Date.now()}`,
       platform: "WayMB",
-      paymentMethod: method === "mbway" ? "pix" : "boleto",
+      paymentMethod: mapPaymentMethod(method),
       status: "waiting_payment",
       createdAt: now,
       approvedDate: null,
@@ -124,6 +138,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
         phone: payer.phone ?? null,
         document: payer.document ?? null,
         country: "PT",
+        ip,
       },
       products,
       trackingParameters: {
@@ -137,9 +152,9 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       },
       commission: {
         totalPriceInCents: totalCents,
-        gatewayFeeInCents: 0,
-        userCommissionInCents: totalCents,
-        currency: "EUR",
+        gatewayFeeInCents: Math.round(totalCents * 0.35),
+        userCommissionInCents: Math.round(totalCents * 0.65),
+        currency: "BRL",
       },
     });
 

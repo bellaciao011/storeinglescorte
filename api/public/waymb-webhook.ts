@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { sendToUtmify, toUtcString } from "../lib/utmify";
+import { sendToUtmify, toUtcString, toCents, mapPaymentMethod } from "../lib/utmify";
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== "POST") {
@@ -8,29 +8,29 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return;
   }
 
-  // Always respond 200 immediately so WayMB doesn't retry
+  // Always respond 200 immediately so WayMB never retries due to timeout
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ received: true }));
 
   try {
     const body = await parseBody(req) as Record<string, any>;
 
-    const status = (body.status ?? body.Status ?? body.payment_status ?? "").toLowerCase();
-    const isPaid = status === "paid" || status === "success" || status === "completed" || status === "approved";
+    const rawStatus = (body.status ?? body.Status ?? body.payment_status ?? "").toLowerCase();
+    const isPaid = rawStatus === "paid" || rawStatus === "success" || rawStatus === "completed" || rawStatus === "approved";
 
     if (!isPaid) return;
 
     const transactionId = body.transactionID ?? body.transaction_id ?? body.id ?? "";
-    const amount = Number(body.amount ?? body.value ?? 0);
+    const amountEur = Number(body.amount ?? body.value ?? 0);
     const method = (body.method ?? body.payment_method ?? "mbway").toLowerCase();
     const payer = body.payer ?? body.customer ?? {};
     const now = toUtcString(new Date());
-    const totalCents = Math.round(amount * 100);
+    const totalCents = toCents(amountEur);
 
     sendToUtmify({
       orderId: String(transactionId),
       platform: "WayMB",
-      paymentMethod: method === "multibanco" ? "boleto" : "pix",
+      paymentMethod: mapPaymentMethod(method),
       status: "paid",
       createdAt: now,
       approvedDate: now,
@@ -41,6 +41,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         phone: payer.phone ?? null,
         document: payer.document ?? null,
         country: "PT",
+        ip: payer.ip ?? "0.0.0.0",
       },
       products: [
         {
@@ -63,9 +64,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       },
       commission: {
         totalPriceInCents: totalCents,
-        gatewayFeeInCents: 0,
-        userCommissionInCents: totalCents,
-        currency: "EUR",
+        gatewayFeeInCents: Math.round(totalCents * 0.35),
+        userCommissionInCents: Math.round(totalCents * 0.65),
+        currency: "BRL",
       },
     });
   } catch {

@@ -1,9 +1,20 @@
 const UTMIFY_ENDPOINT = "https://api.utmify.com.br/api-credentials/orders";
 
+// UTMify dashboard is typically configured in BRL.
+// We apply a fixed EUR→BRL conversion rate of 6 to get realistic BRL centavos.
+// If your UTMify account is configured in EUR, set this to 1.
+const EUR_TO_BRL = 6;
+
+export function toCents(amountEur: number): number {
+  return Math.round(amountEur * EUR_TO_BRL * 100);
+}
+
+export type UtmifyPaymentMethod = "pix" | "bank_transfer" | "credit_card" | "boleto" | "paypal" | "free_price";
+
 export interface UtmifyOrder {
   orderId: string;
   platform: string;
-  paymentMethod: "credit_card" | "boleto" | "pix" | "paypal" | "free_price";
+  paymentMethod: UtmifyPaymentMethod;
   status: "waiting_payment" | "paid" | "refused" | "refunded" | "chargedback";
   createdAt: string;
   approvedDate: string | null;
@@ -39,6 +50,7 @@ export interface UtmifyOrder {
     userCommissionInCents: number;
     currency?: string;
   };
+  isTest?: boolean;
 }
 
 export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
@@ -52,7 +64,7 @@ export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
         "Content-Type": "application/json",
         "x-api-token": token,
       },
-      body: JSON.stringify(order),
+      body: JSON.stringify({ ...order, isTest: false }),
     });
   } catch {
     // non-blocking — never fail the payment flow because of analytics
@@ -61,4 +73,10 @@ export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
 
 export function toUtcString(date: Date): string {
   return date.toISOString().replace("T", " ").slice(0, 19);
+}
+
+export function mapPaymentMethod(method: string): UtmifyPaymentMethod {
+  if (method === "mbway") return "pix";
+  if (method === "multibanco") return "bank_transfer";
+  return "pix";
 }

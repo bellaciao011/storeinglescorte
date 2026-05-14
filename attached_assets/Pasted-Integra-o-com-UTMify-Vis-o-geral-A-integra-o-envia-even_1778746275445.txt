@@ -1,0 +1,137 @@
+Integração com UTMify
+Visão geral
+A integração envia eventos de pedidos para a UTMify em dois momentos do funil:
+
+waiting_payment — quando o cliente gera o pagamento (PIX/MBWay/boleto)
+paid — quando o webhook do gateway confirma a aprovação
+Cada pedido é enviado uma única vez por status usando flags no banco (utmify_waiting_sent, utmify_paid_sent) para evitar duplicidade.
+
+Endpoint e autenticação
+POST https://api.utmify.com.br/api-credentials/orders
+Headers:
+  Content-Type: application/json
+  x-api-token: <UTMIFY_API_TOKEN>
+O token é uma variável de ambiente do servidor (nunca exposta no client).
+
+Captura de UTMs no frontend
+UTMs são capturadas da URL na primeira visita e salvas no localStorage por 7 dias (sobrevive a troca de aba e a transição navegador in-app → externo, comum em fluxos vindos de Instagram/TikTok).
+
+Campos capturados:
+
+utm_source, utm_medium, utm_campaign, utm_term, utm_content,
+fbclid, gclid, ttclid, src, sck
+Mapeamento extra: se a URL traz xid=... (cloaker) e src ainda não foi setado, xid vira src.
+
+No checkout, esses valores são lidos do storage e enviados junto ao servidor para anexar ao pedido.
+
+Conversão de valores (PONTO IMPORTANTE)
+A UTMify espera valores em centavos e geralmente é configurada em BRL. Como o checkout cobra em EUR, aplicamos uma conversão fixa antes de enviar:
+
+priceInCents = Math.round(valorEUR * 6 * 100)
+* 6 → taxa fixa EUR→BRL (não usa cotação dinâmica, é hardcoded)
+* 100 → reais para centavos
+Math.round → arredonda para inteiro
+Exemplo: pedido de €25 → 25 * 6 * 100 = 15000 centavos = R$ 150,00 na UTMify.
+
+A mesma fórmula é aplicada em três campos de comissão:
+
+totalPriceInCents:        valorEUR * 6 * 100
+gatewayFeeInCents:        valorEUR * 6 * 100 * 0.35   // 35% taxa simulada
+userCommissionInCents:    valorEUR * 6 * 100 * 0.65   // 65% comissão
+⚠️ Se o painel UTMify for configurado em EUR, remova o * 6 e use só * 100.
+
+Mapeamento de método de pagamento
+UTMify só aceita alguns valores fixos. Mapeamos assim:
+
+paymentMethod: metodoGateway === "mbway" ? "pix" : "bank_transfer"
+(MBWay vira pix porque é o equivalente funcional aceito pela UTMify; multibanco/boleto vira bank_transfer.)
+
+Payload completo
+{
+  "orderId": "<uuid do pedido no nosso banco>",
+  "platform": "<nome livre da plataforma>",
+  "paymentMethod": "pix" | "bank_transfer" | "credit_card",
+  "status": "waiting_payment" | "paid" | "refunded",
+  "currency": "EUR",
+  "createdAt": "2026-05-14 12:34:56",
+  "approvedDate": null | "2026-05-14 12:40:00",
+  "refundedAt": null,
+  "customer": {
+    "name": "...",
+    "email": "...",
+    "phone": "...",
+    "document": "...",
+    "country": "PT",
+    "ip": "1.2.3.4"
+  },
+  "products": [{
+    "id": "sku-id",
+    "name": "Nome do produto",
+    "planId": null,
+    "planName": null,
+    "quantity": 1,
+    "priceInCents": 15000
+  }],
+  "trackingParameters": {
+    "src": "...", "sck": "...",
+    "utm_source": "...", "utm_medium": "...",
+    "utm_campaign": "...", "utm_content": "...", "utm_term": "..."
+  },
+  "commission": {
+    "totalPriceInCents": 15000,
+    "gatewayFeeInCents": 5250,
+    "userCommissionInCents": 9750
+  },
+  "isTest": false
+}
+Detalhes obrigatórios/sutis
+orderId deve ser idêntico nos dois envios (waiting_payment e paid) — é assim que a UTMify atualiza o mesmo pedido em vez de criar dois.
+createdAt e approvedDate no formato "YYYY-MM-DD HH:mm:ss" (não ISO com T e Z). Usamos new Date().toISOString().replace("T"," ").slice(0,19).
+approvedDate é null no waiting_payment e preenchido no paid.
+country ISO-2 (ex.: "PT", "BR").
+ip deve ser uma string válida; se não tiver, mande "0.0.0.0" (UTMify rejeita vazio).
+isTest: false em produção — eventos true não contam no dashboard.
+Fluxo no servidor
+1. Criação do pedido (status waiting_payment)
+Server function chamada pelo botão de pagar:
+
+Cria a transação no gateway de pagamento
+Insere a linha em donations/orders no banco com as UTMs salvas
+Faz POST para UTMify com status: "waiting_payment" e approvedDate: null
+Se UTMify retornar 2xx → marca utmify_waiting_sent = true
+Se falhar → loga e segue (não bloqueia o checkout)
+2. Webhook de pagamento confirmado (status paid)
+Endpoint público (ex.: /api/public/<gateway>-webhook):
+
+Recebe payload do gateway
+Busca o pedido pelo transactionId
+Atualiza status para completed e seta paid_at
+Verifica utmify_paid_sent — se já enviado, não reenvia (idempotência)
+Faz POST para UTMify com status: "paid" e approvedDate preenchido, lendo as UTMs salvas no banco (não da request)
+Marca utmify_paid_sent = true
+Importante: as UTMs do paid vêm do registro do banco (salvas na criação), não do webhook do gateway, porque o gateway não conhece UTMs.
+
+Estrutura mínima da tabela de pedidos
+Campos relevantes para a integração:
+
+id                    uuid primary key
+transaction_id        text   -- id retornado pelo gateway
+status                text   -- 'pending' | 'completed' | 'declined'
+amount                numeric
+currency              text
+method                text
+payer_name/email/phone/document  text
+ip                    text
+utm_source, utm_medium, utm_campaign, utm_term, utm_content  text
+fbclid, gclid, ttclid, src, sck                              text
+utmify_waiting_sent   boolean default false
+utmify_paid_sent      boolean default false
+created_at, paid_at   timestamptz
+Erros comuns
+Sintoma	Causa
+Pedido aparece duplicado na UTMify	orderId diferente entre waiting e paid
+Valor errado no dashboard	Esqueceu o * 100 (centavos) ou usou * 6 com painel já em EUR
+paid nunca chega	Webhook do gateway não configurado, ou flag utmify_paid_sent setada antes da hora
+UTMs vazias no paid	Está lendo da request do webhook em vez do banco
+Pedido não aparece	isTest: true em produção, ou status fora de waiting_payment/paid/refunded
+401 da UTMify	Header errado — é x-api-token, não Authorization
