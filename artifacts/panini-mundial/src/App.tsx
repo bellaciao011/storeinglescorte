@@ -9,6 +9,7 @@ import Presell from "@/pages/presell";
 import Admin from "@/pages/admin";
 import Rastreio from "@/pages/rastreio";
 import Upsell from "@/pages/upsell";
+import Upsell2 from "@/pages/upsell2";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/rastreio" component={Rastreio} />
       <Route path="/upsell" component={Upsell} />
+      <Route path="/upsell2" component={Upsell2} />
       <Route component={NotFound} />
     </Switch>
   );

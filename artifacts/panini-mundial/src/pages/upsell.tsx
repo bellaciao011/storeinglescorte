@@ -85,7 +85,15 @@ export default function Upsell() {
     }
   };
 
-  // Success state
+  // After payment → go to upsell2
+  useEffect(() => {
+    if (result) {
+      const timer = setTimeout(() => setLocation("/upsell2"), 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [result, setLocation]);
+
+  // Brief success state before redirect
   if (result) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
@@ -94,37 +102,11 @@ export default function Upsell() {
           animate={{ scale: 1, opacity: 1 }}
           className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 w-full max-w-sm text-center"
         >
-          {result.method === "mbway" ? (
-            <>
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                <Smartphone className="w-8 h-8 text-green-600" />
-              </div>
-              <h2 className="text-xl font-black text-gray-900 mb-2">Pedido enviado!</h2>
-              <p className="text-gray-500 text-sm mb-4">
-                Aceita o pedido de <strong>€{result.amount.toFixed(2).replace(".", ",")}</strong> na app <strong>MB WAY</strong>.
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
-                <Building2 className="w-8 h-8 text-blue-600" />
-              </div>
-              <h2 className="text-xl font-black text-gray-900 mb-2">Referência gerada!</h2>
-              {result.referenceData && (
-                <div className="bg-gray-50 rounded-xl p-4 text-left space-y-2 mb-4 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-500">Entidade</span><span className="font-bold">{result.referenceData.entity}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Referência</span><span className="font-bold tracking-widest">{result.referenceData.reference}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-500">Valor</span><span className="font-bold text-[#6b0f1a]">€{result.amount.toFixed(2).replace(".", ",")}</span></div>
-                </div>
-              )}
-            </>
-          )}
-          <button
-            onClick={() => setLocation("/")}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
-            ← Voltar à loja
-          </button>
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+            <Smartphone className="w-8 h-8 text-green-600" />
+          </div>
+          <h2 className="text-xl font-black text-gray-900 mb-2">Envio confirmado!</h2>
+          <p className="text-gray-400 text-xs animate-pulse mt-3">A redirecionar…</p>
         </motion.div>
       </div>
     );
