@@ -129,64 +129,63 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     const trackingCode = generateTrackingCode();
     const productName = kitName ?? "Kit Panini FIFA WC26";
 
-    // Respond to the client immediately — payment URL is ready, no need to wait for tracking/DB
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(data));
-
-    // Fire UTMify + DB in background after responding (neither can block the payment)
-    Promise.allSettled([
-      sendToUtmify({
-        orderId: transactionId,
-        platform: "Front",
-        paymentMethod: mapPaymentMethod(method),
-        status: "waiting_payment",
-        createdAt: now,
-        approvedDate: null,
-        refundedAt: null,
-        customer: {
-          name: payer.name,
-          email: payer.email,
-          phone: payer.phone ?? null,
-          document: payer.document ?? null,
-          country: "PT",
-          ip,
-        },
-        products,
-        trackingParameters: {
-          src: utmParams?.src ?? null,
-          sck: utmParams?.sck ?? null,
-          utm_source: utmParams?.utm_source ?? null,
-          utm_campaign: utmParams?.utm_campaign ?? null,
-          utm_medium: utmParams?.utm_medium ?? null,
-          utm_content: utmParams?.utm_content ?? null,
-          utm_term: utmParams?.utm_term ?? null,
-        },
-        commission: {
-          totalPriceInCents: totalCents,
-          gatewayFeeInCents: Math.round(totalCents * 0.35),
-          userCommissionInCents: Math.round(totalCents * 0.65),
-        },
-      }),
-      createOrder({
-        id: transactionId,
-        tracking_code: trackingCode,
-        customer_name: payer.name,
-        customer_email: payer.email ?? null,
-        customer_phone: payer.phone ?? null,
-        customer_document: payer.document ?? null,
-        customer_address: null,
-        product_name: productName,
-        amount_eur: amount,
-        payment_method: method,
+    // Await UTMify before responding — Vercel kills the function after res.end(), so this must complete first
+    await sendToUtmify({
+      orderId: transactionId,
+      platform: "Front",
+      paymentMethod: mapPaymentMethod(method),
+      status: "waiting_payment",
+      createdAt: now,
+      approvedDate: null,
+      refundedAt: null,
+      customer: {
+        name: payer.name,
+        email: payer.email,
+        phone: payer.phone ?? null,
+        document: payer.document ?? null,
+        country: "PT",
+        ip,
+      },
+      products,
+      trackingParameters: {
+        src: utmParams?.src ?? null,
+        sck: utmParams?.sck ?? null,
         utm_source: utmParams?.utm_source ?? null,
         utm_campaign: utmParams?.utm_campaign ?? null,
         utm_medium: utmParams?.utm_medium ?? null,
         utm_content: utmParams?.utm_content ?? null,
         utm_term: utmParams?.utm_term ?? null,
-        src: utmParams?.src ?? null,
-        sck: utmParams?.sck ?? null,
-      }).catch(err => console.error("[DB] createOrder error:", err)),
-    ]).catch(() => {});
+      },
+      commission: {
+        totalPriceInCents: totalCents,
+        gatewayFeeInCents: Math.round(totalCents * 0.35),
+        userCommissionInCents: Math.round(totalCents * 0.65),
+      },
+    });
+
+    // Respond to client — DB save is fire-and-forget and never blocks the payment
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(data));
+
+    createOrder({
+      id: transactionId,
+      tracking_code: trackingCode,
+      customer_name: payer.name,
+      customer_email: payer.email ?? null,
+      customer_phone: payer.phone ?? null,
+      customer_document: payer.document ?? null,
+      customer_address: null,
+      product_name: productName,
+      amount_eur: amount,
+      payment_method: method,
+      utm_source: utmParams?.utm_source ?? null,
+      utm_campaign: utmParams?.utm_campaign ?? null,
+      utm_medium: utmParams?.utm_medium ?? null,
+      utm_content: utmParams?.utm_content ?? null,
+      utm_term: utmParams?.utm_term ?? null,
+      src: utmParams?.src ?? null,
+      sck: utmParams?.sck ?? null,
+    }).catch(err => console.error("[DB] createOrder error:", err));
   } catch (err) {
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Internal server error" }));
