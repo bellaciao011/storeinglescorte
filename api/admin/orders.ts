@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { getAllOrders, updateOrderStatus, getOrderById } from "../lib/orders";
+import { getAllOrders, updateOrderStatus, getOrderById, createOrder, generateTrackingCode } from "../lib/orders";
 import { sendToUtmify, toCents, mapPaymentMethod, toUtcString } from "../lib/utmify";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -143,6 +143,47 @@ export default async function handler(
       console.error("[Admin] resend_utmify error:", err);
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Failed to resend to UTMify" }));
+    }
+    return;
+  }
+
+  // PATCH — insert manual order into DB
+  if (req.method === "PATCH") {
+    try {
+      const body = (req.body ?? (await parseBody(req))) as {
+        id: string; customer_name: string; customer_phone?: string;
+        customer_email?: string; customer_document?: string;
+        amount_eur: number; payment_method: string; payment_status?: string;
+      };
+      if (!body.id || !body.customer_name || !body.amount_eur || !body.payment_method) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Missing required fields: id, customer_name, amount_eur, payment_method" }));
+        return;
+      }
+      const tracking_code = generateTrackingCode();
+      await createOrder({
+        id: body.id,
+        tracking_code,
+        customer_name: body.customer_name,
+        customer_email: body.customer_email ?? null,
+        customer_phone: body.customer_phone ?? null,
+        customer_document: body.customer_document ?? null,
+        customer_address: null,
+        product_name: "Kit Panini FIFA World Cup 2026",
+        amount_eur: body.amount_eur,
+        payment_method: body.payment_method,
+      });
+      // If payment_status is paid, mark it immediately
+      if (body.payment_status === "paid") {
+        const { markOrderPaid } = await import("../lib/orders");
+        await markOrderPaid(body.id);
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, tracking_code }));
+    } catch (err) {
+      console.error("[Admin] createManualOrder error:", err);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Database error" }));
     }
     return;
   }
