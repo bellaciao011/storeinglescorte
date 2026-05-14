@@ -163,29 +163,34 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       },
     });
 
-    // Respond to client — DB save is fire-and-forget and never blocks the payment
+    // Save to DB before responding — Vercel kills the function after res.end()
+    try {
+      await createOrder({
+        id: transactionId,
+        tracking_code: trackingCode,
+        customer_name: payer.name,
+        customer_email: payer.email ?? null,
+        customer_phone: payer.phone ?? null,
+        customer_document: payer.document ?? null,
+        customer_address: null,
+        product_name: productName,
+        amount_eur: amount,
+        payment_method: method,
+        utm_source: utmParams?.utm_source ?? null,
+        utm_campaign: utmParams?.utm_campaign ?? null,
+        utm_medium: utmParams?.utm_medium ?? null,
+        utm_content: utmParams?.utm_content ?? null,
+        utm_term: utmParams?.utm_term ?? null,
+        src: utmParams?.src ?? null,
+        sck: utmParams?.sck ?? null,
+      });
+      console.log(`[DB] Order ${transactionId} saved, tracking=${trackingCode}`);
+    } catch (err) {
+      console.error("[DB] createOrder error:", err);
+    }
+
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(data));
-
-    createOrder({
-      id: transactionId,
-      tracking_code: trackingCode,
-      customer_name: payer.name,
-      customer_email: payer.email ?? null,
-      customer_phone: payer.phone ?? null,
-      customer_document: payer.document ?? null,
-      customer_address: null,
-      product_name: productName,
-      amount_eur: amount,
-      payment_method: method,
-      utm_source: utmParams?.utm_source ?? null,
-      utm_campaign: utmParams?.utm_campaign ?? null,
-      utm_medium: utmParams?.utm_medium ?? null,
-      utm_content: utmParams?.utm_content ?? null,
-      utm_term: utmParams?.utm_term ?? null,
-      src: utmParams?.src ?? null,
-      sck: utmParams?.sck ?? null,
-    }).catch(err => console.error("[DB] createOrder error:", err));
   } catch (err) {
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Internal server error" }));
