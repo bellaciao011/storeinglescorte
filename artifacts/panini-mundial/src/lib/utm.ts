@@ -47,6 +47,23 @@ export function captureAndSaveUtms(): void {
   }
 }
 
+function readUtmifyPixelSck(): string | null {
+  // UTMify pixel.js stores its session sck in one of these locations
+  const candidates = ["utmify_sck", "__utmify_sck", "utmify-sck", "utmifySck"];
+  for (const key of candidates) {
+    try {
+      const val = localStorage.getItem(key);
+      if (val) return val;
+    } catch { /* ignore */ }
+  }
+  // Also try cookies
+  try {
+    const match = document.cookie.match(/(?:^|;\s*)utmify_sck=([^;]+)/);
+    if (match) return decodeURIComponent(match[1]);
+  } catch { /* ignore */ }
+  return null;
+}
+
 export function readUtms(): UtmParams {
   const empty: UtmParams = {
     utm_source: null, utm_medium: null, utm_campaign: null,
@@ -62,7 +79,12 @@ export function readUtms(): UtmParams {
       localStorage.removeItem(UTM_KEY);
       return empty;
     }
-    return { ...empty, ...data };
+    const result = { ...empty, ...data };
+    // If sck not captured from URL, try UTMify pixel's own stored sck
+    if (!result.sck) {
+      result.sck = readUtmifyPixelSck();
+    }
+    return result;
   } catch {
     return empty;
   }

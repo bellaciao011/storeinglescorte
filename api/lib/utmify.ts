@@ -42,6 +42,9 @@ export interface UtmifyOrder {
     utm_medium: string | null;
     utm_content: string | null;
     utm_term: string | null;
+    fbclid?: string | null;
+    gclid?: string | null;
+    ttclid?: string | null;
   };
   commission: {
     totalPriceInCents: number;
