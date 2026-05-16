@@ -113,9 +113,9 @@ export default function Checkout() {
   const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
   const orderBumps = [
-    { id: "bump50", label: "+50 sobres · ~350 cromos", desc: "Descuento de preventa con envío gratis en México.", price: 699, oldPrice: 1299, img: "/assets/kit-iniciante.png", badge: null },
-    { id: "bump100", label: "+100 sobres · ~700 cromos", desc: "El equilibrio preferido de los coleccionistas — preventa exclusiva.", price: 1299, oldPrice: 2499, img: "/assets/kit-campeao.png", badge: { text: "MÁS VENDIDO", cls: "bg-red-600 text-white" } },
-    { id: "bump250", label: "+250 sobres · ~1,750 cromos", desc: "Máximo descuento en este lote promocional.", price: 2999, oldPrice: 5999, img: "/assets/kit-colecionador.png", badge: { text: "ÚLTIMAS UNIDADES", cls: "bg-amber-400 text-gray-900" } },
+    { id: "bump50", label: "+50 sobres · ~350 cromos", desc: "Descuento de preventa con envío gratis en México.", price: 699, oldPrice: 1299, img: "/assets/bump-sobres.png", badge: null },
+    { id: "bump100", label: "+100 sobres · ~700 cromos", desc: "El equilibrio preferido de los coleccionistas — preventa exclusiva.", price: 1299, oldPrice: 2499, img: "/assets/bump-sobres.png", badge: { text: "MÁS VENDIDO", cls: "bg-red-600 text-white" } },
+    { id: "bump250", label: "+250 sobres · ~1,750 cromos", desc: "Máximo descuento en este lote promocional.", price: 2999, oldPrice: 5999, img: "/assets/bump-sobres.png", badge: { text: "ÚLTIMAS UNIDADES", cls: "bg-amber-400 text-gray-900" } },
   ];
 
   const bumpsTotal = orderBumps.filter(b => selectedBumps.has(b.id)).reduce((s, b) => s + b.price, 0);
