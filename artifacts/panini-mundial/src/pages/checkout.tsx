@@ -3,19 +3,93 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   ChevronRight, CheckCircle2, ShieldCheck, Truck, Lock,
-  CreditCard, CheckCircle, Loader2, AlertCircle, Smartphone, Building2
+  CreditCard, CheckCircle, Loader2, AlertCircle,
 } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Header } from "@/components/Header";
 import { kits } from "@/lib/kits";
 import { readUtms } from "@/lib/utm";
 
-type PaymentResult = {
-  transactionID: string;
-  method: "mbway" | "multibanco";
-  amount: number;
-  generatedMBWay?: boolean;
-  referenceData?: { entity: string; reference: string; expiresAt: string };
-};
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "");
+
+function StripePaymentForm({
+  total,
+  orderId,
+  onSuccess,
+  onError,
+  onBack,
+}: {
+  total: number;
+  orderId: string;
+  onSuccess: () => void;
+  onError: (msg: string) => void;
+  onBack: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+
+  const handlePay = async () => {
+    if (!stripe || !elements) return;
+    setLoading(true);
+    onError("");
+
+    const { error: submitErr } = await elements.submit();
+    if (submitErr) {
+      onError(submitErr.message ?? "Erro no formulário de pagamento.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/checkout?return=1&orderId=${orderId}`,
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      onError(error.message ?? "Pagamento recusado. Verifica os dados e tenta novamente.");
+      setLoading(false);
+      return;
+    }
+
+    onSuccess();
+  };
+
+  return (
+    <div className="mt-4">
+      <PaymentElement
+        options={{
+          layout: "tabs",
+          terms: { card: "never" },
+        }}
+      />
+      <div className="flex gap-3 mt-5 mb-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
+        >
+          VOLTAR
+        </button>
+        <button
+          type="button"
+          onClick={handlePay}
+          disabled={loading || !stripe || !elements}
+          className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+        >
+          {loading
+            ? <><Loader2 className="w-5 h-5 animate-spin" /> A processar…</>
+            : <>Pagar €{total.toFixed(2).replace(".", ",")} →</>
+          }
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Checkout() {
   const [, setLocation] = useLocation();
@@ -26,11 +100,14 @@ export default function Checkout() {
   const utmParams = readUtms();
 
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
+  const [error, setError] = useState<string>("");
   const [selectedBumps, setSelectedBumps] = useState<Set<string>>(new Set());
   const [quantity, setQuantity] = useState(1);
+
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [creatingIntent, setCreatingIntent] = useState(false);
+  const [pollConfirmed, setPollConfirmed] = useState(false);
 
   const orderBumps = [
     { id: "bump50", label: "+50 saquetas · ~250 cromos", desc: "Desconto de pré-venda com portes grátis em Portugal.", price: 30, oldPrice: 40, img: "/assets/kit-iniciante.png", badge: null },
@@ -60,27 +137,30 @@ export default function Checkout() {
     andar: "",
     localidade: "",
     distrito: "",
-    paymentMethod: "mbway" as "mbway" | "multibanco",
-    mbwayPhone: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleNext = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const returnOrderId = params.get("orderId");
+    const redirectStatus = params.get("redirect_status");
+    if (returnOrderId && redirectStatus === "succeeded") {
+      setOrderId(returnOrderId);
+      setStep(4);
+    }
+  }, []);
+
+  const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError("");
 
     if (step < 3) {
       const nextStep = step + 1;
       setStep(nextStep);
       if (nextStep === 3) {
-        // Pré-preencher mbwayPhone com o telemóvel do passo anterior (editável)
-        if (!formData.mbwayPhone) {
-          setFormData(prev => ({ ...prev, mbwayPhone: prev.telemovel }));
-        }
-        // InitiateCheckout — disparado uma vez quando o utilizador chega ao pagamento
         (window as any).fbq?.("track", "InitiateCheckout", {
           value: orderTotal,
           currency: "EUR",
@@ -89,220 +169,164 @@ export default function Checkout() {
           num_items: quantity + selectedBumps.size,
         });
       }
-      return;
-    }
-
-    // Step 3 — submit payment
-    setLoading(true);
-    try {
-      const phone = formData.paymentMethod === "mbway"
-        ? (formData.mbwayPhone || formData.telemovel)
-        : formData.telemovel;
-
-      const res = await fetch("/api/payment/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: orderTotal,
-          method: formData.paymentMethod,
-          paymentDescription: `${quantity}x ${kit.name} — Panini FIFA WC26`.slice(0, 50),
-          payer: {
-            email: formData.email,
-            name: formData.nome,
-            document: formData.nif,
-            phone,
-          },
-          kitId: kit.id,
-          kitName: kit.name,
-          quantity,
-          bumps: orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({
-            id: b.id,
-            name: b.label,
-            price: b.price,
-          })),
-          utmParams,
-        }),
-      });
-
-      const data = await res.json() as PaymentResult & { error?: string; details?: unknown };
-
-      if (!res.ok) {
-        const detail = data.details ? ` (${JSON.stringify(data.details)})` : "";
-        setError((data.error ?? "Erro ao processar o pagamento. Tenta novamente.") + detail);
-        setLoading(false);
-        return;
-      }
-
-      setPaymentResult(data);
-      // Save customer data for upsell page
-      try {
-        const addr = [
-          formData.morada,
-          formData.numero && `nº ${formData.numero}`,
-          formData.andar || null,
-          [formData.codigoPostal, formData.localidade].filter(Boolean).join(" "),
-        ].filter(Boolean).join(", ");
-        sessionStorage.setItem("upsell_customer", JSON.stringify({
-          name: formData.nome,
-          email: formData.email,
-          phone: formData.telemovel,
-          mbwayPhone: formData.mbwayPhone || formData.telemovel,
-          address: addr,
-        }));
-      } catch {}
-      // Purchase — usa transactionID como eventID para evitar duplicados
-      (window as any).fbq?.("track", "Purchase", {
-        value: orderTotal,
-        currency: "EUR",
-        content_ids: [kit.id, ...Array.from(selectedBumps)],
-        content_type: "product",
-        num_items: quantity + selectedBumps.size,
-      }, { eventID: data.transactionID });
-      setStep(4);
-    } catch {
-      setError("Não foi possível ligar ao servidor de pagamentos. Verifica a tua ligação e tenta novamente.");
-    } finally {
-      setLoading(false);
     }
   };
 
-  // ── Polling: check payment status after step 4 (MB WAY only) ────────────────
+  const handleCreateIntent = async () => {
+    setCreatingIntent(true);
+    setError("");
+
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), 15000)
+    );
+
+    try {
+      const addr = [
+        formData.morada,
+        formData.numero && `nº ${formData.numero}`,
+        formData.andar || null,
+        [formData.codigoPostal, formData.localidade].filter(Boolean).join(" "),
+      ].filter(Boolean).join(", ");
+
+      const items = [
+        { id: kit.id, name: kit.name, quantity, price: kit.price },
+        ...orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({
+          id: b.id, name: b.label, quantity: 1, price: b.price,
+        })),
+      ];
+
+      const res = await Promise.race([
+        fetch("/api/payment/create-intent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: orderTotal,
+            customerEmail: formData.email,
+            customerName: formData.nome,
+            customerPhone: formData.telemovel,
+            customerDocument: formData.nif,
+            shippingAddress: addr,
+            shippingPostalCode: formData.codigoPostal,
+            shippingCity: formData.localidade,
+            shippingDistrict: formData.distrito,
+            kitId: kit.id,
+            productName: `${quantity}x ${kit.name}`,
+            quantity,
+            items,
+            orderType: "main",
+            utmParams,
+          }),
+        }),
+        timeout,
+      ]);
+
+      const data = await res.json() as { clientSecret?: string; orderId?: string; error?: string };
+
+      if (!res.ok) {
+        setError(data.error ?? "Erro ao iniciar pagamento. Tenta novamente.");
+        setCreatingIntent(false);
+        return;
+      }
+
+      sessionStorage.setItem("pendingOrderId", data.orderId ?? "");
+      sessionStorage.setItem("upsell_customer", JSON.stringify({
+        name: formData.nome,
+        email: formData.email,
+        phone: formData.telemovel,
+        mbwayPhone: formData.telemovel,
+        address: addr,
+      }));
+
+      setClientSecret(data.clientSecret ?? null);
+      setOrderId(data.orderId ?? null);
+    } catch {
+      setError("Não foi possível ligar ao servidor de pagamentos. Verifica a tua ligação e tenta novamente.");
+    } finally {
+      setCreatingIntent(false);
+    }
+  };
+
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [pollConfirmed, setPollConfirmed] = useState(false);
 
   useEffect(() => {
-    if (step !== 4 || !paymentResult || paymentResult.method !== "mbway") return;
+    if (step !== 4 || !orderId) return;
 
-    const transactionId = paymentResult.transactionID;
     let attempts = 0;
-    const MAX_ATTEMPTS = 48; // 4 min × 60s / 5s
+    const MAX_ATTEMPTS = 60;
 
     pollingRef.current = setInterval(async () => {
       attempts++;
       try {
-        const r = await fetch(`/api/public/payment-status?transactionId=${encodeURIComponent(transactionId)}`);
+        const r = await fetch(`/api/public/payment-status?orderId=${encodeURIComponent(orderId)}`);
         if (r.ok) {
           const data = await r.json() as { status: string };
-          if (data.status === "paid") {
+          if (data.status === "PAID") {
             clearInterval(pollingRef.current!);
             setPollConfirmed(true);
             setTimeout(() => setLocation("/upsell"), 1500);
           }
         }
-      } catch { /* ignore network errors, keep polling */ }
+      } catch { }
 
       if (attempts >= MAX_ATTEMPTS) clearInterval(pollingRef.current!);
     }, 5000);
 
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
-  }, [step, paymentResult]);
+  }, [step, orderId]);
 
-  // ── Success screen ──────────────────────────────────────────────────────────
-  if (step === 4 && paymentResult) {
-    const isMBWay = paymentResult.method === "mbway";
-    const isMultibanco = paymentResult.method === "multibanco";
-
+  if (step === 4) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center">
         <Header />
         <main className="w-full max-w-md mx-auto p-4 py-12 flex-1 flex flex-col items-center text-center">
-
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className={`w-20 h-20 rounded-full flex items-center justify-center mb-5 ${pollConfirmed ? "bg-green-100" : isMBWay ? "bg-green-100" : "bg-blue-50"}`}
+            className={`w-20 h-20 rounded-full flex items-center justify-center mb-5 ${pollConfirmed ? "bg-green-100" : "bg-green-50"}`}
           >
             {pollConfirmed
               ? <CheckCircle className="w-10 h-10 text-green-600" />
-              : isMBWay
-                ? <Smartphone className="w-10 h-10 text-green-600" />
-                : <Building2 className="w-10 h-10 text-blue-600" />
+              : <Loader2 className="w-10 h-10 text-green-500 animate-spin" />
             }
           </motion.div>
 
-          {pollConfirmed && (
-            <div className="text-center mb-6">
+          {pollConfirmed ? (
+            <>
               <h1 className="text-2xl font-black text-green-700 mb-2">Pagamento confirmado!</h1>
-              <p className="text-gray-500 text-sm">A redirecionar para a tua oferta especial…</p>
-              <Loader2 className="w-6 h-6 text-green-500 animate-spin mx-auto mt-3" />
-            </div>
-          )}
-
-          {!pollConfirmed && isMBWay && (
+              <p className="text-gray-500 text-sm mb-6">A redirecionar para a tua oferta especial…</p>
+              <Loader2 className="w-6 h-6 text-green-500 animate-spin mx-auto" />
+            </>
+          ) : (
             <>
-              <h1 className="text-2xl font-black text-gray-900 mb-2">Pedido de pagamento enviado!</h1>
+              <h1 className="text-2xl font-black text-gray-900 mb-2">A confirmar o pagamento…</h1>
               <p className="text-gray-500 text-sm mb-6 max-w-xs">
-                Abre a app <strong>MB WAY</strong> no teu telemóvel e aceita o pedido de pagamento de <strong>€{orderTotal.toFixed(2).replace(".", ",")}</strong>.
+                O teu pagamento está a ser processado. Aguarda um momento.
               </p>
-              <div className="w-full bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
-                <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Atenção</p>
-                <p className="text-sm text-amber-800">O pedido expira em <strong>4 minutos</strong>. Se não receberes a notificação, abre a app MB WAY manualmente.</p>
+              <div className="w-full bg-white border border-gray-100 rounded-xl p-4 mb-6 text-left shadow-sm">
+                <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumo da Encomenda</h3>
+                <div className="flex justify-between mb-1.5 text-sm">
+                  <span className="text-gray-500">Produto</span>
+                  <span className="font-medium text-gray-900">{kit.name}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Total</span>
+                  <span className="font-medium text-gray-900">€{orderTotal.toFixed(2).replace(".", ",")}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400 mb-6">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                A aguardar confirmação do pagamento…
-              </div>
+              <p className="text-xs text-gray-400">Confirmaremos a encomenda por email assim que o pagamento for processado.</p>
             </>
           )}
-
-          {!pollConfirmed && isMultibanco && paymentResult.referenceData && (
-            <>
-              <h1 className="text-2xl font-black text-gray-900 mb-2">Referência Multibanco gerada!</h1>
-              <p className="text-gray-500 text-sm mb-6 max-w-xs">
-                Usa os dados abaixo para pagar em qualquer ATM ou homebanking até <strong>{paymentResult.referenceData.expiresAt}</strong>.
-              </p>
-              <div className="w-full bg-white border border-gray-200 rounded-xl p-5 mb-6 text-left space-y-3 shadow-sm">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Entidade</span>
-                  <span className="font-black text-gray-900 text-lg tracking-widest">{paymentResult.referenceData.entity}</span>
-                </div>
-                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Referência</span>
-                  <span className="font-black text-gray-900 text-lg tracking-widest">{paymentResult.referenceData.reference}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Valor</span>
-                  <span className="font-black text-primary text-xl">€{orderTotal.toFixed(2).replace(".", ",")}</span>
-                </div>
-              </div>
-            </>
-          )}
-
-          {!pollConfirmed && (
-            <div className="w-full bg-white border border-gray-100 rounded-xl p-4 mb-6 text-left shadow-sm">
-              <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumo da Encomenda</h3>
-              <div className="flex justify-between mb-1.5 text-sm">
-                <span className="text-gray-500">Produto</span>
-                <span className="font-medium text-gray-900">{kit.name}</span>
-              </div>
-              <div className="flex justify-between mb-1.5 text-sm">
-                <span className="text-gray-500">Total</span>
-                <span className="font-medium text-gray-900">€{orderTotal.toFixed(2).replace(".", ",")}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Referência</span>
-                <span className="font-medium text-gray-400 text-xs">{paymentResult.transactionID}</span>
-              </div>
-            </div>
-          )}
-
-          {!pollConfirmed && (
-            <p className="text-xs text-gray-400 mb-4">Confirmaremos a encomenda por email assim que o pagamento for processado.</p>
-          )}
-
         </main>
       </div>
     );
   }
 
-  // ── Checkout form ───────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center pb-12">
       <Header />
 
       <main className="w-full max-w-5xl mx-auto px-4 pt-6 pb-4">
 
-        {/* Stepper */}
         <div className="flex items-center justify-between px-2 mb-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center">
@@ -319,7 +343,6 @@ export default function Checkout() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* Order Summary — first on mobile */}
           <div className="lg:col-span-5 lg:col-start-8 lg:row-start-1">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden sticky top-6">
               <div className="relative overflow-hidden bg-gray-50 border-b border-gray-100">
@@ -341,7 +364,6 @@ export default function Checkout() {
                   ★★★★★ <span className="text-gray-400">4,9 · +2.200 avaliações</span>
                 </div>
 
-                {/* Quantity selector */}
                 <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 mb-3 border border-gray-200">
                   <span className="text-xs font-semibold text-gray-700">Quantidade</span>
                   <div className="flex items-center gap-2">
@@ -389,12 +411,10 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Form */}
           <div className="lg:col-span-7 lg:col-start-1 lg:row-start-1 flex flex-col gap-6">
 
             <form onSubmit={handleNext} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
 
-              {/* Step 1 — Dados */}
               {step === 1 && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6">
                   <h2 className="text-xl font-bold text-gray-900 mb-6">1. Os teus dados</h2>
@@ -434,7 +454,6 @@ export default function Checkout() {
                 </motion.div>
               )}
 
-              {/* Step 2 — Entrega */}
               {step === 2 && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6">
                   <div className="flex items-center justify-between mb-1">
@@ -465,7 +484,7 @@ export default function Checkout() {
                         <label className="block text-sm font-semibold text-gray-800 mb-1.5">Número <span className="text-red-500">*</span></label>
                         <input required type="text" name="numero" value={formData.numero} onChange={handleChange}
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white"
-                          placeholder="123" />
+                          placeholder="42" />
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-800 mb-1.5">Andar / Fração</label>
@@ -501,11 +520,9 @@ export default function Checkout() {
                 </motion.div>
               )}
 
-              {/* Step 3 — Order Bumps + Pagamento */}
               {step === 3 && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
 
-                  {/* ── Order Bumps ── */}
                   <div className="bg-green-50 border-b border-green-100 px-5 py-3">
                     <p className="text-sm font-black text-primary text-center">Aproveita e leva mais saquetas com preço promocional</p>
                   </div>
@@ -547,10 +564,9 @@ export default function Checkout() {
                     })}
                   </div>
 
-                  {/* ── Pagamento ── */}
                   <div className="px-5 pt-5 pb-3 border-t border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900 mb-0.5">Pagamento</h2>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Forma de Pagamento</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Pagamento seguro via Stripe</p>
 
                     {error && (
                       <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
@@ -559,86 +575,80 @@ export default function Checkout() {
                       </div>
                     )}
 
-                    {/* MB WAY */}
-                    <label className={`flex items-start gap-3 border-2 rounded-xl p-4 cursor-pointer mb-3 transition-all ${formData.paymentMethod === "mbway" ? "border-primary bg-green-50" : "border-gray-200 bg-white hover:border-gray-300"}`}>
-                      <input type="radio" name="paymentMethod" value="mbway"
-                        checked={formData.paymentMethod === "mbway"} onChange={handleChange}
-                        className="w-5 h-5 mt-0.5 text-primary focus:ring-primary flex-shrink-0" />
-                      <div>
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-bold text-gray-900">MB WAY</span>
-                          <span className="text-sm font-bold text-red-600">MB WAY</span>
+                    {!clientSecret ? (
+                      <>
+                        <div className="border-t border-gray-100 pt-4 space-y-2 mb-5">
+                          <div className="flex justify-between text-sm text-gray-500">
+                            <span>Portes</span>
+                            <span className="text-primary font-semibold">Grátis</span>
+                          </div>
+                          <div className="flex justify-between text-sm text-gray-600">
+                            <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
+                            <span>{(kit.price * quantity).toFixed(2).replace(".", ",")} €</span>
+                          </div>
+                          {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
+                            <div key={b.id} className="flex justify-between text-sm text-gray-600">
+                              <span className="text-xs">{b.label}</span>
+                              <span>{b.price.toFixed(2).replace(".", ",")} €</span>
+                            </div>
+                          ))}
+                          <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                            <span className="font-black text-gray-900 text-base">Total</span>
+                            <span className="font-black text-primary text-xl">{orderTotal.toFixed(2).replace(".", ",")} €</span>
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-500">Aprovação imediata — pagas em segundos na app.</p>
-                      </div>
-                    </label>
 
-                    {formData.paymentMethod === "mbway" && (
-                      <div className="mb-3">
-                        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Telemóvel para MB WAY <span className="text-red-500">*</span></label>
-                        <input
-                          required
-                          type="tel" name="mbwayPhone"
-                          value={formData.mbwayPhone}
-                          onChange={handleChange}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                          placeholder="9XX XXX XXX" />
-                      </div>
+                        <div className="flex gap-3 mb-4">
+                          <button
+                            type="button"
+                            onClick={() => setStep(2)}
+                            className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
+                          >
+                            VOLTAR
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCreateIntent}
+                            disabled={creatingIntent}
+                            className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                          >
+                            {creatingIntent
+                              ? <><Loader2 className="w-5 h-5 animate-spin" /> A preparar…</>
+                              : <>Continuar para o pagamento <ChevronRight className="w-5 h-5" /></>
+                            }
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <Elements
+                        key={clientSecret}
+                        stripe={stripePromise}
+                        options={{ clientSecret, locale: "pt" }}
+                      >
+                        <StripePaymentForm
+                          total={orderTotal}
+                          orderId={orderId!}
+                          onSuccess={() => {
+                            (window as any).fbq?.("track", "Purchase", {
+                              value: orderTotal,
+                              currency: "EUR",
+                              content_ids: [kit.id, ...Array.from(selectedBumps)],
+                              content_type: "product",
+                            }, { eventID: `purchase_${orderId}` });
+                            setStep(4);
+                          }}
+                          onError={(msg) => setError(msg)}
+                          onBack={() => { setClientSecret(null); setOrderId(null); }}
+                        />
+                      </Elements>
                     )}
 
-                    {/* Multibanco */}
-                    <label className={`flex items-start gap-3 border-2 rounded-xl p-4 cursor-pointer mb-5 transition-all ${formData.paymentMethod === "multibanco" ? "border-primary bg-green-50" : "border-gray-200 bg-white hover:border-gray-300"}`}>
-                      <input type="radio" name="paymentMethod" value="multibanco"
-                        checked={formData.paymentMethod === "multibanco"} onChange={handleChange}
-                        className="w-5 h-5 mt-0.5 text-primary focus:ring-primary flex-shrink-0" />
-                      <div>
-                        <p className="font-bold text-gray-900 mb-0.5">Multibanco</p>
-                        <p className="text-xs text-gray-500">Recebes entidade e referência para pagar em ATM ou homebanking.</p>
-                      </div>
-                    </label>
-
-                    {/* Order summary */}
-                    <div className="border-t border-gray-100 pt-4 space-y-2 mb-5">
-                      <div className="flex justify-between text-sm text-gray-500">
-                        <span>Portes</span>
-                        <span className="text-primary font-semibold">Grátis</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
-                        <span>{(kit.price * quantity).toFixed(2).replace(".", ",")} €</span>
-                      </div>
-                      {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
-                        <div key={b.id} className="flex justify-between text-sm text-gray-600">
-                          <span className="text-xs">{b.label}</span>
-                          <span>{b.price.toFixed(2).replace(".", ",")} €</span>
-                        </div>
-                      ))}
-                      <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                        <span className="font-black text-gray-900 text-base">Total</span>
-                        <span className="font-black text-primary text-xl">{orderTotal.toFixed(2).replace(".", ",")} €</span>
-                      </div>
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex gap-3 mb-4">
-                      <button type="button" onClick={() => setStep(2)}
-                        className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all">
-                        VOLTAR
-                      </button>
-                      <button type="submit" disabled={loading}
-                        className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
-                        {loading
-                          ? <><Loader2 className="w-5 h-5 animate-spin" /> A processar…</>
-                          : <>Finalizar pedido &rarr;</>
-                        }
-                      </button>
-                    </div>
-
-                    {/* Footer trust */}
                     <p className="text-center text-[11px] text-gray-400 mb-3">Compra segura SSL · Garantia de 7 dias · Portes grátis Portugal</p>
                     <div className="flex items-center justify-center gap-3 mb-3">
-                      <span className="text-xs font-black text-red-600 border border-red-200 rounded px-2 py-0.5">MB WAY</span>
-                      <span className="text-xs font-black text-blue-700 border border-blue-200 rounded px-2 py-0.5">MULTIBANCO</span>
+                      <CreditCard className="w-4 h-4 text-gray-400" />
+                      <span className="text-xs font-black text-gray-500 border border-gray-300 rounded px-2 py-0.5">VISA</span>
+                      <span className="text-xs font-black text-gray-500 border border-gray-300 rounded px-2 py-0.5">MASTERCARD</span>
+                      <span className="text-xs font-black text-gray-500 border border-gray-300 rounded px-2 py-0.5">STRIPE</span>
                     </div>
                     <p className="text-center text-[10px] text-gray-400">Panini Portugal Lda · Rua Exemplo, 123, Lisboa<br />NIPC: 500 000 000</p>
                   </div>
@@ -646,7 +656,6 @@ export default function Checkout() {
               )}
             </form>
 
-            {/* Trust badges — only steps 1 & 2 */}
             {step < 3 && (
               <div className="flex justify-center gap-6">
                 <div className="flex flex-col items-center gap-1 text-gray-500">

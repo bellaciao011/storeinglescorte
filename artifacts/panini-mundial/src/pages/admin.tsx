@@ -122,10 +122,9 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    if (authed) {
-      const interval = setInterval(() => fetchOrders(savedPw), 30000);
-      return () => clearInterval(interval);
-    }
+    if (!authed) return;
+    const interval = setInterval(() => fetchOrders(savedPw), 30000);
+    return () => clearInterval(interval);
   }, [authed, savedPw, fetchOrders]);
 
   const totalPaid = orders.filter(o => o.payment_status === "paid").length;

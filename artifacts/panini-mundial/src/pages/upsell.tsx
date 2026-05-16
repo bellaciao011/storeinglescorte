@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Zap, Package, Lock, ChevronRight, Smartphone, Building2, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, Lock, ChevronRight, Loader2, AlertCircle } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "");
 
 type CustomerData = {
   name: string;
@@ -28,73 +32,143 @@ const SHIPPING_OPTIONS = [
   },
 ];
 
+function StripePaymentForm({
+  total,
+  orderId,
+  onSuccess,
+  onError,
+  onBack,
+}: {
+  total: number;
+  orderId: string;
+  onSuccess: () => void;
+  onError: (msg: string) => void;
+  onBack: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+
+  const handlePay = async () => {
+    if (!stripe || !elements) return;
+    setLoading(true);
+    onError("");
+
+    const { error: submitErr } = await elements.submit();
+    if (submitErr) {
+      onError(submitErr.message ?? "Erro no formulário.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/upsell?return=1&orderId=${orderId}`,
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      onError(error.message ?? "Pagamento recusado. Tenta novamente.");
+      setLoading(false);
+      return;
+    }
+
+    onSuccess();
+  };
+
+  return (
+    <div className="mt-4">
+      <PaymentElement options={{ layout: "tabs", terms: { card: "never" } }} />
+      <div className="flex gap-3 mt-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex-shrink-0 px-4 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
+        >
+          VOLTAR
+        </button>
+        <button
+          type="button"
+          onClick={handlePay}
+          disabled={loading || !stripe || !elements}
+          className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-3 rounded-xl flex items-center justify-center gap-2"
+        >
+          {loading
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> A processar…</>
+            : <>Confirmar envio — €{total.toFixed(2).replace(".", ",")} <ChevronRight className="w-4 h-4" /></>
+          }
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Upsell() {
   const [, setLocation] = useLocation();
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  const [phone, setPhone] = useState("");
-  const [method, setMethod] = useState<"mbway" | "multibanco">("mbway");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [creatingIntent, setCreatingIntent] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("upsell_customer");
-      if (raw) {
-        const data = JSON.parse(raw) as CustomerData;
-        setCustomer(data);
-        setPhone(data.mbwayPhone || data.phone || "");
-      }
-    } catch {}
+      if (raw) setCustomer(JSON.parse(raw) as CustomerData);
+    } catch { }
+
+    const params = new URLSearchParams(window.location.search);
+    const returnOrderId = params.get("orderId");
+    const redirectStatus = params.get("redirect_status");
+    if (returnOrderId && redirectStatus === "succeeded") {
+      setDone(true);
+      setTimeout(() => setLocation("/upsell2"), 1800);
+    }
   }, []);
 
   const selectedOption = SHIPPING_OPTIONS.find(o => o.id === selected);
 
-  const handlePay = async () => {
-    if (!selectedOption) return;
-    setLoading(true);
-    setError(null);
+  const handleCreateIntent = async () => {
+    if (!selectedOption || !customer) return;
+    setCreatingIntent(true);
+    setError("");
+
     try {
-      const res = await fetch("/api/payment/upsell", {
+      const res = await fetch("/api/payment/create-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: selectedOption.price,
-          method,
-          shippingOption: selectedOption.label,
-          phone,
-          payer: {
-            name: customer?.name ?? "Cliente",
-            email: customer?.email ?? "",
-            document: "",
-            phone,
-          },
+          customerEmail: customer.email,
+          customerName: customer.name,
+          customerPhone: customer.phone,
+          productName: `Frete ${selectedOption.label}`,
+          orderType: "upsell",
         }),
       });
-      const data = await res.json();
+
+      const data = await res.json() as { clientSecret?: string; orderId?: string; error?: string };
+
       if (!res.ok) {
-        setError(data.error ?? "Erro ao processar. Tenta novamente.");
+        setError(data.error ?? "Erro ao iniciar pagamento. Tenta novamente.");
+        setCreatingIntent(false);
         return;
       }
-      setResult({ ...data, method, amount: selectedOption.price });
+
+      setClientSecret(data.clientSecret ?? null);
+      setOrderId(data.orderId ?? null);
     } catch {
       setError("Erro de ligação. Tenta novamente.");
     } finally {
-      setLoading(false);
+      setCreatingIntent(false);
     }
   };
 
-  // After payment → go to upsell2
-  useEffect(() => {
-    if (result) {
-      const timer = setTimeout(() => setLocation("/upsell2"), 1800);
-      return () => clearTimeout(timer);
-    }
-  }, [result, setLocation]);
-
-  // Brief success state before redirect
-  if (result) {
+  if (done) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
         <motion.div
@@ -103,7 +177,7 @@ export default function Upsell() {
           className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 w-full max-w-sm text-center"
         >
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <Smartphone className="w-8 h-8 text-green-600" />
+            <span className="text-3xl">✅</span>
           </div>
           <h2 className="text-xl font-black text-gray-900 mb-2">Envio confirmado!</h2>
           <p className="text-gray-400 text-xs animate-pulse mt-3">A redirecionar…</p>
@@ -114,7 +188,6 @@ export default function Upsell() {
 
   return (
     <div className="min-h-screen bg-[#fdf6f0] pb-12">
-      {/* Header */}
       <div className="w-full bg-[#6b0f1a] text-white py-3 px-4 flex items-center justify-center mb-6">
         <div className="bg-white rounded-md px-2 py-1">
           <img src="/assets/logo-panini-oficial.png" alt="Panini" className="h-7 w-auto object-contain" />
@@ -123,7 +196,6 @@ export default function Upsell() {
 
       <div className="max-w-md mx-auto px-4">
 
-        {/* Error notice */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -157,7 +229,6 @@ export default function Upsell() {
           </div>
         </motion.div>
 
-        {/* Sticker pack image */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -175,7 +246,6 @@ export default function Upsell() {
           <p className="text-xs text-gray-400">Enviados gratuitamente com a tua encomenda</p>
         </motion.div>
 
-        {/* Shipping options */}
         <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-3">
           Opções de envio disponíveis
         </p>
@@ -187,7 +257,12 @@ export default function Upsell() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + i * 0.08 }}
-              onClick={() => setSelected(opt.id)}
+              onClick={() => {
+                setSelected(opt.id);
+                setClientSecret(null);
+                setOrderId(null);
+                setError("");
+              }}
               className={`w-full bg-white rounded-2xl border-2 p-4 flex items-center gap-4 text-left transition-all ${
                 selected === opt.id
                   ? "border-[#6b0f1a] shadow-sm"
@@ -207,7 +282,6 @@ export default function Upsell() {
           ))}
         </div>
 
-        {/* Payment form — shown when option selected */}
         <AnimatePresence>
           {selected && (
             <motion.div
@@ -219,59 +293,47 @@ export default function Upsell() {
               <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
                 <p className="text-sm font-bold text-gray-700 mb-4">Método de pagamento</p>
 
-                {/* Method selector */}
-                <div className="flex gap-2 mb-4">
-                  <button
-                    onClick={() => setMethod("mbway")}
-                    className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-all ${method === "mbway" ? "bg-[#6b0f1a] text-white border-[#6b0f1a]" : "bg-white text-gray-600 border-gray-300"}`}
-                  >
-                    📱 MB WAY
-                  </button>
-                  <button
-                    onClick={() => setMethod("multibanco")}
-                    className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition-all ${method === "multibanco" ? "bg-[#6b0f1a] text-white border-[#6b0f1a]" : "bg-white text-gray-600 border-gray-300"}`}
-                  >
-                    🏧 Multibanco
-                  </button>
-                </div>
-
-                {method === "mbway" && (
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Telemóvel MB WAY</label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      placeholder="9XXXXXXXX"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6b0f1a]/30 focus:border-[#6b0f1a]"
-                    />
+                {error && (
+                  <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
+                    <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-red-700">{error}</p>
                   </div>
                 )}
 
-                {error && (
-                  <p className="text-red-600 text-xs mt-3 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+                {!clientSecret ? (
+                  <button
+                    onClick={handleCreateIntent}
+                    disabled={creatingIntent}
+                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-xl flex items-center justify-center gap-2"
+                  >
+                    {creatingIntent
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> A preparar…</>
+                      : <>Continuar para o pagamento <ChevronRight className="w-4 h-4" /></>
+                    }
+                  </button>
+                ) : (
+                  <Elements
+                    key={clientSecret}
+                    stripe={stripePromise}
+                    options={{ clientSecret, locale: "pt" }}
+                  >
+                    <StripePaymentForm
+                      total={selectedOption!.price}
+                      orderId={orderId!}
+                      onSuccess={() => {
+                        setDone(true);
+                        setTimeout(() => setLocation("/upsell2"), 1800);
+                      }}
+                      onError={(msg) => setError(msg)}
+                      onBack={() => { setClientSecret(null); setOrderId(null); }}
+                    />
+                  </Elements>
                 )}
-
-                <button
-                  onClick={handlePay}
-                  disabled={loading || (method === "mbway" && !phone.trim())}
-                  className="w-full mt-4 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-xl flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <span className="animate-pulse">A processar...</span>
-                  ) : (
-                    <>
-                      Confirmar envio — €{selectedOption?.price.toFixed(2).replace(".", ",")}
-                      <ChevronRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Skip */}
         <div className="text-center mt-2">
           <button
             onClick={() => setLocation("/")}
@@ -281,10 +343,9 @@ export default function Upsell() {
           </button>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-1.5">
           <Lock className="w-3.5 h-3.5" />
-          Pagamento 100% seguro via WayMB
+          Pagamento 100% seguro via Stripe
         </p>
       </div>
     </div>
