@@ -106,18 +106,18 @@ export async function markEmailSent(id: string): Promise<void> {
 }
 
 export async function getOrderByTrackingCode(code: string): Promise<Order | null> {
-  const res = await query<Order>(
+  const res = await query(
     `SELECT * FROM panini_orders WHERE tracking_code = $1`,
     [code.toUpperCase()]
   );
-  return res.rows[0] ?? null;
+  return (res.rows[0] as unknown as Order) ?? null;
 }
 
 export async function getAllOrders(): Promise<Order[]> {
-  const res = await query<Order>(
+  const res = await query(
     `SELECT * FROM panini_orders ORDER BY created_at DESC`
   );
-  return res.rows;
+  return res.rows as unknown as Order[];
 }
 
 export async function updateOrderStatus(id: string, status: string): Promise<void> {
@@ -128,9 +128,9 @@ export async function updateOrderStatus(id: string, status: string): Promise<voi
 }
 
 export async function getOrderById(id: string): Promise<Order | null> {
-  const res = await query<Order>(
+  const res = await query(
     `SELECT * FROM panini_orders WHERE id = $1`,
     [id]
   );
-  return res.rows[0] ?? null;
+  return (res.rows[0] as unknown as Order) ?? null;
 }

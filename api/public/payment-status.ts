@@ -11,16 +11,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
 
   const url = new URL(req.url ?? "", `http://localhost`);
-  const transactionId = url.searchParams.get("transactionId") ?? "";
+  const orderId = url.searchParams.get("orderId") ?? "";
 
-  if (!transactionId) {
+  if (!orderId) {
     res.writeHead(400, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Missing transactionId" }));
+    res.end(JSON.stringify({ error: "Missing orderId" }));
     return;
   }
 
   try {
-    const order = await getOrderById(transactionId);
+    const order = await getOrderById(orderId);
     if (!order) {
       res.writeHead(404, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ status: "not_found" }));

@@ -3,7 +3,6 @@
   "buildCommand": "pnpm --filter @workspace/panini-mundial run build",
   "outputDirectory": "artifacts/panini-mundial/dist/public",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

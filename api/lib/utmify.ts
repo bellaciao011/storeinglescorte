@@ -1,14 +1,21 @@
 const UTMIFY_ENDPOINT = "https://api.utmify.com.br/api-credentials/orders";
 
-// EUR→BRL fixed rate (UTMify works in BRL cents)
-// 30 EUR → Math.round(30 * 6 * 100) = 18000 cents = R$180
-const EUR_TO_BRL = 6;
+// MXN → BRL approximate rate (UTMify works in BRL cents)
+// 1 MXN ≈ 0.30 BRL
+// Ex: $1,199 MXN → Math.round(1199 * 0.30 * 100) = 35,970 cents = R$359.70
+const MXN_TO_BRL = 0.30;
 
-export function toCents(amountEur: number): number {
-  return Math.round(amountEur * EUR_TO_BRL * 100);
+export function toCents(amountMxn: number): number {
+  return Math.round(amountMxn * MXN_TO_BRL * 100);
 }
 
-export type UtmifyPaymentMethod = "pix" | "bank_transfer" | "billet" | "credit_card" | "paypal" | "free_price";
+export type UtmifyPaymentMethod =
+  | "pix"
+  | "bank_transfer"
+  | "billet"
+  | "credit_card"
+  | "paypal"
+  | "free_price";
 
 export interface UtmifyOrder {
   orderId: string;
@@ -62,7 +69,7 @@ export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
 
   const payload = {
     ...order,
-    currency: "EUR",
+    currency: "MXN",
     isTest: false,
   };
 
@@ -79,7 +86,9 @@ export async function sendToUtmify(order: UtmifyOrder): Promise<void> {
     if (!res.ok) {
       console.error(`[UTMify] API error ${res.status}:`, text);
     } else {
-      console.log(`[UTMify] OK — order ${order.orderId} status=${order.status} response=${text}`);
+      console.log(
+        `[UTMify] OK — order ${order.orderId} status=${order.status} response=${text}`
+      );
     }
   } catch (err) {
     console.error("[UTMify] fetch failed:", err);
@@ -90,13 +99,13 @@ export function toUtcString(date: Date): string {
   return date.toISOString().replace("T", " ").slice(0, 19);
 }
 
-// waiting_payment: mbway→pix, multibanco→bank_transfer
-// paid:            mbway→pix, multibanco→billet  (matches reference project)
 export function mapPaymentMethod(
   method: string,
-  status: "waiting_payment" | "paid" = "waiting_payment"
+  _status?: string
 ): UtmifyPaymentMethod {
-  if (method === "mbway") return "pix";
-  if (method === "multibanco") return status === "paid" ? "billet" : "bank_transfer";
-  return "pix";
+  if (method === "stripe" || method === "credit_card" || method === "card")
+    return "credit_card";
+  if (method === "pix") return "pix";
+  if (method === "bank_transfer") return "bank_transfer";
+  return "credit_card";
 }

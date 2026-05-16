@@ -181,11 +181,12 @@ export default function Checkout() {
       })),
     ];
 
+    const piId = clientSecret.split("_secret_")[0];
     const t = setTimeout(() => {
       fetch(apiUrl("/api/payment/update-intent"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, amount: orderTotal, items }),
+        body: JSON.stringify({ piId, amount: orderTotal, items }),
       }).catch(() => { /* silent — payment will use confirmed amount */ });
     }, 400);
 
@@ -236,7 +237,7 @@ export default function Checkout() {
       ];
 
       const res = await Promise.race([
-        fetch(apiUrl("/api/payment/create-intent"), {
+        fetch(apiUrl("/api/payment/create"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -293,7 +294,7 @@ export default function Checkout() {
         const r = await fetch(apiUrl(`/api/public/payment-status?orderId=${encodeURIComponent(orderId)}`));
         if (r.ok) {
           const data = await r.json() as { status: string };
-          if (data.status === "PAID") {
+          if (data.status === "paid") {
             clearInterval(pollingRef.current!);
             setPollConfirmed(true);
           }
