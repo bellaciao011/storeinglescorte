@@ -37,7 +37,7 @@ function StripePaymentForm({
 
     const { error: submitErr } = await elements.submit();
     if (submitErr) {
-      onError(submitErr.message ?? "Erro no formulário de pagamento.");
+      onError(submitErr.message ?? "Error en el formulario de pago.");
       setLoading(false);
       return;
     }
@@ -51,7 +51,7 @@ function StripePaymentForm({
     });
 
     if (error) {
-      onError(error.message ?? "Pagamento recusado. Verifica os dados e tenta novamente.");
+      onError(error.message ?? "Pago rechazado. Verifica tus datos e inténtalo de nuevo.");
       setLoading(false);
       return;
     }
@@ -73,7 +73,7 @@ function StripePaymentForm({
           onClick={onBack}
           className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
         >
-          VOLTAR
+          VOLVER
         </button>
         <button
           type="button"
@@ -82,8 +82,8 @@ function StripePaymentForm({
           className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
         >
           {loading
-            ? <><Loader2 className="w-5 h-5 animate-spin" /> A processar…</>
-            : <>Pagar €{total.toFixed(2).replace(".", ",")} →</>
+            ? <><Loader2 className="w-5 h-5 animate-spin" /> Procesando…</>
+            : <>Pagar ${total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} →</>
           }
         </button>
       </div>
@@ -110,10 +110,12 @@ export default function Checkout() {
   const [pollConfirmed, setPollConfirmed] = useState(false);
   const piAmountRef = useRef<number | null>(null);
 
+  const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+
   const orderBumps = [
-    { id: "bump50", label: "+50 saquetas · ~250 cromos", desc: "Desconto de pré-venda com portes grátis em Portugal.", price: 30, oldPrice: 40, img: "/assets/kit-iniciante.png", badge: null },
-    { id: "bump100", label: "+100 saquetas · ~500 cromos", desc: "O equilíbrio preferido dos colecionadores — pré-venda exclusiva.", price: 55, oldPrice: 125, img: "/assets/kit-campeao.png", badge: { text: "MAIS VENDIDO", cls: "bg-red-600 text-white" } },
-    { id: "bump250", label: "+250 saquetas · ~1250 cromos", desc: "Máximo desconto neste lote promocional.", price: 100, oldPrice: 625, img: "/assets/kit-colecionador.png", badge: { text: "ÚLTIMAS UNIDADES", cls: "bg-amber-400 text-gray-900" } },
+    { id: "bump50", label: "+50 sobres · ~350 cromos", desc: "Descuento de preventa con envío gratis en México.", price: 150, oldPrice: 299, img: "/assets/kit-iniciante.png", badge: null },
+    { id: "bump100", label: "+100 sobres · ~700 cromos", desc: "El equilibrio preferido de los coleccionistas — preventa exclusiva.", price: 270, oldPrice: 599, img: "/assets/kit-campeao.png", badge: { text: "MÁS VENDIDO", cls: "bg-red-600 text-white" } },
+    { id: "bump250", label: "+250 sobres · ~1,750 cromos", desc: "Máximo descuento en este lote promocional.", price: 500, oldPrice: 1299, img: "/assets/kit-colecionador.png", badge: { text: "ÚLTIMAS UNIDADES", cls: "bg-amber-400 text-gray-900" } },
   ];
 
   const bumpsTotal = orderBumps.filter(b => selectedBumps.has(b.id)).reduce((s, b) => s + b.price, 0);
@@ -200,7 +202,7 @@ export default function Checkout() {
       if (nextStep === 3) {
         (window as any).fbq?.("track", "InitiateCheckout", {
           value: orderTotal,
-          currency: "EUR",
+          currency: "MXN",
           content_ids: [kit.id],
           content_type: "product",
           num_items: quantity + selectedBumps.size,
@@ -260,7 +262,7 @@ export default function Checkout() {
       const data = await res.json() as { clientSecret?: string; orderId?: string; error?: string };
 
       if (!res.ok) {
-        setError(data.error ?? "Erro ao iniciar pagamento. Tenta novamente.");
+        setError(data.error ?? "Error al iniciar el pago. Inténtalo de nuevo.");
         setCreatingIntent(false);
         return;
       }
@@ -277,7 +279,7 @@ export default function Checkout() {
       setClientSecret(data.clientSecret ?? null);
       setOrderId(data.orderId ?? null);
     } catch {
-      setError("Não foi possível ligar ao servidor de pagamentos. Verifica a tua ligação e tenta novamente.");
+      setError("No fue posible conectar con el servidor de pagos. Verifica tu conexión e inténtalo de nuevo.");
     } finally {
       setCreatingIntent(false);
     }
@@ -329,28 +331,28 @@ export default function Checkout() {
 
           {pollConfirmed ? (
             <>
-              <h1 className="text-2xl font-black text-green-700 mb-2">Pagamento confirmado!</h1>
-              <p className="text-gray-500 text-sm mb-6">A redirecionar para a tua oferta especial…</p>
+              <h1 className="text-2xl font-black text-green-700 mb-2">¡Pago confirmado!</h1>
+              <p className="text-gray-500 text-sm mb-6">Redirigiendo a tu oferta especial…</p>
               <Loader2 className="w-6 h-6 text-green-500 animate-spin mx-auto" />
             </>
           ) : (
             <>
-              <h1 className="text-2xl font-black text-gray-900 mb-2">A confirmar o pagamento…</h1>
+              <h1 className="text-2xl font-black text-gray-900 mb-2">Confirmando el pago…</h1>
               <p className="text-gray-500 text-sm mb-6 max-w-xs">
-                O teu pagamento está a ser processado. Aguarda um momento.
+                Tu pago está siendo procesado. Espera un momento.
               </p>
               <div className="w-full bg-white border border-gray-100 rounded-xl p-4 mb-6 text-left shadow-sm">
-                <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumo da Encomenda</h3>
+                <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumen del Pedido</h3>
                 <div className="flex justify-between mb-1.5 text-sm">
-                  <span className="text-gray-500">Produto</span>
+                  <span className="text-gray-500">Producto</span>
                   <span className="font-medium text-gray-900">{kit.name}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Total</span>
-                  <span className="font-medium text-gray-900">€{orderTotal.toFixed(2).replace(".", ",")}</span>
+                  <span className="font-medium text-gray-900">{fmtMXN(orderTotal)}</span>
                 </div>
               </div>
-              <p className="text-xs text-gray-400">Confirmaremos a encomenda por email assim que o pagamento for processado.</p>
+              <p className="text-xs text-gray-400">Confirmaremos tu pedido por email cuando el pago sea procesado.</p>
             </>
           )}
         </main>
@@ -371,7 +373,7 @@ export default function Checkout() {
                 {step > i ? <CheckCircle2 className="w-5 h-5" /> : i}
               </div>
               <span className={`ml-2 text-xs md:text-sm font-semibold ${step >= i ? "text-gray-900" : "text-gray-400"}`}>
-                {i === 1 ? "Encomenda" : i === 2 ? "Entrega" : "Pagamento"}
+                {i === 1 ? "Pedido" : i === 2 ? "Envío" : "Pago"}
               </span>
               {i < 3 && <div className={`w-8 md:w-16 h-1 mx-2 rounded ${step > i ? "bg-primary" : "bg-gray-200"}`} />}
             </div>
@@ -388,21 +390,21 @@ export default function Checkout() {
                   className="absolute top-[28px] right-[-36px] w-[148px] text-center py-[5px] rotate-45 shadow-lg"
                   style={{ background: "linear-gradient(135deg, #f5a623 0%, #fbbf24 40%, #f5a623 100%)" }}
                 >
-                  <span className="text-[10px] font-black tracking-[0.18em] uppercase text-[#7c4a00]">Promoção</span>
+                  <span className="text-[10px] font-black tracking-[0.18em] uppercase text-[#7c4a00]">Promoción</span>
                 </div>
               </div>
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between mb-0.5">
                   <p className="font-bold text-gray-900 text-sm">{kit.name}</p>
-                  <span className="text-xs font-black text-primary">€{kit.price.toFixed(2).replace(".", ",")}</span>
+                  <span className="text-xs font-black text-primary">{fmtMXN(kit.price)}</span>
                 </div>
                 <p className="text-xs text-gray-400 mb-1">{kit.contents}</p>
                 <div className="flex items-center gap-1 text-yellow-500 text-xs mb-3">
-                  ★★★★★ <span className="text-gray-400">4,9 · +2.200 avaliações</span>
+                  ★★★★★ <span className="text-gray-400">4.9 · +2,200 calificaciones</span>
                 </div>
 
                 <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 mb-3 border border-gray-200">
-                  <span className="text-xs font-semibold text-gray-700">Quantidade</span>
+                  <span className="text-xs font-semibold text-gray-700">Cantidad</span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -420,28 +422,28 @@ export default function Checkout() {
 
                 <div className="space-y-1 border-t border-gray-100 pt-2">
                   <div className="flex justify-between text-xs text-gray-400">
-                    <span>Preço normal</span>
-                    <span className="line-through">€{(kit.oldPrice * quantity).toFixed(2).replace(".", ",")}</span>
+                    <span>Precio normal</span>
+                    <span className="line-through">{fmtMXN(kit.oldPrice * quantity)}</span>
                   </div>
                   {quantity > 1 && (
                     <div className="flex justify-between text-xs text-gray-500">
                       <span>{kit.name} × {quantity}</span>
-                      <span>€{(kit.price * quantity).toFixed(2).replace(".", ",")}</span>
+                      <span>{fmtMXN(kit.price * quantity)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>Portes de envio</span>
-                    <span className="text-green-600 font-semibold">Grátis</span>
+                    <span>Envío</span>
+                    <span className="text-green-600 font-semibold">Gratis</span>
                   </div>
                   {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
                     <div key={b.id} className="flex justify-between text-xs text-gray-500">
                       <span className="truncate pr-2">{b.label}</span>
-                      <span className="flex-shrink-0">+€{b.price.toFixed(2).replace(".", ",")}</span>
+                      <span className="flex-shrink-0">+{fmtMXN(b.price)}</span>
                     </div>
                   ))}
                   <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                    <span className="font-bold text-gray-900 text-xs">Total c/ IVA</span>
-                    <span className="text-base font-black text-primary">€{orderTotal.toFixed(2).replace(".", ",")}</span>
+                    <span className="font-bold text-gray-900 text-xs">Total</span>
+                    <span className="text-base font-black text-primary">{fmtMXN(orderTotal)}</span>
                   </div>
                 </div>
               </div>
@@ -454,34 +456,34 @@ export default function Checkout() {
 
               {step === 1 && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">1. Os teus dados</h2>
+                  <h2 className="text-xl font-bold text-gray-900 mb-6">1. Tus datos</h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico *</label>
                       <input required type="email" name="email" value={formData.email} onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                        placeholder="nome@gmail.com" />
+                        placeholder="nombre@gmail.com" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nome completo *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
                       <input required type="text" name="nome" value={formData.nome} onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                        placeholder="Nome e apelido" />
+                        placeholder="Nombre y apellidos" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Telemóvel *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono celular *</label>
                       <input required type="tel" name="telemovel" value={formData.telemovel} onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                        placeholder="9XX XXX XXX" />
-                      <p className="text-xs text-gray-500 mt-1">Para notificações de entrega por SMS.</p>
+                        placeholder="55 1234 5678" />
+                      <p className="text-xs text-gray-500 mt-1">Para notificaciones de entrega por SMS.</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">NIF *</label>
-                      <input required type="text" name="nif" value={formData.nif} onChange={handleChange}
-                        maxLength={9} minLength={9}
+                      <label className="block text-sm font-medium text-gray-700 mb-1">RFC (opcional)</label>
+                      <input type="text" name="nif" value={formData.nif} onChange={handleChange}
+                        maxLength={13} minLength={12}
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
-                        placeholder="123456789" />
-                      <p className="text-xs text-gray-500 mt-1">Necessário para emissão de factura.</p>
+                        placeholder="XAXX010101000" />
+                      <p className="text-xs text-gray-500 mt-1">Necesario para emisión de factura.</p>
                     </div>
                   </div>
                   <button type="submit"
@@ -494,56 +496,56 @@ export default function Checkout() {
               {step === 2 && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6">
                   <div className="flex items-center justify-between mb-1">
-                    <h2 className="text-xl font-bold text-gray-900">Endereço de entrega</h2>
-                    <button type="button" onClick={() => setStep(1)} className="text-sm text-primary font-medium hover:underline">Editar dados</button>
+                    <h2 className="text-xl font-bold text-gray-900">Dirección de entrega</h2>
+                    <button type="button" onClick={() => setStep(1)} className="text-sm text-primary font-medium hover:underline">Editar datos</button>
                   </div>
                   <p className="text-sm text-gray-400 mb-6 flex items-center gap-1">
-                    <Truck className="w-3.5 h-3.5 text-green-500" /> Portes grátis para todo Portugal
+                    <Truck className="w-3.5 h-3.5 text-green-500" /> Envío gratis a todo México
                   </p>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Código postal <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Código Postal <span className="text-red-500">*</span></label>
                       <input required type="text" name="codigoPostal" value={formData.codigoPostal} onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white"
-                        placeholder="0000-000" />
+                        placeholder="C.P. 00000" />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Morada <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Calle y número <span className="text-red-500">*</span></label>
                       <input required type="text" name="morada" value={formData.morada} onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white"
-                        placeholder="Rua / Avenida" />
+                        placeholder="Ej. Insurgentes Sur 1647" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Número <span className="text-red-500">*</span></label>
+                        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Número ext. <span className="text-red-500">*</span></label>
                         <input required type="text" name="numero" value={formData.numero} onChange={handleChange}
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white"
-                          placeholder="42" />
+                          placeholder="123" />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Andar / Fração</label>
+                        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Depto / Interior</label>
                         <input type="text" name="andar" value={formData.andar} onChange={handleChange}
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white"
-                          placeholder="2º Esq." />
+                          placeholder="Apto 4B" />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Localidade <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Colonia <span className="text-red-500">*</span></label>
                       <input required type="text" name="localidade" value={formData.localidade} onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white"
-                        placeholder="Lisboa" />
+                        placeholder="Roma Norte" />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Distrito <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Estado <span className="text-red-500">*</span></label>
                       <select required name="distrito" value={formData.distrito} onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white appearance-none cursor-pointer text-gray-700">
-                        <option value="">Selecione...</option>
-                        {["Aveiro","Beja","Braga","Bragança","Castelo Branco","Coimbra","Évora","Faro","Guarda","Leiria","Lisboa","Portalegre","Porto","Santarém","Setúbal","Viana do Castelo","Vila Real","Viseu","Açores","Madeira"].map(d => (
+                        <option value="">Selecciona...</option>
+                        {["Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas","Chihuahua","Ciudad de México","Coahuila","Colima","Durango","Estado de México","Guanajuato","Guerrero","Hidalgo","Jalisco","Michoacán","Morelos","Nayarit","Nuevo León","Oaxaca","Puebla","Querétaro","Quintana Roo","San Luis Potosí","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatán","Zacatecas"].map(d => (
                           <option key={d} value={d}>{d}</option>
                         ))}
                       </select>
@@ -561,7 +563,7 @@ export default function Checkout() {
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
 
                   <div className="bg-green-50 border-b border-green-100 px-5 py-3">
-                    <p className="text-sm font-black text-primary text-center">Aproveita e leva mais saquetas com preço promocional</p>
+                    <p className="text-sm font-black text-primary text-center">Aprovecha y lleva más sobres con precio promocional</p>
                   </div>
 
                   <div className="divide-y divide-gray-100">
@@ -580,8 +582,8 @@ export default function Checkout() {
                               </div>
                               <p className="text-xs text-gray-500 mb-1.5">{bump.desc}</p>
                               <div className="flex items-baseline gap-1.5">
-                                <span className="text-xs text-gray-400 line-through">{bump.oldPrice.toFixed(2).replace(".", ",")} €</span>
-                                <span className="text-lg font-black text-primary">{bump.price.toFixed(2).replace(".", ",")} €</span>
+                                <span className="text-xs text-gray-400 line-through">{fmtMXN(bump.oldPrice)}</span>
+                                <span className="text-lg font-black text-primary">{fmtMXN(bump.price)}</span>
                               </div>
                             </div>
                           </div>
@@ -594,7 +596,7 @@ export default function Checkout() {
                                 : "border-primary text-primary bg-white hover:bg-green-50"
                             }`}
                           >
-                            {active ? <><CheckCircle className="w-4 h-4" /> Adicionado</> : <>+ Adicionar ao pedido</>}
+                            {active ? <><CheckCircle className="w-4 h-4" /> Agregado</> : <>+ Agregar al pedido</>}
                           </button>
                         </div>
                       );
@@ -602,8 +604,8 @@ export default function Checkout() {
                   </div>
 
                   <div className="px-5 pt-5 pb-3 border-t border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-900 mb-0.5">Pagamento</h2>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Pagamento seguro via Stripe</p>
+                    <h2 className="text-xl font-bold text-gray-900 mb-0.5">Pago</h2>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Pago seguro vía Stripe</p>
 
                     {error && (
                       <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
@@ -644,7 +646,7 @@ export default function Checkout() {
                       <Elements
                         key={clientSecret}
                         stripe={stripePromise}
-                        options={{ clientSecret, locale: "pt" }}
+                        options={{ clientSecret, locale: "es" }}
                       >
                         <StripePaymentForm
                           total={orderTotal}
@@ -652,7 +654,7 @@ export default function Checkout() {
                           onSuccess={() => {
                             (window as any).fbq?.("track", "Purchase", {
                               value: orderTotal,
-                              currency: "EUR",
+                              currency: "MXN",
                               content_ids: [kit.id, ...Array.from(selectedBumps)],
                               content_type: "product",
                             }, { eventID: `purchase_${orderId}` });
@@ -664,14 +666,14 @@ export default function Checkout() {
                       </Elements>
                     )}
 
-                    <p className="text-center text-[11px] text-gray-400 mb-3">Compra segura SSL · Garantia de 7 dias · Portes grátis Portugal</p>
+                    <p className="text-center text-[11px] text-gray-400 mb-3">Compra segura SSL · Garantía de 7 días · Envío gratis México</p>
                     <div className="flex items-center justify-center gap-3 mb-3">
                       <CreditCard className="w-4 h-4 text-gray-400" />
                       <span className="text-xs font-black text-gray-500 border border-gray-300 rounded px-2 py-0.5">VISA</span>
                       <span className="text-xs font-black text-gray-500 border border-gray-300 rounded px-2 py-0.5">MASTERCARD</span>
                       <span className="text-xs font-black text-gray-500 border border-gray-300 rounded px-2 py-0.5">STRIPE</span>
                     </div>
-                    <p className="text-center text-[10px] text-gray-400">Panini Portugal Lda · Rua Exemplo, 123, Lisboa<br />NIPC: 500 000 000</p>
+                    <p className="text-center text-[10px] text-gray-400">Panini México S.A. de C.V. · Av. Insurgentes Sur 1647, CDMX<br />RFC: PMX260101AAA</p>
                   </div>
                 </motion.div>
               )}
@@ -681,7 +683,7 @@ export default function Checkout() {
               <div className="flex justify-center gap-6">
                 <div className="flex flex-col items-center gap-1 text-gray-500">
                   <Lock className="w-5 h-5 text-gray-400" />
-                  <span className="text-[10px] font-medium uppercase tracking-wider">Pagamento seguro</span>
+                  <span className="text-[10px] font-medium uppercase tracking-wider">Pago seguro</span>
                 </div>
                 <div className="flex flex-col items-center gap-1 text-gray-500">
                   <ShieldCheck className="w-5 h-5 text-gray-400" />
@@ -689,7 +691,7 @@ export default function Checkout() {
                 </div>
                 <div className="flex flex-col items-center gap-1 text-gray-500">
                   <Truck className="w-5 h-5 text-gray-400" />
-                  <span className="text-[10px] font-medium uppercase tracking-wider">Portes grátis</span>
+                  <span className="text-[10px] font-medium uppercase tracking-wider">Envío gratis</span>
                 </div>
               </div>
             )}

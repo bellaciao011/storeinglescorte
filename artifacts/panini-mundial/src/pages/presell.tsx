@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, ShieldCheck, Loader2, Lock, Star, Package } from "lucide-react";
 
 const steps = [
-  { id: 1, label: "A verificar utilizador real...", duration: 2200 },
-  { id: 2, label: "A validar acesso exclusivo...", duration: 1800 },
-  { id: 3, label: "A preparar descontos e produtos...", duration: 2000 },
+  { id: 1, label: "Verificando usuario real...", duration: 2200 },
+  { id: 2, label: "Validando acceso exclusivo...", duration: 1800 },
+  { id: 3, label: "Preparando descuentos y productos...", duration: 2000 },
 ];
 
 export default function Presell() {
@@ -42,7 +42,7 @@ export default function Presell() {
       <div className="w-full bg-[#6b0f1a] text-white py-3 px-4 flex items-center justify-center">
         <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-4 py-1.5">
           <Lock className="w-3 h-3 text-yellow-300" />
-          <span className="text-xs font-semibold text-white tracking-wide">Área de Acesso Restrito</span>
+          <span className="text-xs font-semibold text-white tracking-wide">Área de Acceso Restringido</span>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ export default function Presell() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-400"></span>
           </span>
-          Validação em curso
+          Validación en curso
         </span>
         <span className="text-white/40">|</span>
         <span className="flex items-center gap-1.5">
@@ -65,18 +65,16 @@ export default function Presell() {
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
 
-        {/* Title */}
         <div className="text-center mb-8">
           <span className="inline-block bg-[#6b0f1a] text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest mb-4">
             FIFA World Cup 2026
           </span>
           <h1 className="text-2xl font-black text-gray-900 leading-tight">
-            A verificar o teu<br />acesso exclusivo
+            Verificando tu<br />acceso exclusivo
           </h1>
-          <p className="text-gray-500 text-sm mt-2">Por favor aguarda enquanto validamos o teu perfil</p>
+          <p className="text-gray-500 text-sm mt-2">Por favor espera mientras validamos tu perfil</p>
         </div>
 
-        {/* Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -84,7 +82,6 @@ export default function Presell() {
         >
           {!done ? (
             <>
-              {/* Steps */}
               <div className="space-y-3 mb-6">
                 {steps.map((step, idx) => {
                   const isCompleted = completedSteps.includes(idx);
@@ -123,7 +120,6 @@ export default function Presell() {
                 })}
               </div>
 
-              {/* Progress bar */}
               <div className="space-y-2">
                 <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                   <motion.div
@@ -133,7 +129,7 @@ export default function Presell() {
                   />
                 </div>
                 <div className="flex justify-between text-xs text-gray-400">
-                  <span>A verificar perfil...</span>
+                  <span>Verificando perfil...</span>
                   <span className="font-bold text-[#6b0f1a]">{progress}%</span>
                 </div>
               </div>
@@ -154,13 +150,13 @@ export default function Presell() {
                   <ShieldCheck className="w-10 h-10 text-green-600" />
                 </motion.div>
 
-                <h2 className="text-xl font-black text-gray-900 mb-2">Acesso Confirmado!</h2>
+                <h2 className="text-xl font-black text-gray-900 mb-2">¡Acceso Confirmado!</h2>
                 <p className="text-gray-500 text-sm mb-6">
-                  Identificámos o teu perfil e reservámos os teus descontos exclusivos de pré-venda.
+                  Identificamos tu perfil y reservamos tus descuentos exclusivos de preventa.
                 </p>
 
                 <div className="space-y-2 mb-7 text-left">
-                  {["✅ Portes grátis para Portugal", "✅ Preços de pré-venda desbloqueados", "✅ Stock reservado por 15 minutos"].map((perk, i) => (
+                  {["✅ Envío gratis a México", "✅ Precios de preventa desbloqueados", "✅ Stock reservado por 15 minutos"].map((perk, i) => (
                     <motion.p
                       key={i}
                       initial={{ opacity: 0, x: -10 }}
@@ -180,23 +176,22 @@ export default function Presell() {
                   onClick={() => setLocation(`/${params}`)}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-black text-lg py-4 rounded-xl shadow-sm active:scale-[0.98] transition-all"
                 >
-                  🛒 Ir para a Loja
+                  🛒 Ir a la Tienda
                 </motion.button>
 
                 <p className="text-gray-400 text-xs mt-4 flex items-center justify-center gap-1">
-                  <Lock className="w-3 h-3" /> Compra 100% segura · Pagamento protegido
+                  <Lock className="w-3 h-3" /> Compra 100% segura · Pago protegido
                 </p>
               </motion.div>
             </AnimatePresence>
           )}
         </motion.div>
 
-        {/* Social proof */}
         <div className="mt-8 text-center">
           <div className="flex items-center justify-center gap-1 text-yellow-500 mb-1">
             {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
           </div>
-          <p className="text-gray-400 text-xs">+2.200 famílias portuguesas já fizeram a sua encomenda</p>
+          <p className="text-gray-400 text-xs">+2,200 familias mexicanas ya hicieron su pedido</p>
         </div>
 
       </div>

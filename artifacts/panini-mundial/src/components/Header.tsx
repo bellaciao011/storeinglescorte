@@ -26,13 +26,6 @@ export function Header() {
     };
   }, []);
 
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
-    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
-    return `${h}:${m}:${s}`;
-  };
-
   return (
     <header className="w-full flex flex-col items-center sticky top-0 z-50 shadow-md">
       {/* Main top bar */}
@@ -47,7 +40,7 @@ export function Header() {
 
         <div className="flex flex-col items-end gap-0.5">
           <span className="text-white/60 text-[10px] font-semibold uppercase tracking-widest leading-none">
-            ⏱ Oferta expira em
+            ⏱ Oferta expira en
           </span>
           <div className="flex items-center gap-1">
             {(() => {
@@ -78,21 +71,21 @@ export function Header() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-400"></span>
           </span>
-          {buying} a comprar agora
+          {buying} comprando ahora
         </span>
         <span className="text-white/40">|</span>
         <span className="flex items-center gap-1.5">
           <Package className="w-3.5 h-3.5 text-green-400" />
-          <span className="text-green-300 font-bold">{sold} vendidos hoje</span>
+          <span className="text-green-300 font-bold">{sold} vendidos hoy</span>
         </span>
       </div>
 
       {/* Trust Badges Row */}
       <div className="w-full py-2 px-4 flex flex-wrap justify-center gap-x-5 gap-y-1 text-[11px] text-gray-500 bg-white border-b border-gray-100">
-        <span className="flex items-center gap-1 font-medium"><Lock className="w-3 h-3 text-green-600" /> Ambiente 100% seguro</span>
+        <span className="flex items-center gap-1 font-medium"><Lock className="w-3 h-3 text-green-600" /> Pago 100% seguro</span>
         <span className="flex items-center gap-1 font-medium"><ShieldCheck className="w-3 h-3 text-green-600" /> Compra protegida</span>
-        <span className="flex items-center gap-1 font-medium"><Truck className="w-3 h-3 text-green-600" /> Portes grátis Portugal</span>
-        <span className="flex items-center gap-1 font-medium"><ShieldCheck className="w-3 h-3 text-green-600" /> Produto original</span>
+        <span className="flex items-center gap-1 font-medium"><Truck className="w-3 h-3 text-green-600" /> Envío gratis México</span>
+        <span className="flex items-center gap-1 font-medium"><ShieldCheck className="w-3 h-3 text-green-600" /> Producto original</span>
       </div>
     </header>
   );

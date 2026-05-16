@@ -7,6 +7,8 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "");
 
+const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+
 type CustomerData = {
   name: string;
   email: string;
@@ -17,18 +19,18 @@ type CustomerData = {
 
 const SHIPPING_OPTIONS = [
   {
-    id: "expresso",
+    id: "expreso",
     icon: "⚡",
-    label: "Expresso",
-    desc: "Entrega rápida garantida · Chegará em 1-2 dias úteis",
-    price: 10.99,
+    label: "Expreso",
+    desc: "Entrega rápida garantizada · Llega en 1-2 días hábiles",
+    price: 99,
   },
   {
-    id: "postal",
+    id: "estandar",
     icon: "📦",
-    label: "Encomenda Postal",
-    desc: "Via CTT · ~3 dias úteis",
-    price: 7.99,
+    label: "Estándar",
+    desc: "Paquetería nacional · ~3-5 días hábiles",
+    price: 69,
   },
 ];
 
@@ -56,7 +58,7 @@ function StripePaymentForm({
 
     const { error: submitErr } = await elements.submit();
     if (submitErr) {
-      onError(submitErr.message ?? "Erro no formulário.");
+      onError(submitErr.message ?? "Error en el formulario.");
       setLoading(false);
       return;
     }
@@ -70,7 +72,7 @@ function StripePaymentForm({
     });
 
     if (error) {
-      onError(error.message ?? "Pagamento recusado. Tenta novamente.");
+      onError(error.message ?? "Pago rechazado. Inténtalo de nuevo.");
       setLoading(false);
       return;
     }
@@ -87,7 +89,7 @@ function StripePaymentForm({
           onClick={onBack}
           className="flex-shrink-0 px-4 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
         >
-          VOLTAR
+          VOLVER
         </button>
         <button
           type="button"
@@ -96,8 +98,8 @@ function StripePaymentForm({
           className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-3 rounded-xl flex items-center justify-center gap-2"
         >
           {loading
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> A processar…</>
-            : <>Confirmar envio — €{total.toFixed(2).replace(".", ",")} <ChevronRight className="w-4 h-4" /></>
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> Procesando…</>
+            : <>Confirmar envío — {fmtMXN(total)} <ChevronRight className="w-4 h-4" /></>
           }
         </button>
       </div>
@@ -146,7 +148,7 @@ export default function Upsell() {
           customerEmail: customer.email,
           customerName: customer.name,
           customerPhone: customer.phone,
-          productName: `Frete ${selectedOption.label}`,
+          productName: `Envío ${selectedOption.label}`,
           orderType: "upsell",
         }),
       });
@@ -154,7 +156,7 @@ export default function Upsell() {
       const data = await res.json() as { clientSecret?: string; orderId?: string; error?: string };
 
       if (!res.ok) {
-        setError(data.error ?? "Erro ao iniciar pagamento. Tenta novamente.");
+        setError(data.error ?? "Error al iniciar el pago. Inténtalo de nuevo.");
         setCreatingIntent(false);
         return;
       }
@@ -162,7 +164,7 @@ export default function Upsell() {
       setClientSecret(data.clientSecret ?? null);
       setOrderId(data.orderId ?? null);
     } catch {
-      setError("Erro de ligação. Tenta novamente.");
+      setError("Error de conexión. Inténtalo de nuevo.");
     } finally {
       setCreatingIntent(false);
     }
@@ -179,8 +181,8 @@ export default function Upsell() {
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">✅</span>
           </div>
-          <h2 className="text-xl font-black text-gray-900 mb-2">Envio confirmado!</h2>
-          <p className="text-gray-400 text-xs animate-pulse mt-3">A redirecionar…</p>
+          <h2 className="text-xl font-black text-gray-900 mb-2">¡Envío confirmado!</h2>
+          <p className="text-gray-400 text-xs animate-pulse mt-3">Redirigiendo…</p>
         </motion.div>
       </div>
     );
@@ -206,25 +208,25 @@ export default function Upsell() {
               <AlertTriangle className="w-5 h-5 text-yellow-600" />
             </div>
             <div>
-              <h2 className="font-black text-red-700 text-base">Erro no Cálculo do Frete</h2>
+              <h2 className="font-black text-red-700 text-base">Error en el Cálculo del Envío</h2>
               <p className="text-sm text-gray-700 mt-1 leading-relaxed">
-                Detectámos um erro no cálculo do frete para o endereço{" "}
+                Detectamos un error en el cálculo del envío para la dirección{" "}
                 <strong className="text-gray-900">
-                  {customer?.address ?? "o teu endereço"}
+                  {customer?.address ?? "tu dirección"}
                 </strong>
-                . Este erro pode causar{" "}
-                <strong>atrasos de até 45 dias</strong> no envio do produto.
+                . Este error puede causar{" "}
+                <strong>retrasos de hasta 45 días</strong> en la entrega del producto.
               </p>
             </div>
           </div>
           <div className="bg-red-50 rounded-xl px-4 py-2.5 border border-red-200">
             <p className="text-sm text-red-700 font-medium">
-              🎁 Por causa deste erro, iremos enviar <strong>5 saquetas de cromos de brinde</strong> junto com a tua encomenda!
+              🎁 Por este error, enviaremos <strong>5 sobres de regalo</strong> junto con tu pedido.
             </p>
           </div>
           <div className="bg-pink-50 border border-pink-200 rounded-xl px-4 py-2.5 mt-2">
             <p className="text-sm text-pink-700 font-semibold">
-              📌 Seleciona uma opção de envio abaixo para garantir a entrega no prazo.
+              📌 Selecciona una opción de envío abajo para garantizar la entrega a tiempo.
             </p>
           </div>
         </motion.div>
@@ -237,17 +239,17 @@ export default function Upsell() {
         >
           <img
             src="/assets/pacotes-panini.png"
-            alt="5 saquetas de brinde"
+            alt="5 sobres de regalo"
             className="w-52 h-auto object-contain drop-shadow-md"
           />
           <p className="text-sm font-bold text-green-700 mt-2">
-            ✅ +5 saquetas de brinde incluídas
+            ✅ +5 sobres de regalo incluidos
           </p>
-          <p className="text-xs text-gray-400">Enviados gratuitamente com a tua encomenda</p>
+          <p className="text-xs text-gray-400">Enviados gratis con tu pedido</p>
         </motion.div>
 
         <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-3">
-          Opções de envio disponíveis
+          Opciones de envío disponibles
         </p>
 
         <div className="space-y-3 mb-6">
@@ -275,8 +277,8 @@ export default function Upsell() {
                 <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="font-black text-gray-900 text-base">€{opt.price.toFixed(2).replace(".", ",")}</p>
-                <p className="text-xs text-[#6b0f1a] font-semibold">selecionar →</p>
+                <p className="font-black text-gray-900 text-base">{fmtMXN(opt.price)}</p>
+                <p className="text-xs text-[#6b0f1a] font-semibold">seleccionar →</p>
               </div>
             </motion.button>
           ))}
@@ -291,7 +293,7 @@ export default function Upsell() {
               className="overflow-hidden"
             >
               <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-4">
-                <p className="text-sm font-bold text-gray-700 mb-4">Método de pagamento</p>
+                <p className="text-sm font-bold text-gray-700 mb-4">Método de pago</p>
 
                 {error && (
                   <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
@@ -307,15 +309,15 @@ export default function Upsell() {
                     className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-xl flex items-center justify-center gap-2"
                   >
                     {creatingIntent
-                      ? <><Loader2 className="w-4 h-4 animate-spin" /> A preparar…</>
-                      : <>Continuar para o pagamento <ChevronRight className="w-4 h-4" /></>
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Preparando…</>
+                      : <>Continuar con el pago <ChevronRight className="w-4 h-4" /></>
                     }
                   </button>
                 ) : (
                   <Elements
                     key={clientSecret}
                     stripe={stripePromise}
-                    options={{ clientSecret, locale: "pt" }}
+                    options={{ clientSecret, locale: "es" }}
                   >
                     <StripePaymentForm
                       total={selectedOption!.price}
@@ -339,13 +341,13 @@ export default function Upsell() {
             onClick={() => setLocation("/")}
             className="text-xs text-gray-400 hover:text-gray-600 underline"
           >
-            Não, obrigado — continuar sem upgrade de envio
+            No, gracias — continuar sin mejora de envío
           </button>
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-1.5">
           <Lock className="w-3.5 h-3.5" />
-          Pagamento 100% seguro via Stripe
+          Pago 100% seguro vía Stripe
         </p>
       </div>
     </div>
