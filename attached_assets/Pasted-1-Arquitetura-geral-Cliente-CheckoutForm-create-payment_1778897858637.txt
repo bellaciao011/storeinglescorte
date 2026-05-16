@@ -1,0 +1,221 @@
+1. Arquitetura geral
+Cliente (CheckoutForm)
+   │
+   ├─► create-payment-intent  (cria pedido em PENDING + PaymentIntent na Stripe)
+   │      └─► tabela `pedidos` (insert)
+   │
+   ├─► update-payment-intent  (a cada blur + debounce 800ms)
+   │      └─► grava payer_email/name/phone/shipping em `pedidos`
+   │      └─► sincroniza shipping no PI da Stripe (antifraude)
+   │
+   ├─► stripe.confirmPayment()
+   │
+   └─► Stripe processa → dispara webhook
+              │
+              ▼
+        stripe-webhook (payment_intent.succeeded)
+           ├─► UPDATE pedidos SET status='PAID' (preserva campos já preenchidos)
+           ├─► sendFbCapiPurchase()        — Facebook CAPI server-side
+           ├─► sendOrderConfirmationEmail() — Resend (nosso email branded)
+           └─► sendPushcutSaleNotification() — notificação no iPhone
+
+Paralelo (cron):
+   process-abandoned-carts (5 em 5 min) → email recovery 30min-72h
+   process-order-status (cron) → shipped → in_transit → delayed
+Princípio chave: Stripe é só gateway. Toda comunicação com cliente é nossa (Resend), todo tracking de venda é nosso (CAPI + Pushcut), todo email é branded.
+
+2. Tabela pedidos — campos críticos
+Campo	Pra que serve	Erro se faltar
+id (uuid)	PK	—
+transaction_id	PaymentIntent ID da Stripe	Sem isto, webhook não consegue mapear de volta
+status	PENDING/PAID/FAILED	Recovery e idempotência dependem disto
+payer_email	Email pra confirmação + recovery	Sem isto NADA chega ao cliente
+payer_name, payer_phone, payer_document	Dados do cliente	CAPI fica pior, email fica "Hola," sem nome
+shipping_*	Endereço entrega	Sem isto não consegue enviar
+amount	Valor na moeda do catálogo (CLP/COP/MXN) — NÃO na local	Confunde relatórios se misturar
+items (jsonb)	Snapshot do carrinho	Sem isto o recovery não consegue remontar
+confirmation_sent_at	Idempotência email confirmação	Spam de emails se faltar
+notification_sent_at	Idempotência Pushcut	Spam de notif se faltar
+recovery_email_sent_at	Idempotência recovery	Spam de emails se faltar
+recovery_discount_code	Cupom VOLTA-XXXXXX	Cliente não consegue resgatar
+tracking_code	Gerado no momento do PAID	Pra mostrar no email + página /rastreio
+status_*_at + status_*_email_sent_at	State machine de envio	Sem *_email_sent_at = spam
+Atribuição: utm_*, fbclid, gclid, referrer, landing_page	Performance marketing	Perde ROI por canal
+RLS: anon pode insert/update/select (mas não delete). Isso é necessário porque o checkout é anônimo. Só service_role faz tudo.
+
+3. Stripe — regras de ouro
+3.1. NUNCA fazer
+// ❌ NUNCA — Stripe vai mandar recibo automático em inglês
+await stripe.customers.create({ email });
+await stripe.paymentIntents.create({ customer: cust.id, receipt_email: email });
+3.2. Como FAZER (do projeto)
+// ✅ Sem customer, sem receipt_email
+await stripe.paymentIntents.create({
+  amount: amountInCents,
+  currency: localCurrency,
+  description: "...",
+  statement_descriptor_suffix: "STUDIOFC", // bancos LATAM aprovam mais
+  automatic_payment_methods: { enabled: true },
+  payment_method_options: { card: { request_three_d_secure: "automatic" } },
+  metadata: { pedido_id, base_currency, base_amount, fx_rate, ... }
+});
+3.3. Multi-moeda (LATAM)
+Catálogo em CLP (ou COP/MXN) → conversão em runtime via rate do geo-rates
+ZERO_DECIMAL currencies (CLP, JPY, KRW...) não se multiplica por 100
+Erro clássico: cobrar 100 CLP achando que era 1 CLP, ou 1 EUR achando que era 100 EUR
+3.4. Reuso de PaymentIntent
+Frontend guarda pedidoId em sessionStorage (pendingCheckoutOrder)
+Se cliente faz refresh, manda pedido_id de volta e backend faz stripe.paymentIntents.update() em vez de criar novo
+Se PI já está succeeded/canceled, cria um novo (rotação) e devolve novo clientSecret
+Frontend detecta rotação e troca clientSecret (senão confirmPayment falha contra PI stale)
+3.5. Webhook
+Deno precisa de constructEventAsync (síncrono não funciona)
+verify_jwt = false em supabase/config.toml
+Eventos a escutar:
+payment_intent.succeeded (principal)
+payment_intent.payment_failed
+checkout.session.completed (legacy, manter)
+checkout.session.expired / async_payment_failed
+Endpoint: https://<ref>.supabase.co/functions/v1/stripe-webhook
+Test mode e live mode têm secrets diferentes — não misturar
+4. Captura do email (PONTO MAIS FRÁGIL)
+Sem payer_email em pedidos, NADA funciona: nem confirmação, nem recovery, nem CAPI direito.
+
+4.1. Três momentos de captura
+onBlur do email → syncCustomerToBackend() imediato
+Debounce 800ms em qualquer mudança de email, firstName, lastName, phone, address, etc → update-payment-intent
+Antes de confirmPayment → última chamada síncrona (best-effort, não bloqueia)
+Webhook fallback → se ainda chegou vazio, pega de pi.receipt_email ou charges[0].billing_details.email
+4.2. Regra crítica no webhook (anti-overwrite)
+// ✅ Buscar pedido ANTES de atualizar
+const { data: existing } = await supabase
+  .from("pedidos").select("payer_email, ...").eq("id", pedidoId).single();
+
+// ✅ Só preencher campos NULL — nunca sobrescrever
+if (!existing?.payer_email && email) updates.payer_email = email;
+Sem isso, o webhook chega depois do checkout-form e apaga os dados ricos que o cliente preencheu, substituindo pelos dados pobres da Stripe.
+
+5. Frontend — armadilhas do Checkout.tsx
+5.1. cartSignature NÃO inclui currency/rate/country
+// ✅ Só inclui itens + recovery
+const cartSignature = JSON.stringify({
+  items: items.map(i => ({ id: i.product.id, quantity: i.quantity })),
+  recoveryDiscountCode: ...,
+});
+Por quê? Câmbio oscila e geo-IP atrasa. Se incluir, cada mudança recria um PI → órfãos na Stripe + invalida clientSecret no front.
+
+5.2. <Elements key={clientSecret}>
+Forçar remount quando rotaciona PI, senão o PaymentElement fica preso ao client_secret antigo.
+
+5.3. Timeout duro de 15s
+Leads em 3G ficam num spinner infinito. Sem timeout, vira pedido PENDING sem email.
+
+5.4. await elements.submit() antes de confirmPayment
+Senão dá erro no Stripe quando algum campo opcional vem vazio.
+
+5.5. Não passar payment_method_data no confirmPayment
+Duplicar com billing_details do PaymentElement dá erro fields.billingDetails never.
+
+5.6. recovery_discount_percent clamped 0-100 no backend
+Senão um bug no front pode gerar desconto de 200% (= cobrar negativo).
+
+6. Sistema de email (Resend)
+6.1. Tipos
+Função	Quando	Idempotência via
+sendOrderEmail kind=confirmation	Webhook PAID	confirmation_sent_at
+sendOrderEmail kind=shipped	Cron 24h após PAID	status_shipped_email_sent_at
+sendOrderEmail kind=in_transit	Cron 3d após shipped	status_in_transit_email_sent_at
+sendOrderEmail kind=delayed	Cron 3d após in_transit	status_delayed_email_sent_at
+sendRecoveryEmail	Cron carrinho 30min-72h	recovery_email_sent_at
+6.2. Remetente
+From: Studio F <ordenconfirmada@studiofchl.com> (domínio verificado)
+Reply-To: ordenstudiofchl@outlook.com (responde direto pra Outlook do dono)
+6.3. Recovery — fluxo "pergunta + 80%"
+Email pede pra responder ("o que aconteceu?")
+Se responder → equipe manda 80% manualmente
+CTA secundário: "voltar ao carrinho com 70%" (link /recuperar/{pedido_id})
+Gera código VOLTA-XXXXXX salvo em recovery_discount_code
+6.4. Cron process-abandoned-carts
+Filtro exato (errar aqui = não dispara):
+
+status != 'PAID'               -- não é só PENDING; pode ser REQUIRES_ACTION
+AND payer_email IS NOT NULL
+AND recovery_email_sent_at IS NULL
+AND created_at <= now() - 30 min
+AND created_at >= now() - 72 h
+LIMIT 100
+7. Facebook tracking (Pixel + CAPI)
+7.1. Deduplicação Pixel ↔ CAPI
+MESMO event_id nos dois lados, senão Meta conta evento em dobro:
+
+Frontend: trackEvent('Purchase', { eventID: 'purchase_<pedidoId>' })
+Backend CAPI: event_id: 'purchase_<pedidoId>'
+7.2. fbp e fbc
+Frontend lê cookies _fbp e _fbc, passa no create-payment-intent
+Backend guarda em metadata do PI e usa no CAPI (matching score sobe)
+7.3. Hashing SHA-256
+Email, telefone, nome, cidade, CEP → tudo lowercase + trim + SHA-256 hex antes de mandar pro CAPI. País já vem como ISO-2.
+
+8. Secrets necessários
+Secret	Pra quê
+SECRET_KEY (Stripe)	Backend Stripe
+STRIPE_WEBHOOK_SECRET	Validar assinatura do webhook
+RESEND_API_KEY	Envio de emails
+FB_PIXEL_ID	CAPI
+FB_CAPI_ACCESS_TOKEN	CAPI (token de sistema, não user token)
+VITE_STRIPE_PUBLISHABLE_KEY	Frontend (público, pode ir no código)
+Limpar duplicações: tinha FB_ACCESS_TOKEN e FB_CAPI_ACCESS_TOKEN — código usa fallback do segundo pro primeiro. Padroniza num só.
+
+9. Checklist anti-bug pra novo projeto
+Stripe
+ Webhook configurado com mesmo modo (test vs live) que a SECRET_KEY
+ STRIPE_WEBHOOK_SECRET é o do endpoint específico (não o geral da conta)
+ verify_jwt = false no config.toml pra webhook + create-payment-intent + update-payment-intent
+ Usa constructEventAsync (não constructEvent)
+ NÃO anexa customer ao PaymentIntent
+ NÃO passa receipt_email
+ statement_descriptor_suffix configurado (max 10 chars, sem especiais)
+ Zero-decimal currencies tratadas
+ 3DS = automatic
+Frontend
+ cartSignature exclui currency/rate/country
+ <Elements key={clientSecret}> força remount
+ Timeout 15s no create-payment-intent
+ Reusa pedido_id do sessionStorage
+ elements.submit() antes do confirmPayment
+ onBlur em TODOS os campos → update-payment-intent
+ Debounce 800ms paralelo (auto-sync sem precisar de blur)
+ Trata rotação de PI no update effect
+Webhook
+ Lê existing antes de fazer UPDATE (preserva dados do checkout)
+ Idempotência via *_sent_at em TODOS os side-effects (email, Pushcut, CAPI opcional)
+ Pega email de 3 fontes: pi.receipt_email, charges[0].billing_details.email, ou já em pedidos
+ Gera tracking_code único antes de mandar email
+Banco
+ RLS permite anon insert/update/select em pedidos
+ Índice em created_at, status, payer_email (recovery query)
+ Campos *_sent_at existem ANTES de deploy do webhook
+Email/Resend
+ Domínio verificado no Resend (SPF + DKIM)
+ From usa subdomínio dedicado (não root)
+ Reply-To aponta pra inbox real (Outlook/Gmail)
+ Idempotência checada antes de enviar
+Facebook
+ Pixel + CAPI usam MESMO event_id (purchase_<pedidoId>)
+ _fbp e _fbc propagados do front pro backend
+ Dados PII hasheados SHA-256 lowercase trim
+Cron
+ process-abandoned-carts rodando a cada 5min
+ process-order-status rodando (hora em hora basta)
+ Filtro recovery usa status != 'PAID' (NÃO = 'PENDING')
+10. Bugs reais que já aconteceram (e como evitar)
+Email da Stripe chegando duplicado → alguém anexou customer. Remover.
+Webhook apagando endereço → não checava existing antes do UPDATE.
+Recovery spam → cron sem filtro recovery_email_sent_at IS NULL.
+PI órfão na Stripe → cartSignature incluía currency e geo-IP atrasava.
+Cliente vê spinner eterno → sem timeout no create-payment-intent.
+Pixel contando em dobro → event_id diferente entre Pixel e CAPI.
+Confirmação não chega → payer_email NULL porque faltou onBlur no campo.
+Cobrança absurda → ZERO_DECIMAL não tratado pra CLP.
+3DS falhando em alguns bancos → faltava statement_descriptor_suffix.
+confirmPayment erro fields.billingDetails never → passou payment_method_data duplicando PaymentElement.
