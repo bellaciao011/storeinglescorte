@@ -88,6 +88,7 @@ export default async function handler(
       amount: Math.round(amount * 100), // centavos MXN
       currency: "mxn",
       description: `1x ${productName ?? "Kit Panini FIFA World Cup 2026"}`,
+      statement_descriptor_suffix: "PANINI",
       metadata: {
         order_id: orderId,
         tracking_code: trackingCode,
