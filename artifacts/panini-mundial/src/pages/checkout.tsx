@@ -665,7 +665,6 @@ export default function Checkout() {
                       <CreditCard className="w-4 h-4 text-gray-400" />
                       <span className="text-xs font-black text-gray-500 border border-gray-300 rounded px-2 py-0.5">VISA</span>
                       <span className="text-xs font-black text-gray-500 border border-gray-300 rounded px-2 py-0.5">MASTERCARD</span>
-                      <span className="text-xs font-black text-gray-500 border border-gray-300 rounded px-2 py-0.5">STRIPE</span>
                     </div>
                     <p className="text-center text-[10px] text-gray-400">Panini México S.A. de C.V. · Av. Insurgentes Sur 1647, CDMX<br />RFC: PMX260101AAA</p>
                   </div>
