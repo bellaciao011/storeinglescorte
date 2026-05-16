@@ -10,18 +10,15 @@ export interface Order {
   customer_address: string | null;
   product_name: string;
   amount_eur: number;
-  payment_method: string;
-  payment_status: string;
+  status: string;
   order_status: string;
   paid_at: string | null;
-  email_sent: boolean;
+  confirmation_email_sent_at: string | null;
   utm_source: string | null;
   utm_campaign: string | null;
   utm_medium: string | null;
   utm_content: string | null;
   utm_term: string | null;
-  src: string | null;
-  sck: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -45,7 +42,7 @@ export async function createOrder(order: {
   customer_address: string | null;
   product_name: string;
   amount_eur: number;
-  payment_method: string;
+  payment_method?: string;
   utm_source?: string | null;
   utm_campaign?: string | null;
   utm_medium?: string | null;
@@ -58,17 +55,16 @@ export async function createOrder(order: {
     `INSERT INTO panini_orders (
       id, tracking_code, customer_name, customer_email, customer_phone,
       customer_document, customer_address, product_name, amount_eur,
-      payment_method, payment_status, order_status, email_sent,
-      utm_source, utm_campaign, utm_medium, utm_content, utm_term, src, sck
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'waiting_payment','preparing',false,$11,$12,$13,$14,$15,$16,$17)
+      status, order_status,
+      utm_source, utm_campaign, utm_medium, utm_content, utm_term
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'waiting_payment','preparing',$10,$11,$12,$13,$14)
     ON CONFLICT (id) DO NOTHING`,
     [
       order.id, order.tracking_code, order.customer_name, order.customer_email,
       order.customer_phone, order.customer_document, order.customer_address,
-      order.product_name, order.amount_eur, order.payment_method,
+      order.product_name, order.amount_eur,
       order.utm_source ?? null, order.utm_campaign ?? null, order.utm_medium ?? null,
       order.utm_content ?? null, order.utm_term ?? null,
-      order.src ?? null, order.sck ?? null,
     ]
   );
 }
@@ -76,7 +72,7 @@ export async function createOrder(order: {
 export async function markOrderPaid(id: string): Promise<{ tracking_code: string; customer_name: string; customer_email: string; product_name: string; amount_eur: number } | null> {
   const res = await query<{ tracking_code: string; customer_name: string; customer_email: string; product_name: string; amount_eur: number }>(
     `UPDATE panini_orders
-     SET payment_status = 'paid', order_status = 'preparing', paid_at = NOW(), updated_at = NOW()
+     SET status = 'paid', order_status = 'preparing', paid_at = NOW(), updated_at = NOW()
      WHERE id = $1
      RETURNING tracking_code, customer_name, customer_email, product_name, amount_eur`,
     [id]
@@ -85,22 +81,16 @@ export async function markOrderPaid(id: string): Promise<{ tracking_code: string
   return null;
 }
 
-export async function markOrderRefused(id: string, reason: string | null): Promise<void> {
+export async function markOrderRefused(id: string, reason?: string | null): Promise<void> {
   await query(
-    `UPDATE panini_orders SET payment_status = 'refused', failure_reason = $2, updated_at = NOW() WHERE id = $1`,
-    [id, reason ?? null]
-  ).catch(async () => {
-    // Column may not exist yet — fall back without reason
-    await query(
-      `UPDATE panini_orders SET payment_status = 'refused', updated_at = NOW() WHERE id = $1`,
-      [id]
-    );
-  });
+    `UPDATE panini_orders SET status = 'refused', updated_at = NOW() WHERE id = $1`,
+    [id]
+  );
 }
 
 export async function markEmailSent(id: string): Promise<void> {
   await query(
-    `UPDATE panini_orders SET email_sent = true, updated_at = NOW() WHERE id = $1`,
+    `UPDATE panini_orders SET confirmation_email_sent_at = NOW(), updated_at = NOW() WHERE id = $1`,
     [id]
   );
 }

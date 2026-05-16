@@ -89,7 +89,7 @@ export default async function handler(
         return;
       }
 
-      const isPaid = order.payment_status === "paid";
+      const isPaid = order.status === "paid";
       const totalCents = toCents(Number(order.amount_eur));
       const now = toUtcString(new Date());
       const createdAt = toUtcString(new Date(order.created_at));
@@ -98,7 +98,7 @@ export default async function handler(
       await sendToUtmify({
         orderId: order.id,
         platform: "Front",
-        paymentMethod: mapPaymentMethod(order.payment_method, isPaid ? "paid" : "waiting_payment"),
+        paymentMethod: mapPaymentMethod("stripe", isPaid ? "paid" : "waiting_payment"),
         status: isPaid ? "paid" : "waiting_payment",
         createdAt,
         approvedDate: approvedAt,
@@ -121,8 +121,8 @@ export default async function handler(
           },
         ],
         trackingParameters: {
-          src: order.src ?? null,
-          sck: order.sck ?? null,
+          src: null,
+          sck: null,
           utm_source: order.utm_source ?? null,
           utm_campaign: order.utm_campaign ?? null,
           utm_medium: order.utm_medium ?? null,

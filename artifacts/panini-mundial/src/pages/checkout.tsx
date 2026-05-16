@@ -652,6 +652,7 @@ export default function Checkout() {
                               content_ids: [kit.id, ...Array.from(selectedBumps)],
                               content_type: "product",
                             }, { eventID: `purchase_${orderId}` });
+                            setPollConfirmed(true);
                             setStep(4);
                           }}
                           onError={(msg) => setError(msg)}
