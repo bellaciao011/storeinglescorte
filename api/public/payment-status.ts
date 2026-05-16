@@ -19,6 +19,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return;
   }
 
+  if (!process.env.SUPABASE_DB_URL) {
+    res.writeHead(503, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "SUPABASE_DB_URL not configured" }));
+    return;
+  }
+
   try {
     const order = await getOrderById(orderId);
     if (!order) {
@@ -29,8 +35,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ status: order.payment_status }));
   } catch (err) {
-    console.error("[PaymentStatus] error:", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[PaymentStatus] error:", msg);
     res.writeHead(500, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Internal server error" }));
+    res.end(JSON.stringify({ error: "DB error", detail: msg }));
   }
 }
