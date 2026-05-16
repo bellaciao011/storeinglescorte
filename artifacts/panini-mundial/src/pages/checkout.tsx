@@ -10,6 +10,7 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { Header } from "@/components/Header";
 import { kits } from "@/lib/kits";
 import { readUtms } from "@/lib/utm";
+import { apiUrl } from "@/lib/api";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "");
 
@@ -181,7 +182,7 @@ export default function Checkout() {
     ];
 
     const t = setTimeout(() => {
-      fetch("/api/payment/update-intent", {
+      fetch(apiUrl("/api/payment/update-intent"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, amount: orderTotal, items }),
@@ -235,7 +236,7 @@ export default function Checkout() {
       ];
 
       const res = await Promise.race([
-        fetch("/api/payment/create-intent", {
+        fetch(apiUrl("/api/payment/create-intent"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -289,7 +290,7 @@ export default function Checkout() {
     pollingRef.current = setInterval(async () => {
       attempts++;
       try {
-        const r = await fetch(`/api/public/payment-status?orderId=${encodeURIComponent(orderId)}`);
+        const r = await fetch(apiUrl(`/api/public/payment-status?orderId=${encodeURIComponent(orderId)}`));
         if (r.ok) {
           const data = await r.json() as { status: string };
           if (data.status === "PAID") {
@@ -608,22 +609,22 @@ export default function Checkout() {
 
                       <div className="border-t border-gray-100 pt-4 space-y-2 mb-5">
                         <div className="flex justify-between text-sm text-gray-500">
-                          <span>Portes</span>
-                          <span className="text-primary font-semibold">Grátis</span>
+                          <span>Envío</span>
+                          <span className="text-primary font-semibold">Gratis</span>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600">
                           <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
-                          <span>{(kit.price * quantity).toFixed(2).replace(".", ",")} €</span>
+                          <span>{fmtMXN(kit.price * quantity)}</span>
                         </div>
                         {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
                           <div key={b.id} className="flex justify-between text-sm text-gray-600">
                             <span className="text-xs">{b.label}</span>
-                            <span>{b.price.toFixed(2).replace(".", ",")} €</span>
+                            <span>{fmtMXN(b.price)}</span>
                           </div>
                         ))}
                         <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                           <span className="font-black text-gray-900 text-base">Total</span>
-                          <span className="font-black text-primary text-xl">{orderTotal.toFixed(2).replace(".", ",")} €</span>
+                          <span className="font-black text-primary text-xl">{fmtMXN(orderTotal)}</span>
                         </div>
                       </div>
 

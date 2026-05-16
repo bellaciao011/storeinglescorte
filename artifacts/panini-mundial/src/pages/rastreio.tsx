@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/api";
 import { CheckCircle2, Clock, Package, Truck, Home, Search, AlertCircle } from "lucide-react";
 
 const STATUS_STEPS = [
@@ -43,7 +44,7 @@ export default function Rastreio() {
     setError(null);
     setData(null);
     try {
-      const res = await fetch(`/api/public/rastreio?codigo=${encodeURIComponent(code.trim())}`);
+      const res = await fetch(apiUrl(`/api/public/rastreio?codigo=${encodeURIComponent(code.trim())}`));
       if (res.status === 404) { setError("Código de rastreio não encontrado. Confirma que introduziste o código correto."); return; }
       if (res.status >= 500) { setError("A base de dados ainda está a ser configurada. Tenta novamente em alguns minutos."); return; }
       if (!res.ok) { setError("Erro ao pesquisar. Tenta novamente."); return; }

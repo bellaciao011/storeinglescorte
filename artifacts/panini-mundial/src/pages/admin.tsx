@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { apiUrl } from "@/lib/api";
 import { Lock, RefreshCw, CheckCircle2, Package, Truck, Home, Mail, LogOut, ChevronDown, ChevronUp, Send } from "lucide-react";
 
 type Order = {
@@ -66,7 +67,7 @@ export default function Admin() {
   const fetchOrders = useCallback(async (pw: string) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/orders", { headers: { "x-admin-password": pw } });
+      const res = await fetch(apiUrl("/api/admin/orders"), { headers: { "x-admin-password": pw } });
       if (res.status === 401) { setAuthed(false); return; }
       if (!res.ok) return;
       setOrders(await res.json());
@@ -80,7 +81,7 @@ export default function Admin() {
     setAuthError(false);
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/orders", { headers: { "x-admin-password": password } });
+      const res = await fetch(apiUrl("/api/admin/orders"), { headers: { "x-admin-password": password } });
       if (res.status === 401) { setAuthError(true); return; }
       setOrders(await res.json());
       setSavedPw(password);
@@ -93,7 +94,7 @@ export default function Admin() {
   const updateStatus = async (id: string, status: string) => {
     setSaving(id);
     try {
-      await fetch("/api/admin/orders", {
+      await fetch(apiUrl("/api/admin/orders"), {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": savedPw },
         body: JSON.stringify({ id, status }),
@@ -108,7 +109,7 @@ export default function Admin() {
     setResending(id);
     setResendResult(prev => { const n = { ...prev }; delete n[id]; return n; });
     try {
-      const res = await fetch("/api/admin/orders", {
+      const res = await fetch(apiUrl("/api/admin/orders"), {
         method: "PUT",
         headers: { "Content-Type": "application/json", "x-admin-password": savedPw },
         body: JSON.stringify({ id, action: "resend_utmify" }),
