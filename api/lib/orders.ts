@@ -86,7 +86,7 @@ export async function markOrderPaid(id: string): Promise<{ tracking_code: string
   return null;
 }
 
-export async function markOrderRefused(id: string): Promise<void> {
+export async function markOrderRefused(id: string, _reason?: string | null): Promise<void> {
   await query(
     `UPDATE panini_orders SET status = 'refused', updated_at = NOW() WHERE id = $1`,
     [id]

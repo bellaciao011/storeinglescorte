@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "http";
+import { randomUUID } from "crypto";
 import Stripe from "stripe";
 import { sendToUtmify, toUtcString, toCents } from "../lib/utmify";
 import { createOrder, generateTrackingCode } from "../lib/orders";
@@ -81,7 +82,7 @@ export default async function handler(
     }
 
     const trackingCode = generateTrackingCode();
-    const orderId = `str-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const orderId = randomUUID();
 
     // Create Stripe PaymentIntent in MXN
     const paymentIntent = await stripe.paymentIntents.create({
