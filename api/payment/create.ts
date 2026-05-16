@@ -91,7 +91,7 @@ export default async function handler(
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // centavos MXN
       currency: "mxn",
-      description: `1x ${productName ?? "Guia com inteligencia artificial"}`,
+      description: `1x ${productName ?? "Kit Panini FIFA World Cup 2026"}`,
       receipt_email: customerEmail || undefined,
       metadata: {
         order_id: orderId,

@@ -251,7 +251,7 @@ export default function Checkout() {
             shippingCity: formData.localidade,
             shippingDistrict: formData.distrito,
             kitId: kit.id,
-            productName: "Guia com inteligencia artificial",
+            productName: "Kit Panini FIFA World Cup 2026",
             quantity,
             items,
             orderType: "main",
