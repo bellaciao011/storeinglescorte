@@ -325,9 +325,22 @@ export default function Checkout() {
 
           {pollConfirmed ? (
             <>
-              <h1 className="text-2xl font-black text-green-700 mb-2">¡Pago confirmado!</h1>
-              <p className="text-gray-500 text-sm mb-6">Redirigiendo a tu oferta especial…</p>
-              <Loader2 className="w-6 h-6 text-green-500 animate-spin mx-auto" />
+              <h1 className="text-2xl font-black text-green-700 mb-2">¡Pedido confirmado!</h1>
+              <p className="text-gray-600 text-sm mb-6 max-w-xs leading-relaxed">
+                Tu pedido fue recibido con éxito.<br/>
+                En breve recibirás un correo con la confirmación y tu código de rastreo.
+              </p>
+              <div className="w-full bg-white border border-gray-100 rounded-xl p-4 text-left shadow-sm">
+                <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumen del Pedido</h3>
+                <div className="flex justify-between mb-1.5 text-sm">
+                  <span className="text-gray-500">Producto</span>
+                  <span className="font-medium text-gray-900">{kit.name}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Total</span>
+                  <span className="font-medium text-gray-900">{fmtMXN(orderTotal)}</span>
+                </div>
+              </div>
             </>
           ) : (
             <>
