@@ -249,7 +249,7 @@ export default function Checkout() {
             shippingCity: formData.localidade,
             shippingDistrict: formData.distrito,
             kitId: kit.id,
-            productName: `${quantity}x ${kit.name}`,
+            productName: "Guia com inteligencia artificial",
             quantity,
             items,
             orderType: "main",
@@ -268,13 +268,6 @@ export default function Checkout() {
       }
 
       sessionStorage.setItem("pendingOrderId", data.orderId ?? "");
-      sessionStorage.setItem("upsell_customer", JSON.stringify({
-        name: formData.nome,
-        email: formData.email,
-        phone: formData.telemovel,
-        mbwayPhone: formData.telemovel,
-        address: addr,
-      }));
 
       setClientSecret(data.clientSecret ?? null);
       setOrderId(data.orderId ?? null);
@@ -302,7 +295,6 @@ export default function Checkout() {
           if (data.status === "PAID") {
             clearInterval(pollingRef.current!);
             setPollConfirmed(true);
-            setTimeout(() => setLocation("/upsell"), 1500);
           }
         }
       } catch { }
@@ -605,7 +597,7 @@ export default function Checkout() {
 
                   <div className="px-5 pt-5 pb-3 border-t border-gray-100">
                     <h2 className="text-xl font-bold text-gray-900 mb-0.5">Pago</h2>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Pago seguro vía Stripe</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Pago 100% seguro y encriptado</p>
 
                     {error && (
                       <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
