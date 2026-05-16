@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/api";
-import { CheckCircle2, Clock, Package, Truck, Home, Search, AlertCircle } from "lucide-react";
+import { CheckCircle2, Clock, Package, Search, AlertCircle } from "lucide-react";
 
-const STATUS_STEPS = [
-  { key: "preparing",  label: "Preparando pedido",            icon: Package },
-  { key: "shipped",    label: "Enviado para transportadora",  icon: Truck },
-  { key: "in_transit", label: "A caminho",                    icon: Truck },
-  { key: "delivered",  label: "Entregue",                     icon: Home },
+const MILESTONES = [
+  { day: 1,  status: "confirmed",         label: "Pedido confirmado",                desc: "Pago aprobado, pedido registrado y correo de confirmación enviado." },
+  { day: 2,  status: "preparing",         label: "Preparación logística",            desc: "Tu producto fue separado y encaminado a procesamiento interno." },
+  { day: 4,  status: "shipped",           label: "Enviado a transportista",          desc: "Etiqueta validada y pedido entregado al socio logístico." },
+  { day: 7,  status: "in_transit",        label: "Centro logístico internacional",   desc: "Pedido en tránsito entre centros operacionales por el alto volumen de envíos." },
+  { day: 10, status: "transport_update",  label: "Actualización de transporte",      desc: "Pedido encaminado para distribución regional." },
+  { day: 13, status: "local_center",      label: "Entrada en centro local",          desc: "Pedido recibido en el centro logístico responsable de tu región." },
+  { day: 16, status: "delivery_prep",     label: "Preparación de entrega",           desc: "Separación final y organización de la ruta de distribución." },
+  { day: 18, status: "out_for_delivery",  label: "Salió para distribución",          desc: "Pedido asignado al repartidor responsable." },
+  { day: 20, status: "delivery_expected", label: "Entrega prevista",                 desc: "Tu pedido está en la fase final de entrega." },
 ];
 
-const STATUS_INDEX: Record<string, number> = {
-  preparing: 0, shipped: 1, in_transit: 2, delivered: 3,
-};
+const STATUS_ORDER = MILESTONES.map((m) => m.status);
 
 type TrackingData = {
   tracking_code: string;
@@ -65,13 +68,20 @@ export default function Rastreio() {
   }, []);
 
   const isPaid = data?.payment_status === "paid";
-  const currentIdx = data ? (STATUS_INDEX[data.order_status] ?? 0) : -1;
+  const currentStatusIdx = data ? STATUS_ORDER.indexOf(data.order_status) : -1;
+  const currentMilestone = currentStatusIdx >= 0 ? MILESTONES[currentStatusIdx] : null;
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" });
 
   const formatAmount = (v: number) =>
     `$${Number(v).toLocaleString("es-MX", { minimumFractionDigits: 0 })} MXN`;
+
+  // Estimate expected date: paid_at + 20 days
+  const estimatedDelivery = data?.paid_at
+    ? new Date(new Date(data.paid_at).getTime() + 20 * 24 * 60 * 60 * 1000)
+        .toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" })
+    : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -123,6 +133,7 @@ export default function Rastreio() {
         {/* Order card */}
         {data && (
           <div className="space-y-4">
+            {/* Summary */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
@@ -137,7 +148,7 @@ export default function Rastreio() {
                   <p className="text-xs text-gray-400">Tarjeta de crédito</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
                   isPaid ? "bg-green-100 text-green-700" :
                   data.payment_status === "refused" ? "bg-red-100 text-red-700" :
@@ -149,6 +160,13 @@ export default function Rastreio() {
                 </span>
                 <span className="text-xs text-gray-400">{formatDate(data.created_at)}</span>
               </div>
+              {estimatedDelivery && isPaid && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    Entrega estimada: <span className="font-semibold text-gray-700">{estimatedDelivery}</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Awaiting payment */}
@@ -162,35 +180,61 @@ export default function Rastreio() {
               </div>
             )}
 
-            {/* Timeline */}
+            {/* Current status banner */}
+            {isPaid && currentMilestone && (
+              <div className="bg-[#7B1C1C]/5 border border-[#7B1C1C]/20 rounded-xl p-4">
+                <p className="text-xs font-bold text-[#7B1C1C]/60 uppercase tracking-widest mb-1">Estado actual</p>
+                <p className="text-base font-black text-[#7B1C1C]">{currentMilestone.label}</p>
+                <p className="text-sm text-gray-600 mt-1">{currentMilestone.desc}</p>
+              </div>
+            )}
+
+            {/* Full timeline */}
             {isPaid && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">Estado del pedido</p>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">Seguimiento completo</p>
                 <div className="relative">
-                  <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-gray-200" />
+                  {/* Vertical line */}
+                  <div className="absolute left-[13px] top-3 bottom-3 w-0.5 bg-gray-200" />
+
                   <div className="space-y-0">
-                    {STATUS_STEPS.map((step, idx) => {
-                      const isCompleted = idx < currentIdx;
-                      const isCurrent = idx === currentIdx;
-                      const Icon = step.icon;
+                    {MILESTONES.map((m, idx) => {
+                      const isCompleted = currentStatusIdx > idx;
+                      const isCurrent = currentStatusIdx === idx;
+                      const isPending = currentStatusIdx < idx;
+
                       return (
-                        <div key={step.key} className="flex items-start gap-4 relative pb-6 last:pb-0">
-                          <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            isCompleted ? "bg-green-500" : isCurrent ? "bg-[#7B1C1C]" : "bg-gray-200"
+                        <div key={m.status} className="flex items-start gap-4 relative pb-5 last:pb-0">
+                          {/* Dot */}
+                          <div className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                            isCompleted ? "bg-green-500" :
+                            isCurrent   ? "bg-[#7B1C1C]" :
+                            "bg-gray-200"
                           }`}>
                             {isCompleted
                               ? <CheckCircle2 className="w-4 h-4 text-white" />
-                              : <Icon className={`w-4 h-4 ${isCurrent ? "text-white" : "text-gray-400"}`} />
+                              : isCurrent
+                              ? <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                              : <div className="w-2 h-2 rounded-full bg-gray-400" />
                             }
                           </div>
-                          <div className="pt-1">
-                            <p className={`text-sm font-semibold ${
-                              isCompleted ? "text-green-700" : isCurrent ? "text-[#7B1C1C]" : "text-gray-400"
-                            }`}>{step.label}</p>
-                            {isCurrent && (
-                              <span className="inline-block mt-1 text-xs bg-[#7B1C1C]/10 text-[#7B1C1C] font-semibold px-2 py-0.5 rounded-full">
-                                Estado actual
-                              </span>
+
+                          {/* Content */}
+                          <div className="pt-0.5 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className={`text-sm font-bold ${
+                                isCompleted ? "text-green-700" :
+                                isCurrent   ? "text-[#7B1C1C]" :
+                                "text-gray-400"
+                              }`}>{m.label}</p>
+                              {isCurrent && (
+                                <span className="text-xs bg-[#7B1C1C] text-white font-semibold px-2 py-0.5 rounded-full">
+                                  Ahora
+                                </span>
+                              )}
+                            </div>
+                            {(isCompleted || isCurrent) && !isPending && (
+                              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{m.desc}</p>
                             )}
                           </div>
                         </div>
