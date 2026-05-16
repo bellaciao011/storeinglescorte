@@ -239,4 +239,182 @@ router.post("/stripe-webhook", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/public/rastreio", async (req: Request, res: Response) => {
+  try {
+    const { codigo } = req.query as { codigo?: string };
+    if (!codigo) {
+      res.status(400).json({ error: "Código de rastreio é obrigatório" });
+      return;
+    }
+
+    const [order] = await db
+      .select()
+      .from(paniniOrdersTable)
+      .where(eq(paniniOrdersTable.trackingCode, codigo.toUpperCase()));
+
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    const rawStatus = (order.status ?? "").toLowerCase();
+    const paymentStatus =
+      rawStatus === "paid" ? "paid" :
+      rawStatus === "failed" || rawStatus === "refused" ? "refused" :
+      "waiting_payment";
+
+    res.json({
+      tracking_code: order.trackingCode,
+      customer_name: order.customerName,
+      product_name: order.productName,
+      amount_eur: order.amountEur,
+      payment_status: paymentStatus,
+      order_status: order.orderStatus ?? "preparing",
+      paid_at: order.paidAt,
+      created_at: order.createdAt,
+    });
+  } catch (err) {
+    req.log.error({ err }, "public/rastreio error");
+    res.status(500).json({ error: "Erro interno." });
+  }
+});
+
+router.get("/admin/orders", async (req: Request, res: Response) => {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (req.headers["x-admin-password"] !== adminPassword) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  try {
+    const orders = await db
+      .select()
+      .from(paniniOrdersTable)
+      .orderBy(paniniOrdersTable.createdAt);
+
+    const mapped = orders.map((o) => {
+      const rawStatus = (o.status ?? "").toLowerCase();
+      return {
+        id: o.id,
+        tracking_code: o.trackingCode,
+        customer_name: o.customerName,
+        customer_email: o.customerEmail,
+        customer_phone: o.customerPhone,
+        shipping_address: o.shippingAddress,
+        shipping_city: o.shippingCity,
+        shipping_postal_code: o.shippingPostalCode,
+        product_name: o.productName,
+        amount_eur: o.amountEur,
+        status: rawStatus === "paid" ? "paid" : rawStatus === "failed" ? "refused" : rawStatus,
+        order_status: o.orderStatus ?? "preparing",
+        confirmation_email_sent_at: o.confirmationEmailSentAt,
+        paid_at: o.paidAt,
+        utm_source: o.utmSource,
+        utm_campaign: o.utmCampaign,
+        utm_medium: o.utmMedium,
+        utm_content: o.utmContent,
+        utm_term: o.utmTerm,
+        created_at: o.createdAt,
+        updated_at: o.updatedAt,
+      };
+    });
+
+    res.json(mapped);
+  } catch (err) {
+    req.log.error({ err }, "admin/orders GET error");
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+router.post("/admin/orders", async (req: Request, res: Response) => {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (req.headers["x-admin-password"] !== adminPassword) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  try {
+    const { id, status } = req.body as { id: string; status: string };
+    const validStatuses = ["preparing", "shipped", "in_transit", "delivered"];
+    if (!id || !validStatuses.includes(status)) {
+      res.status(400).json({ error: "id e status válido são obrigatórios" });
+      return;
+    }
+    await db
+      .update(paniniOrdersTable)
+      .set({ orderStatus: status, updatedAt: new Date() })
+      .where(eq(paniniOrdersTable.id, id));
+    res.json({ ok: true });
+  } catch (err) {
+    req.log.error({ err }, "admin/orders POST error");
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+router.put("/admin/orders", async (req: Request, res: Response) => {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (req.headers["x-admin-password"] !== adminPassword) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  try {
+    const { id, action } = req.body as { id: string; action: string };
+    if (!id || action !== "send_email") {
+      res.status(400).json({ error: "id e action=send_email são obrigatórios" });
+      return;
+    }
+
+    const [order] = await db
+      .select()
+      .from(paniniOrdersTable)
+      .where(eq(paniniOrdersTable.id, id));
+
+    if (!order || !order.customerEmail) {
+      res.status(404).json({ error: "Pedido não encontrado ou sem email" });
+      return;
+    }
+
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_API_KEY) {
+      res.status(500).json({ error: "RESEND_API_KEY não configurado" });
+      return;
+    }
+
+    const trackingCode = order.trackingCode ?? "—";
+    const trackingUrl = `https://panini-mx.site/rastreio?codigo=${trackingCode}`;
+    const firstName = (order.customerName ?? "Cliente").split(" ")[0];
+    const amountFmt = `$${Number(order.amountEur ?? 0).toLocaleString("es-MX", { minimumFractionDigits: 0 })} MXN`;
+    const productName = order.productName ?? "Kit Panini FIFA World Cup 2026";
+
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/></head><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 16px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;"><tr><td style="background:#7B1C1C;border-radius:12px 12px 0 0;padding:20px 32px;text-align:center;"><p style="margin:0;font-size:11px;color:rgba(255,255,255,0.6);letter-spacing:2px;text-transform:uppercase;">FIFA World Cup 2026&#8482;</p><p style="margin:0;font-size:22px;font-weight:900;color:#F5C518;font-family:Georgia,serif;">PANINI</p></td></tr><tr><td style="background:#fff;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.10);"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="background:#1a7a3c;padding:24px 32px;text-align:center;"><div style="width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:50%;margin:0 auto 10px;line-height:52px;font-size:26px;color:#fff;">&#10003;</div><h1 style="margin:0;color:#fff;font-size:21px;font-weight:800;">&#161;Pedido confirmado!</h1><p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">Tu pago fue recibido con &#233;xito</p></td></tr></table><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:28px 32px;"><p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">Hola <strong>${firstName}</strong>,<br/>Tu pedido de <strong>${productName}</strong> est&#225; siendo preparado y ser&#225; enviado muy pronto a M&#233;xico.</p><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:24px;"><tr><td style="background:#7B1C1C;padding:12px 20px;"><span style="font-size:10px;font-weight:700;color:#F5C518;text-transform:uppercase;letter-spacing:1.5px;">Resumen del pedido</span></td></tr><tr><td style="padding:4px 0;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:11px 20px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;">Producto</td><td style="padding:11px 20px;font-size:13px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;">${productName}</td></tr><tr><td style="padding:11px 20px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;">Total pagado</td><td style="padding:11px 20px;font-size:13px;color:#111827;font-weight:700;text-align:right;border-bottom:1px solid #f3f4f6;">${amountFmt}</td></tr><tr><td style="padding:11px 20px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;">M&#233;todo de pago</td><td style="padding:11px 20px;font-size:13px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;">Tarjeta de cr&#233;dito / d&#233;bito</td></tr><tr><td style="padding:13px 20px;font-size:13px;color:#6b7280;">C&#243;digo de rastreo</td><td style="padding:13px 20px;text-align:right;"><span style="font-size:17px;font-weight:900;color:#7B1C1C;letter-spacing:3px;font-family:monospace;">${trackingCode}</span></td></tr></table></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td align="center"><a href="${trackingUrl}" style="display:inline-block;background:#7B1C1C;color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 38px;border-radius:8px;">Rastrear mi pedido &rarr;</a></td></tr></table><p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.7;">panini-mx.site &middot; Env&#237;o gratis a todo M&#233;xico</p></td></tr></table></td></tr></table></td></tr></table></body></html>`;
+
+    const emailRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+      body: JSON.stringify({
+        from: "Panini WC26 <panini@confirmedorder.site>",
+        to: order.customerEmail,
+        subject: `¡Pedido confirmado! — Código ${trackingCode}`,
+        html,
+      }),
+    });
+
+    if (!emailRes.ok) {
+      const txt = await emailRes.text();
+      req.log.error({ status: emailRes.status, txt }, "Resend error");
+      res.status(502).json({ error: "Falha ao enviar email" });
+      return;
+    }
+
+    await db
+      .update(paniniOrdersTable)
+      .set({ confirmationEmailSentAt: new Date(), updatedAt: new Date() })
+      .where(eq(paniniOrdersTable.id, id));
+
+    req.log.info({ id, email: order.customerEmail }, "Confirmation email sent from admin");
+    res.json({ ok: true });
+  } catch (err) {
+    req.log.error({ err }, "admin/orders PUT error");
+    res.status(500).json({ error: "Erro interno" });
+  }
+});
+
 export default router;

@@ -168,10 +168,12 @@ export default async function handler(
         customer_email: body.customer_email ?? null,
         customer_phone: body.customer_phone ?? null,
         customer_document: body.customer_document ?? null,
-        customer_address: null,
+        shipping_address: null,
+        shipping_city: null,
+        shipping_postal_code: null,
+        shipping_district: null,
         product_name: "Kit Panini FIFA World Cup 2026",
         amount_eur: body.amount_eur,
-        payment_method: body.payment_method,
       });
       // If payment_status is paid, mark it immediately
       if (body.payment_status === "paid") {

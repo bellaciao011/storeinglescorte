@@ -83,10 +83,6 @@ export default async function handler(
     const trackingCode = generateTrackingCode();
     const orderId = `str-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-    const fullAddress = [shippingAddress, shippingCity, shippingDistrict, shippingPostalCode]
-      .filter(Boolean)
-      .join(", ") || null;
-
     // Create Stripe PaymentIntent in MXN
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // centavos MXN
@@ -126,7 +122,7 @@ export default async function handler(
             },
           ];
 
-    // UTMify + DB in parallel (non-blocking for DB errors)
+    // UTMify + DB in parallel (DB errors are non-blocking)
     await Promise.all([
       sendToUtmify({
         orderId,
@@ -170,17 +166,17 @@ export default async function handler(
         customer_email: customerEmail ?? null,
         customer_phone: customerPhone ?? null,
         customer_document: customerDocument ?? null,
-        customer_address: fullAddress,
+        shipping_address: shippingAddress ?? null,
+        shipping_city: shippingCity ?? null,
+        shipping_postal_code: shippingPostalCode ?? null,
+        shipping_district: shippingDistrict ?? null,
         product_name: productName ?? "Kit Panini FIFA WC26",
         amount_eur: amount,
-        payment_method: "stripe",
         utm_source: utmParams?.utm_source ?? null,
         utm_campaign: utmParams?.utm_campaign ?? null,
         utm_medium: utmParams?.utm_medium ?? null,
         utm_content: utmParams?.utm_content ?? null,
         utm_term: utmParams?.utm_term ?? null,
-        src: utmParams?.src ?? null,
-        sck: utmParams?.sck ?? null,
       }).catch((err) => console.error("[DB] createOrder error:", err)),
     ]);
 

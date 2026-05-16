@@ -7,7 +7,10 @@ export interface Order {
   customer_email: string | null;
   customer_phone: string | null;
   customer_document: string | null;
-  customer_address: string | null;
+  shipping_address: string | null;
+  shipping_city: string | null;
+  shipping_postal_code: string | null;
+  shipping_district: string | null;
   product_name: string;
   amount_eur: number;
   status: string;
@@ -39,29 +42,31 @@ export async function createOrder(order: {
   customer_email: string | null;
   customer_phone: string | null;
   customer_document: string | null;
-  customer_address: string | null;
+  shipping_address: string | null;
+  shipping_city: string | null;
+  shipping_postal_code: string | null;
+  shipping_district: string | null;
   product_name: string;
   amount_eur: number;
-  payment_method?: string;
   utm_source?: string | null;
   utm_campaign?: string | null;
   utm_medium?: string | null;
   utm_content?: string | null;
   utm_term?: string | null;
-  src?: string | null;
-  sck?: string | null;
 }): Promise<void> {
   await query(
     `INSERT INTO panini_orders (
       id, tracking_code, customer_name, customer_email, customer_phone,
-      customer_document, customer_address, product_name, amount_eur,
+      customer_document, shipping_address, shipping_city, shipping_postal_code, shipping_district,
+      product_name, amount_eur,
       status, order_status,
       utm_source, utm_campaign, utm_medium, utm_content, utm_term
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'waiting_payment','preparing',$10,$11,$12,$13,$14)
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'waiting_payment','preparing',$13,$14,$15,$16,$17)
     ON CONFLICT (id) DO NOTHING`,
     [
       order.id, order.tracking_code, order.customer_name, order.customer_email,
-      order.customer_phone, order.customer_document, order.customer_address,
+      order.customer_phone, order.customer_document,
+      order.shipping_address, order.shipping_city, order.shipping_postal_code, order.shipping_district,
       order.product_name, order.amount_eur,
       order.utm_source ?? null, order.utm_campaign ?? null, order.utm_medium ?? null,
       order.utm_content ?? null, order.utm_term ?? null,
@@ -81,7 +86,7 @@ export async function markOrderPaid(id: string): Promise<{ tracking_code: string
   return null;
 }
 
-export async function markOrderRefused(id: string, reason?: string | null): Promise<void> {
+export async function markOrderRefused(id: string): Promise<void> {
   await query(
     `UPDATE panini_orders SET status = 'refused', updated_at = NOW() WHERE id = $1`,
     [id]
