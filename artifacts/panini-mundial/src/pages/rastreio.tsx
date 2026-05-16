@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/api";
-import { CheckCircle2, Clock, Package, Search, AlertCircle } from "lucide-react";
+import { CheckCircle2, Clock, Package, Search, AlertCircle, X, ChevronDown, ChevronUp, MessageCircle, Send, Loader2 } from "lucide-react";
 
 const MILESTONES = [
   { day: 1,  status: "confirmed",         label: "Pedido confirmado",                desc: "Pago aprobado, pedido registrado y correo de confirmación enviado." },
@@ -16,6 +16,29 @@ const MILESTONES = [
 
 const STATUS_ORDER = MILESTONES.map((m) => m.status);
 
+const FAQ = [
+  {
+    icon: "📦",
+    title: "ONDE ESTÁ A MINHA ENCOMENDA?",
+    body: "A tua encomenda encontra-se em processamento logístico e poderá receber novas atualizações automaticamente nas próximas horas/dias úteis.\n\nDevido ao elevado volume de pedidos da campanha atual, alguns rastreios podem demorar mais tempo a sincronizar no sistema.",
+  },
+  {
+    icon: "⏳",
+    title: "QUAL O PRAZO DE ENTREGA?",
+    body: "O prazo médio de entrega pode variar entre 3 a 8 dias úteis dependendo da região, transportadora e fluxo logístico internacional.\n\nEm períodos promocionais, algumas encomendas podem sofrer pequenos atrasos operacionais.",
+  },
+  {
+    icon: "🚚",
+    title: "O MEU RASTREIO NÃO ATUALIZA",
+    body: "Não te preocupes. Em alguns casos, o sistema apenas atualiza quando a encomenda chega ao próximo centro logístico.\n\nIsso não significa que o pedido esteja parado.",
+  },
+  {
+    icon: "💬",
+    title: "FALAR COM O SUPORTE",
+    body: "Caso precises de ajuda adicional, a nossa equipa irá analisar o teu caso o mais rapidamente possível.\n\nTempo médio de resposta:\n• 24h a 72h úteis",
+  },
+];
+
 type TrackingData = {
   tracking_code: string;
   customer_name: string;
@@ -26,6 +49,232 @@ type TrackingData = {
   paid_at: string | null;
   created_at: string;
 };
+
+function SupportWidget() {
+  const [open, setOpen] = useState(false);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [form, setForm] = useState({ nome: "", encomenda: "", email: "", motivo: "", opcao: "" });
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSending(true);
+    try {
+      await fetch(apiUrl("/api/public/support"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+    } catch { /* silent */ }
+    setSending(false);
+    setSubmitted(true);
+  }
+
+  return (
+    <>
+      {/* Floating button */}
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#7B1C1C] text-white shadow-lg flex items-center justify-center hover:bg-[#5a0c16] transition-all hover:scale-105 active:scale-95"
+        aria-label="Suporte"
+      >
+        <MessageCircle className="w-6 h-6" />
+      </button>
+
+      {/* Backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Panel */}
+      <div className={`fixed bottom-0 right-0 z-50 w-full max-w-md h-[88vh] bg-white rounded-t-2xl shadow-2xl flex flex-col transition-transform duration-300 ${open ? "translate-y-0" : "translate-y-full"}`}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#7B1C1C] flex items-center justify-center">
+              <MessageCircle className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-black text-gray-900 text-sm leading-tight">SUPORTE AO CLIENTE</p>
+              <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                Centro de Apoio
+              </p>
+            </div>
+          </div>
+          <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+            <X className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+
+          {/* Welcome */}
+          <div className="bg-[#7B1C1C]/5 rounded-xl p-4 border border-[#7B1C1C]/10">
+            <p className="text-sm text-gray-700 leading-relaxed">
+              👋 <strong>Olá! Bem-vindo ao Centro de Apoio ao Cliente.</strong>
+            </p>
+            <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+              A nossa equipa está disponível para ajudar com dúvidas relacionadas ao estado da encomenda, prazos de entrega, atualizações logísticas, reembolsos e suporte geral.
+            </p>
+          </div>
+
+          {/* FAQ items */}
+          {FAQ.map((item, idx) => (
+            <div key={idx} className="border border-gray-200 rounded-xl overflow-hidden">
+              <button
+                onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <span>{item.icon}</span>
+                  <span>{item.title}</span>
+                </span>
+                {expandedFaq === idx
+                  ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                }
+              </button>
+              {expandedFaq === idx && (
+                <div className="px-4 pb-4 pt-0">
+                  <div className="border-t border-gray-100 pt-3">
+                    {item.body.split("\n").map((line, i) => (
+                      <p key={i} className={`text-xs text-gray-600 leading-relaxed ${i > 0 && line === "" ? "mt-2" : line !== "" && i > 0 ? "mt-1" : ""}`}>
+                        {line || "\u00A0"}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Refund form section */}
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+            >
+              <span className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                <span>📄</span>
+                <span>PEDIDO DE REEMBOLSO</span>
+              </span>
+              {showForm
+                ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              }
+            </button>
+
+            {showForm && (
+              <div className="px-4 pb-4 pt-0 border-t border-gray-100">
+                {submitted ? (
+                  <div className="pt-4 text-center">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                    </div>
+                    <p className="font-bold text-green-700 text-sm mb-1">✅ PEDIDO RECEBIDO</p>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      Após o envio do formulário, o teu pedido será encaminhado automaticamente para análise interna.<br/><br/>
+                      Receberás uma atualização assim que o processo for revisto pela equipa responsável.
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="pt-3 space-y-3">
+                    <p className="text-xs text-gray-500 leading-relaxed mb-3">
+                      Se pretendes solicitar uma análise de cancelamento ou reembolso, preenche o formulário abaixo. A nossa equipa irá validar as informações e responder em breve.
+                    </p>
+
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Nome completo</label>
+                      <input
+                        required
+                        value={form.nome}
+                        onChange={e => setForm({ ...form, nome: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#7B1C1C]/20 focus:border-[#7B1C1C]"
+                        placeholder="Seu nome completo"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Número da encomenda</label>
+                      <input
+                        required
+                        value={form.encomenda}
+                        onChange={e => setForm({ ...form, encomenda: e.target.value.toUpperCase() })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#7B1C1C]/20 focus:border-[#7B1C1C]"
+                        placeholder="Ex: PANAB1234"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Email utilizado na compra</label>
+                      <input
+                        required
+                        type="email"
+                        value={form.email}
+                        onChange={e => setForm({ ...form, email: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#7B1C1C]/20 focus:border-[#7B1C1C]"
+                        placeholder="seu@email.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Motivo do pedido</label>
+                      <textarea
+                        required
+                        rows={2}
+                        value={form.motivo}
+                        onChange={e => setForm({ ...form, motivo: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#7B1C1C]/20 focus:border-[#7B1C1C] resize-none"
+                        placeholder="Descreve o motivo..."
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-2">Pretende:</label>
+                      <div className="space-y-1.5">
+                        {[
+                          "Continuar com a encomenda",
+                          "Receber atualização prioritária",
+                          "Solicitar análise de reembolso",
+                        ].map((opt) => (
+                          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="opcao"
+                              value={opt}
+                              checked={form.opcao === opt}
+                              onChange={() => setForm({ ...form, opcao: opt })}
+                              className="accent-[#7B1C1C]"
+                            />
+                            <span className="text-xs text-gray-700">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={sending}
+                      className="w-full bg-[#7B1C1C] text-white font-bold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-[#5a0c16] disabled:opacity-60 transition-colors"
+                    >
+                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {sending ? "Enviando..." : "Enviar formulário"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="h-4" />
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function Rastreio() {
   const params = new URLSearchParams(window.location.search);
@@ -77,7 +326,6 @@ export default function Rastreio() {
   const formatAmount = (v: number) =>
     `$${Number(v).toLocaleString("es-MX", { minimumFractionDigits: 0 })} MXN`;
 
-  // Estimate expected date: paid_at + 20 days
   const estimatedDelivery = data?.paid_at
     ? new Date(new Date(data.paid_at).getTime() + 20 * 24 * 60 * 60 * 1000)
         .toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" })
@@ -133,7 +381,6 @@ export default function Rastreio() {
         {/* Order card */}
         {data && (
           <div className="space-y-4">
-            {/* Summary */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
@@ -169,7 +416,6 @@ export default function Rastreio() {
               )}
             </div>
 
-            {/* Awaiting payment */}
             {!isPaid && data.payment_status !== "refused" && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
                 <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -180,7 +426,6 @@ export default function Rastreio() {
               </div>
             )}
 
-            {/* Current status banner */}
             {isPaid && currentMilestone && (
               <div className="bg-[#7B1C1C]/5 border border-[#7B1C1C]/20 rounded-xl p-4">
                 <p className="text-xs font-bold text-[#7B1C1C]/60 uppercase tracking-widest mb-1">Estado actual</p>
@@ -189,27 +434,19 @@ export default function Rastreio() {
               </div>
             )}
 
-            {/* Full timeline */}
             {isPaid && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-5">Seguimiento completo</p>
                 <div className="relative">
-                  {/* Vertical line */}
                   <div className="absolute left-[13px] top-3 bottom-3 w-0.5 bg-gray-200" />
-
                   <div className="space-y-0">
                     {MILESTONES.map((m, idx) => {
                       const isCompleted = currentStatusIdx > idx;
                       const isCurrent = currentStatusIdx === idx;
-                      const isPending = currentStatusIdx < idx;
-
                       return (
                         <div key={m.status} className="flex items-start gap-4 relative pb-5 last:pb-0">
-                          {/* Dot */}
                           <div className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                            isCompleted ? "bg-green-500" :
-                            isCurrent   ? "bg-[#7B1C1C]" :
-                            "bg-gray-200"
+                            isCompleted ? "bg-green-500" : isCurrent ? "bg-[#7B1C1C]" : "bg-gray-200"
                           }`}>
                             {isCompleted
                               ? <CheckCircle2 className="w-4 h-4 text-white" />
@@ -218,22 +455,16 @@ export default function Rastreio() {
                               : <div className="w-2 h-2 rounded-full bg-gray-400" />
                             }
                           </div>
-
-                          {/* Content */}
-                          <div className="pt-0.5 flex-1 min-w-0">
+                          <div className="pt-0.5 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <p className={`text-sm font-bold ${
-                                isCompleted ? "text-green-700" :
-                                isCurrent   ? "text-[#7B1C1C]" :
-                                "text-gray-400"
+                                isCompleted ? "text-green-700" : isCurrent ? "text-[#7B1C1C]" : "text-gray-400"
                               }`}>{m.label}</p>
                               {isCurrent && (
-                                <span className="text-xs bg-[#7B1C1C] text-white font-semibold px-2 py-0.5 rounded-full">
-                                  Ahora
-                                </span>
+                                <span className="text-xs bg-[#7B1C1C] text-white font-semibold px-2 py-0.5 rounded-full">Ahora</span>
                               )}
                             </div>
-                            {(isCompleted || isCurrent) && !isPending && (
+                            {(isCompleted || isCurrent) && (
                               <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{m.desc}</p>
                             )}
                           </div>
@@ -254,6 +485,8 @@ export default function Rastreio() {
           </div>
         )}
       </div>
+
+      <SupportWidget />
     </div>
   );
 }
