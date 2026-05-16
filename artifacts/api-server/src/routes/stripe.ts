@@ -119,6 +119,46 @@ router.post("/payment/create-intent", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/payment/update-intent", async (req: Request, res: Response) => {
+  try {
+    const stripe = getStripe();
+    const { orderId, amount, items } = req.body as {
+      orderId: string;
+      amount: number;
+      items?: unknown[];
+    };
+
+    if (!orderId || !amount) {
+      res.status(400).json({ error: "orderId e amount são obrigatórios" });
+      return;
+    }
+
+    const [order] = await db
+      .select({ stripePaymentIntentId: paniniOrdersTable.stripePaymentIntentId })
+      .from(paniniOrdersTable)
+      .where(eq(paniniOrdersTable.id, orderId));
+
+    if (!order?.stripePaymentIntentId) {
+      res.status(404).json({ error: "Pedido não encontrado" });
+      return;
+    }
+
+    await stripe.paymentIntents.update(order.stripePaymentIntentId, {
+      amount: Math.round(amount * 100),
+    });
+
+    await db.update(paniniOrdersTable)
+      .set({ amountEur: String(amount), items: items ?? undefined, updatedAt: new Date() })
+      .where(eq(paniniOrdersTable.id, orderId));
+
+    req.log.info({ orderId, amount }, "PaymentIntent amount updated");
+    res.json({ ok: true });
+  } catch (err) {
+    req.log.error({ err }, "payment/update-intent error");
+    res.status(500).json({ error: "Erro ao actualizar o pagamento." });
+  }
+});
+
 router.get("/public/payment-status", async (req: Request, res: Response) => {
   try {
     const { orderId } = req.query as { orderId?: string };

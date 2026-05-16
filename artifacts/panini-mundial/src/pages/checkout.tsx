@@ -108,6 +108,7 @@ export default function Checkout() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
   const [pollConfirmed, setPollConfirmed] = useState(false);
+  const piAmountRef = useRef<number | null>(null);
 
   const orderBumps = [
     { id: "bump50", label: "+50 saquetas · ~250 cromos", desc: "Desconto de pré-venda com portes grátis em Portugal.", price: 30, oldPrice: 40, img: "/assets/kit-iniciante.png", badge: null },
@@ -152,6 +153,42 @@ export default function Checkout() {
       setStep(4);
     }
   }, []);
+
+  // Auto-create PI when user enters step 3
+  useEffect(() => {
+    if (step !== 3 || clientSecret || creatingIntent) return;
+    handleCreateIntent();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  // Update PI amount silently when bumps change (debounced)
+  useEffect(() => {
+    if (!orderId || !clientSecret) return;
+    if (piAmountRef.current === null) {
+      piAmountRef.current = orderTotal;
+      return;
+    }
+    if (piAmountRef.current === orderTotal) return;
+    piAmountRef.current = orderTotal;
+
+    const items = [
+      { id: kit.id, name: kit.name, quantity, price: kit.price },
+      ...orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({
+        id: b.id, name: b.label, quantity: 1, price: b.price,
+      })),
+    ];
+
+    const t = setTimeout(() => {
+      fetch("/api/payment/update-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, amount: orderTotal, items }),
+      }).catch(() => { /* silent — payment will use confirmed amount */ });
+    }, 400);
+
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, clientSecret, orderTotal]);
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
@@ -575,51 +612,35 @@ export default function Checkout() {
                       </div>
                     )}
 
-                    {!clientSecret ? (
-                      <>
-                        <div className="border-t border-gray-100 pt-4 space-y-2 mb-5">
-                          <div className="flex justify-between text-sm text-gray-500">
-                            <span>Portes</span>
-                            <span className="text-primary font-semibold">Grátis</span>
-                          </div>
-                          <div className="flex justify-between text-sm text-gray-600">
-                            <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
-                            <span>{(kit.price * quantity).toFixed(2).replace(".", ",")} €</span>
-                          </div>
-                          {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
-                            <div key={b.id} className="flex justify-between text-sm text-gray-600">
-                              <span className="text-xs">{b.label}</span>
-                              <span>{b.price.toFixed(2).replace(".", ",")} €</span>
-                            </div>
-                          ))}
-                          <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                            <span className="font-black text-gray-900 text-base">Total</span>
-                            <span className="font-black text-primary text-xl">{orderTotal.toFixed(2).replace(".", ",")} €</span>
-                          </div>
+                      <div className="border-t border-gray-100 pt-4 space-y-2 mb-5">
+                        <div className="flex justify-between text-sm text-gray-500">
+                          <span>Portes</span>
+                          <span className="text-primary font-semibold">Grátis</span>
                         </div>
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
+                          <span>{(kit.price * quantity).toFixed(2).replace(".", ",")} €</span>
+                        </div>
+                        {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
+                          <div key={b.id} className="flex justify-between text-sm text-gray-600">
+                            <span className="text-xs">{b.label}</span>
+                            <span>{b.price.toFixed(2).replace(".", ",")} €</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                          <span className="font-black text-gray-900 text-base">Total</span>
+                          <span className="font-black text-primary text-xl">{orderTotal.toFixed(2).replace(".", ",")} €</span>
+                        </div>
+                      </div>
 
-                        <div className="flex gap-3 mb-4">
-                          <button
-                            type="button"
-                            onClick={() => setStep(2)}
-                            className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
-                          >
-                            VOLTAR
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleCreateIntent}
-                            disabled={creatingIntent}
-                            className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                          >
-                            {creatingIntent
-                              ? <><Loader2 className="w-5 h-5 animate-spin" /> A preparar…</>
-                              : <>Continuar para o pagamento <ChevronRight className="w-5 h-5" /></>
-                            }
-                          </button>
-                        </div>
-                      </>
-                    ) : (
+                    {creatingIntent && (
+                      <div className="flex items-center justify-center gap-3 py-10 text-gray-500">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        <span className="text-sm font-medium">A preparar pagamento…</span>
+                      </div>
+                    )}
+
+                    {clientSecret && (
                       <Elements
                         key={clientSecret}
                         stripe={stripePromise}
@@ -638,7 +659,7 @@ export default function Checkout() {
                             setStep(4);
                           }}
                           onError={(msg) => setError(msg)}
-                          onBack={() => { setClientSecret(null); setOrderId(null); }}
+                          onBack={() => { setClientSecret(null); setOrderId(null); piAmountRef.current = null; setStep(2); }}
                         />
                       </Elements>
                     )}
