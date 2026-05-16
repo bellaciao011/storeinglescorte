@@ -1,0 +1,126 @@
+
+May 16 10:13:02.03
+POST
+200
+panini-mx.site
+/api/payment/update-intent
+May 16 10:13:01.05
+POST
+200
+panini-mx.site
+/api/payment/update-intent
+May 16 10:12:55.74
+POST
+200
+panini-mx.site
+/api/payment/update-intent
+May 16 10:12:38.86
+POST
+200
+panini-mx.site
+/api/payment/create
+2
+[DB] createOrder error: Error: connect ECONNREFUSED 127.0.0.1:5432 at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async createOrder (/vercel/path0/api/lib/orders.ts:57:3) at async Promise.all (index 1) at async Object.handler (/vercel/path0/api/payment/create.ts:131:5) at async r (/opt/rust/nodejs.js:2:15575) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11597) at async Server.<anonymous> (/opt/rust/nodejs.js:17:11390) { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5432 }
+May 16 10:12:35.03
+POST
+200
+panini-mx.site
+/api/payment/update-intent
+May 16 10:12:33.94
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:12:28.93
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:12:23.93
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:12:18.93
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:12:13.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:12:08.93
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:12:03.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:12:02.77
+POST
+200
+panini-mx.site
+/api/payment/create
+2
+[DB] createOrder error: Error: connect ECONNREFUSED 127.0.0.1:5432 at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async createOrder (/vercel/path0/api/lib/orders.ts:57:3) at async Promise.all (index 1) at async Object.handler (/vercel/path0/api/payment/create.ts:131:5) at async r (/opt/rust/nodejs.js:2:15575) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11597) at async Server.<anonymous> (/opt/rust/nodejs.js:17:11390) { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5432 }
+May 16 10:11:58.93
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:11:53.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:11:48.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:11:43.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:11:38.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:11:33.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:11:28.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:11:23.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:11:18.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
+May 16 10:11:17.76
+GET
+500
+panini-mx.site
+/api/public/rastreio
+[Rastreio] error: Error: connect ECONNREFUSED 127.0.0.1:5432 at /var/task/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool/index.js:45:11 at process.processTicksAndRejections (node:internal/process/task_queues:104:5) at async query (/vercel/path0/api/lib/db.ts:32:18) at async getOrderByTrackingCode (/vercel/path0/api/lib/orders.ts:109:15) at async Object.handler (/vercel/path0/api/public/rastreio.ts:23:19) at async r (/opt/rust/nodejs.js:2:15575) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11597) at async Server.<anonymous> (/opt/rust/nodejs.js:17:11390) { errno: -111, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 5432 }
+May 16 10:11:13.92
+GET
+503
+panini-mx.site
+/api/public/payment-status
