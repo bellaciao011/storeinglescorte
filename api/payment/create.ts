@@ -87,7 +87,7 @@ export default async function handler(
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // centavos MXN
       currency: "mxn",
-      description: `1x ${productName ?? "Kit Panini FIFA World Cup 2026"}`,
+      description: "Guía de automatizaciones con inteligencia artificial",
       statement_descriptor_suffix: "PANINI",
       metadata: {
         order_id: orderId,
