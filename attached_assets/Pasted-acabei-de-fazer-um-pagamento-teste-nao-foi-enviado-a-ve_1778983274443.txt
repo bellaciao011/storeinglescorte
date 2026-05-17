@@ -1,0 +1,79 @@
+acabei de fazer um pagamento teste, nao foi enviado a venda aprovada para a utmify, nem email disparou, por que? sendo que remixamos de um projeto que funcionava
+
+4 minutes ago
+
+Show less
+
+Diagnosing webhook processing failures (4 seconds)
+O problema está no webhook do Stripe. Deixa eu analisar o código e os logs para identificar a causa:
+
+
+3 actions
+O código do webhook está correto. O problema mais provável é a configuração no painel do Stripe. Deixa eu verificar o caminho exato:
+
+
+4 actions
+Encontrei o problema. O webhook do Stripe quase certamente está com o STRIPE_WEBHOOK_SECRET errado.
+
+O que acontece: cada endpoint de webhook no Stripe tem seu próprio whsec_... exclusivo. Se você copiou o secret do projeto original, ele não serve para o novo endpoint — a verificação de assinatura falha silenciosamente e o Stripe recebe 400, sem disparar nada.
+
+Como corrigir:
+
+Acesse Stripe → Developers → Webhooks
+Verifique se existe um endpoint apontando para:
+https://www.mx-panini.site/api/stripe/webhook
+
+Se não existir, crie um novo com esse URL e marque o evento payment_intent.succeeded
+Após criar/abrir o endpoint, clique em "Reveal" no campo Signing secret — esse é o whsec_... correto para este projeto
+Atualize o STRIPE_WEBHOOK_SECRET na Vercel com esse novo valor
+Esse é o motivo mais comum quando um webhook funcionava no projeto original mas não no remix — o secret é único por endpoint, não por conta Stripe.
+
+
+Worked for 42 seconds
+
+Attached Image
+
+Attached Image
+https://mx-panini.site/api/stripe/webhook
+mas esta configurado
+
+3 minutes ago
+
+Show less
+
+Debugging webhook delivery failures (13 seconds)
+Vejo o problema! O Stripe mostra 2 entregas malsucedidas no dia 16/05 — o webhook está chegando mas o endpoint está retornando erro.
+
+Olhando os detalhes, há uma suspeita forte: o webhook está configurado para mx-panini.site (sem www), mas os logs da Vercel mostravam requests de www.mx-panini.site. Se houver um redirect de non-www → www, o Stripe perde o body raw da requisição e a verificação de assinatura falha com 400.
+
+Verifique agora no Stripe:
+
+Clique em "Entregas de eventos" → abra uma das entregas malsucedidas → veja o código de resposta HTTP que seu endpoint retornou.
+
+Se for 400 → problema de assinatura (redirect ou secret errado)
+Se for 500 → erro interno (banco, variável faltando)
+Solução mais provável:
+
+Atualize o webhook no Stripe para usar www na URL:
+
+https://www.mx-panini.site/api/stripe/webhook
+
+Pode confirmar qual código de erro aparece na entrega malsucedida?
+
+
+Checkpoint made
+2 minutes ago
+
+Attached Image
+nao acho q o problema seja esse, pq o outro projeto de qual remixamos
+
+tbm esta na mesma pegada, veja o banco de dados se esta la a venda
+
+Just now
+
+Checking Supabase for orders
+Vou verificar o banco agora:
+
+
+2 actions
+O problema está claro: stripe_pi_id está null nos dois pedidos — o PaymentIntent não foi salvo no banco quando o pedido foi criado. Deixa eu verificar o fluxo de criação:
