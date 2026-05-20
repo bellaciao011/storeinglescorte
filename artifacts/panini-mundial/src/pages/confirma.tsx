@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 
 export default function Confirma() {
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col">
       <Header />
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-16">
@@ -31,7 +31,7 @@ export default function Confirma() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-3xl font-bold mb-3"
+            className="text-3xl font-bold mb-3 text-gray-900"
           >
             ¡Compra confirmada!
           </motion.h1>
@@ -40,7 +40,7 @@ export default function Confirma() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-gray-400 text-lg mb-10"
+            className="text-gray-500 text-lg mb-10"
           >
             Gracias por tu pedido. En breve recibirás la confirmación por correo electrónico con todos los detalles y el seguimiento de tu envío.
           </motion.p>
@@ -50,15 +50,15 @@ export default function Confirma() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-gray-900 rounded-2xl border border-gray-800 divide-y divide-gray-800 mb-8 text-left"
+            className="bg-gray-50 rounded-2xl border border-gray-200 divide-y divide-gray-200 mb-8 text-left"
           >
             <div className="flex items-start gap-4 p-5">
               <div className="mt-0.5 w-9 h-9 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                 <Mail className="w-4 h-4 text-blue-400" />
               </div>
               <div>
-                <p className="font-semibold text-white">Confirmación por email</p>
-                <p className="text-sm text-gray-400 mt-0.5">Recibirás un correo con el resumen de tu compra y número de seguimiento.</p>
+                <p className="font-semibold text-gray-900">Confirmación por email</p>
+                <p className="text-sm text-gray-500 mt-0.5">Recibirás un correo con el resumen de tu compra y número de seguimiento.</p>
               </div>
             </div>
 
@@ -67,8 +67,8 @@ export default function Confirma() {
                 <Package className="w-4 h-4 text-yellow-400" />
               </div>
               <div>
-                <p className="font-semibold text-white">Preparando tu kit</p>
-                <p className="text-sm text-gray-400 mt-0.5">Tu pedido se empacará y enviará en un plazo de 1–2 días hábiles.</p>
+                <p className="font-semibold text-gray-900">Preparando tu kit</p>
+                <p className="text-sm text-gray-500 mt-0.5">Tu pedido se empacará y enviará en un plazo de 1–2 días hábiles.</p>
               </div>
             </div>
 
@@ -77,8 +77,8 @@ export default function Confirma() {
                 <MessageCircle className="w-4 h-4 text-green-400" />
               </div>
               <div>
-                <p className="font-semibold text-white">¿Tienes dudas?</p>
-                <p className="text-sm text-gray-400 mt-0.5">Escríbenos por WhatsApp y te ayudamos en minutos.</p>
+                <p className="font-semibold text-gray-900">¿Tienes dudas?</p>
+                <p className="text-sm text-gray-500 mt-0.5">Escríbenos por WhatsApp y te ayudamos en minutos.</p>
               </div>
             </div>
           </motion.div>
