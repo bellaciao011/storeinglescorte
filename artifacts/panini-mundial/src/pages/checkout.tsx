@@ -25,6 +25,18 @@ export default function Checkout() {
   const [redirecting, setRedirecting] = useState(false);
   const [pollConfirmed, setPollConfirmed] = useState(false);
 
+  // Stripe Elements state (powered by Cooud ephemeral publishable key)
+  type ElementConfig = {
+    publishable_key: string;
+    cooud_session_secret: string;
+    element: { mode: string; amount: number; currency: string; appearance: { theme: string } };
+  };
+  const [elementConfig, setElementConfig] = useState<ElementConfig | null>(null);
+  const [paymentReady, setPaymentReady] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const stripeRef = useRef<import("@stripe/stripe-js").Stripe | null>(null);
+  const stripeElementsRef = useRef<import("@stripe/stripe-js").StripeElements | null>(null);
+
   const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
   const orderBumps = [
@@ -134,6 +146,7 @@ export default function Checkout() {
         checkoutUrl?: string;
         orderId?: string;
         sessionId?: string;
+        elementConfig?: ElementConfig | null;
         error?: string;
       };
 
@@ -146,7 +159,11 @@ export default function Checkout() {
       sessionStorage.setItem("pendingOrderId", data.orderId);
       setOrderId(data.orderId);
 
-      if (data.checkoutUrl) {
+      if (data.elementConfig?.publishable_key && data.elementConfig?.cooud_session_secret) {
+        // Mount Stripe Elements with Cooud's ephemeral publishable key — no redirect
+        setElementConfig(data.elementConfig);
+        setRedirecting(false);
+      } else if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
         setError("Error al configurar el pago. Inténtalo de nuevo.");
@@ -155,6 +172,63 @@ export default function Checkout() {
     } catch {
       setError("No fue posible conectar con el servidor de pagos. Verifica tu conexión e inténtalo de nuevo.");
       setRedirecting(false);
+    }
+  };
+
+  // Mount Stripe Elements using Cooud's ephemeral Stripe publishable key
+  useEffect(() => {
+    if (!elementConfig) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { loadStripe } = await import("@stripe/stripe-js");
+        const stripe = await loadStripe(elementConfig.publishable_key);
+        if (!stripe || cancelled) return;
+
+        const elements = stripe.elements({
+          clientSecret: elementConfig.cooud_session_secret,
+          appearance: { theme: elementConfig.element.appearance.theme === "dark" ? "night" : "stripe" },
+        });
+
+        const paymentEl = elements.create("payment", { layout: "tabs" });
+        paymentEl.mount("#stripe-payment-element");
+        paymentEl.on("ready", () => { if (!cancelled) setPaymentReady(true); });
+
+        stripeRef.current = stripe;
+        stripeElementsRef.current = elements;
+      } catch (e) {
+        if (!cancelled) {
+          setError("No se pudo cargar el formulario de pago. Inténtalo de nuevo.");
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [elementConfig]);
+
+  const handleConfirmPayment = async () => {
+    const stripe = stripeRef.current;
+    const elements = stripeElementsRef.current;
+    if (!stripe || !elements || !orderId) return;
+
+    setConfirming(true);
+    setError("");
+
+    const returnUrl = `${window.location.origin}/checkout?return=1&orderId=${encodeURIComponent(orderId)}`;
+    const { error: stripeError } = await stripe.confirmPayment({
+      elements,
+      confirmParams: { return_url: returnUrl },
+      redirect: "if_required",
+    });
+
+    if (stripeError) {
+      setError(stripeError.message ?? "Error al procesar el pago. Inténtalo de nuevo.");
+      setConfirming(false);
+    } else {
+      setStep(4);
+      setConfirming(false);
     }
   };
 
@@ -520,26 +594,59 @@ export default function Checkout() {
                       </div>
                     </div>
 
-                    <div className="flex gap-3 mt-2 mb-4">
-                      <button
-                        type="button"
-                        onClick={() => setStep(2)}
-                        className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
-                      >
-                        VOLVER
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handlePay}
-                        disabled={redirecting}
-                        className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                      >
-                        {redirecting
-                          ? <><Loader2 className="w-5 h-5 animate-spin" /> Preparando pago…</>
-                          : <>Pagar {fmtMXN(orderTotal)} →</>
-                        }
-                      </button>
-                    </div>
+                    {elementConfig ? (
+                      <div className="mt-2 mb-4">
+                        {/* Stripe PaymentElement mounted here using Cooud's ephemeral key */}
+                        <div id="stripe-payment-element" className="mb-4" />
+                        {!paymentReady && (
+                          <div className="flex flex-col items-center justify-center py-8 gap-3">
+                            <Loader2 className="w-7 h-7 animate-spin text-primary" />
+                            <p className="text-sm text-gray-500">Cargando formulario de pago…</p>
+                          </div>
+                        )}
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => { setElementConfig(null); setPaymentReady(false); setStep(2); }}
+                            className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
+                          >
+                            VOLVER
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleConfirmPayment}
+                            disabled={!paymentReady || confirming}
+                            className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                          >
+                            {confirming
+                              ? <><Loader2 className="w-5 h-5 animate-spin" /> Procesando…</>
+                              : <>Pagar {fmtMXN(orderTotal)} →</>
+                            }
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-3 mt-2 mb-4">
+                        <button
+                          type="button"
+                          onClick={() => setStep(2)}
+                          className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
+                        >
+                          VOLVER
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePay}
+                          disabled={redirecting}
+                          className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                        >
+                          {redirecting
+                            ? <><Loader2 className="w-5 h-5 animate-spin" /> Preparando pago…</>
+                            : <>Pagar {fmtMXN(orderTotal)} →</>
+                          }
+                        </button>
+                      </div>
+                    )}
 
                     <p className="text-center text-[11px] text-gray-400 mb-3">Compra segura SSL · Garantía de 7 días · Envío gratis México</p>
                     <div className="flex items-center justify-center gap-3 mb-3">
