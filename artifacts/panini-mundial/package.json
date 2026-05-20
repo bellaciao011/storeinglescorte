@@ -72,9 +72,7 @@
     "vaul": "^1.1.2",
     "vite": "catalog:",
     "wouter": "^3.3.5",
+    "@stripe/stripe-js": "^9.6.0",
     "zod": "catalog:"
-  },
-  "dependencies": {
-    "@stripe/stripe-js": "^9.6.0"
   }
 }
