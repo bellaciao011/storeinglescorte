@@ -6,6 +6,7 @@ export type Kit = {
   price: number;
   oldPrice: number;
   img: string;
+  checkoutUrl: string;
   badge?: {
     text: string;
     colorClass: string;
@@ -21,6 +22,7 @@ export const kits: Kit[] = [
     price: 329,
     oldPrice: 449,
     img: "/assets/kit-basico.png",
+    checkoutUrl: "https://checkout.cooud.com/01KS137170J22EER29WXMDJ5T7",
   },
   {
     id: "iniciante",
@@ -30,6 +32,7 @@ export const kits: Kit[] = [
     price: 749,
     oldPrice: 999,
     img: "/assets/kit-iniciante.png",
+    checkoutUrl: "https://checkout.cooud.com/01KS14367WFPP7TQ98HS2ACAC5",
   },
   {
     id: "campeao",
@@ -39,6 +42,7 @@ export const kits: Kit[] = [
     price: 1199,
     oldPrice: 1799,
     img: "/assets/kit-campeao.png",
+    checkoutUrl: "https://checkout.cooud.com/01KS14A4TGAGPQSBXAMRAKFXHY",
     badge: {
       text: "MÁS VENDIDO",
       colorClass: "bg-red-600 text-white",
@@ -52,6 +56,7 @@ export const kits: Kit[] = [
     price: 1899,
     oldPrice: 2499,
     img: "/assets/kit-colecionador.png",
+    checkoutUrl: "https://checkout.cooud.com/01KS14E2ENQY9PHF9E446W3FA9",
     badge: {
       text: "MEJOR VALOR",
       colorClass: "bg-green-600 text-white",
@@ -65,6 +70,7 @@ export const kits: Kit[] = [
     price: 4199,
     oldPrice: 4999,
     img: "/assets/kit-capa-dourada.png",
+    checkoutUrl: "https://checkout.cooud.com/01KS14HQMQDCP6KX7NRXYRTMPG",
     badge: {
       text: "EXCLUSIVO",
       colorClass: "bg-gradient-to-r from-yellow-500 to-yellow-300 text-black font-bold",
@@ -78,6 +84,7 @@ export const kits: Kit[] = [
     price: 5699,
     oldPrice: 6999,
     img: "/assets/kit-estadio.png",
+    checkoutUrl: "https://checkout.cooud.com/01KS14MTF1T7YY2S7QNXE7HMDS",
     badge: {
       text: "EDICIÓN LIMITADA",
       colorClass: "bg-gradient-to-r from-amber-700 to-yellow-400 text-white font-bold",
