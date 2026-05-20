@@ -1,8 +1,8 @@
-import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronRight, Star, CheckCircle, Truck, ShieldCheck, Lock, Award, Package, ShoppingBag } from "lucide-react";
 import { Header } from "@/components/Header";
 import { kits } from "@/lib/kits";
+import { readUtms } from "@/lib/utm";
 
 const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
@@ -74,10 +74,23 @@ const reviews = [
 ];
 
 export default function Landing() {
-  const [, setLocation] = useLocation();
+  const utmParams = readUtms();
 
   const handleBuy = (kitId: string) => {
-    setLocation(`/checkout?kit=${kitId}`);
+    const kit = kits.find((k) => k.id === kitId);
+    if (!kit) return;
+    const url = new URL(kit.checkoutUrl);
+    if (utmParams) {
+      const map: Record<string, string | null | undefined> = {
+        utm_source: utmParams.utm_source,
+        utm_medium: utmParams.utm_medium,
+        utm_campaign: utmParams.utm_campaign,
+        utm_content: utmParams.utm_content,
+        utm_term: utmParams.utm_term,
+      };
+      Object.entries(map).forEach(([k, v]) => { if (v) url.searchParams.set(k, v); });
+    }
+    window.location.href = url.toString();
   };
 
   const stagger = {
