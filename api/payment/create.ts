@@ -141,6 +141,27 @@ export default async function handler(
 
     const session = await sessionRes.json() as { url: string; id: string };
 
+    let elementConfig: Record<string, unknown> | null = null;
+    try {
+      const elemRes = await fetch(
+        `https://api.cooud.com/v2/checkout-sessions/${session.id}/element-config`,
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${cooudKey}`,
+            "Cooud-Compat-Date": "2026-09-01",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        }
+      );
+      if (elemRes.ok) {
+        elementConfig = await elemRes.json() as Record<string, unknown>;
+      }
+    } catch {
+      // non-fatal: frontend falls back to hosted checkout
+    }
+
     const now = toUtcString(new Date());
 
     const utmProducts =
@@ -222,7 +243,12 @@ export default async function handler(
     ]);
 
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ checkoutUrl: session.url, orderId }));
+    res.end(JSON.stringify({
+      checkoutUrl: session.url,
+      orderId,
+      sessionId: session.id,
+      elementConfig,
+    }));
   } catch (err) {
     console.error("[CreateSession] error:", err);
     res.writeHead(500, { "Content-Type": "application/json" });
