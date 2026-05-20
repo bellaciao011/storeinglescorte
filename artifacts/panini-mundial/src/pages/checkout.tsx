@@ -27,6 +27,7 @@ export default function Checkout() {
 
   const [elementConfig, setElementConfig] = useState<Record<string, unknown> | null>(null);
   const [elementMounted, setElementMounted] = useState(false);
+  const [hostedCheckoutUrl, setHostedCheckoutUrl] = useState<string | null>(null);
 
   const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
@@ -149,13 +150,14 @@ export default function Checkout() {
 
       sessionStorage.setItem("pendingOrderId", data.orderId);
       setOrderId(data.orderId);
+      if (data.checkoutUrl) setHostedCheckoutUrl(data.checkoutUrl);
 
       if (data.elementConfig) {
-        // Embed Cooud payment element — useEffect will mount it
+        // Try to embed Cooud payment element — useEffect will mount it
+        // If CDN fails, falls back automatically to hostedCheckoutUrl
         setElementConfig(data.elementConfig);
-        // redirecting stays true until element mounts
+        // redirecting stays true until element mounts or CDN fails
       } else if (data.checkoutUrl) {
-        // Fallback: redirect to Cooud hosted checkout
         window.location.href = data.checkoutUrl;
       } else {
         setError("Error al configurar el pago. Inténtalo de nuevo.");
@@ -173,16 +175,15 @@ export default function Checkout() {
     function doMount() {
       const CE = (window as any).CooudElements;
       if (!CE) {
-        setError("No se pudo cargar el formulario de pago. Recarga la página.");
+        // CDN loaded but no export — fall back to hosted checkout
+        if (hostedCheckoutUrl) { window.location.href = hostedCheckoutUrl; return; }
+        setError("No se pudo cargar el formulario de pago.");
         setRedirecting(false);
         return;
       }
       try {
         CE.mount("#cooud-payment-element", elementConfig, {
-          onSuccess: () => {
-            setStep(4);
-            setRedirecting(false);
-          },
+          onSuccess: () => { setStep(4); setRedirecting(false); },
           onError: (err: { message?: string }) => {
             setError(err?.message ?? "Error al procesar el pago. Inténtalo de nuevo.");
             setRedirecting(false);
@@ -191,6 +192,8 @@ export default function Checkout() {
         setElementMounted(true);
         setRedirecting(false);
       } catch {
+        // mount threw — fall back to hosted checkout
+        if (hostedCheckoutUrl) { window.location.href = hostedCheckoutUrl; return; }
         setError("Error al iniciar el formulario de pago.");
         setRedirecting(false);
       }
@@ -207,11 +210,16 @@ export default function Checkout() {
     script.src = "https://cdn.cooud.com/cdn/elements/v1.js";
     script.onload = doMount;
     script.onerror = () => {
-      setError("Error al cargar el formulario de pago. Inténtalo de nuevo.");
-      setRedirecting(false);
+      // CDN unreachable — redirect to Cooud hosted checkout automatically
+      if (hostedCheckoutUrl) {
+        window.location.href = hostedCheckoutUrl;
+      } else {
+        setError("Error al cargar el formulario de pago. Inténtalo de nuevo.");
+        setRedirecting(false);
+      }
     };
     document.head.appendChild(script);
-  }, [elementConfig]);
+  }, [elementConfig, hostedCheckoutUrl]);
 
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
