@@ -1,8 +1,16 @@
-import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronRight, Star, CheckCircle, Truck, ShieldCheck, Lock, Award, Package, ShoppingBag } from "lucide-react";
 import { Header } from "@/components/Header";
 import { kits } from "@/lib/kits";
+
+const COOUD_URLS: Record<string, string> = {
+  basico:       "https://checkout.cooud.com/01KS137170J22EER29WXMDJ5T7",
+  iniciante:    "https://checkout.cooud.com/01KS14367WFPP7TQ98HS2ACAC5",
+  campeao:      "https://checkout.cooud.com/01KS14A4TGAGPQSBXAMRAKFXHY",
+  colecionador: "https://checkout.cooud.com/01KS14E2ENQY9PHF9E446W3FA9",
+  dourada:      "https://checkout.cooud.com/01KS14HQMQDCP6KX7NRXYRTMPG",
+  estadio:      "https://checkout.cooud.com/01KS14MTF1T7YY2S7QNXE7HMDS",
+};
 
 const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
@@ -74,10 +82,9 @@ const reviews = [
 ];
 
 export default function Landing() {
-  const [, setLocation] = useLocation();
-
   const handleBuy = (kitId: string) => {
-    setLocation(`/checkout?kit=${kitId}`);
+    const url = COOUD_URLS[kitId];
+    if (url) window.location.href = url;
   };
 
   const stagger = {
