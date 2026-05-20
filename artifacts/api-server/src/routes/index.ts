@@ -1,12 +1,12 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import paymentRouter from "./payment";
-import stripeRouter from "./stripe";
+import cooudRouter from "./cooud";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(paymentRouter);
-router.use(stripeRouter);
+router.use(cooudRouter);
 
 export default router;

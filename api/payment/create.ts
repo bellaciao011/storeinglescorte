@@ -1,6 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "http";
 import { randomUUID } from "crypto";
-import Stripe from "stripe";
 import { sendToUtmify, toUtcString, toCents } from "../lib/utmify";
 import { createOrder, generateTrackingCode } from "../lib/orders";
 
@@ -20,14 +19,13 @@ export default async function handler(
     return;
   }
 
-  const stripeKey = process.env.STRIPE_SECRET_KEY;
-  if (!stripeKey) {
+  const cooudKey = process.env.COOUD_SECRET_KEY;
+  if (!cooudKey) {
     res.writeHead(500, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Stripe não configurado" }));
+    res.end(JSON.stringify({ error: "Gateway de pagamento não configurado" }));
     return;
   }
 
-  const stripe = new Stripe(stripeKey);
   const ip = getIp(req);
 
   try {
@@ -84,24 +82,66 @@ export default async function handler(
     const trackingCode = generateTrackingCode();
     const orderId = randomUUID();
 
-    // Create Stripe PaymentIntent in MXN
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // centavos MXN
-      currency: "mxn",
-      description: "Guía de automatizaciones con inteligencia artificial",
-      statement_descriptor_suffix: "PANINI",
-      metadata: {
-        order_id: orderId,
-        tracking_code: trackingCode,
-        kit_id: kitId ?? "",
-        customer_name: customerName ?? "",
-        customer_email: customerEmail ?? "",
-      },
-    });
-
-    const now = toUtcString(new Date());
     const qty = quantity ?? 1;
     const totalCents = toCents(amount);
+
+    const lineItems = items && items.length > 0
+      ? items.map((item) => ({
+          name: item.name,
+          amount: toCents(item.price * (item.quantity ?? 1)),
+          currency: "mxn",
+          quantity: item.quantity ?? 1,
+        }))
+      : [
+          {
+            name: productName ?? "Kit Panini FIFA WC26",
+            amount: totalCents,
+            currency: "mxn",
+            quantity: qty,
+          },
+        ];
+
+    const requestOrigin = (req.headers["origin"] as string | undefined)
+      ?? (req.headers["referer"] ? new URL(req.headers["referer"] as string).origin : null)
+      ?? "https://panini-mx.site";
+
+    const finalSuccessUrl = `${requestOrigin}/checkout?return=1&orderId=${orderId}`;
+    const finalCancelUrl = `${requestOrigin}/checkout?kit=${kitId ?? "basico"}`;
+
+    const sessionRes = await fetch("https://api.cooud.com/v2/checkout-sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${cooudKey}`,
+        "Cooud-Compat-Date": "2026-09-01",
+        "Idempotency-Key": orderId,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        line_items: lineItems,
+        success_url: finalSuccessUrl,
+        cancel_url: finalCancelUrl,
+        customer_email: customerEmail ?? undefined,
+        metadata: {
+          order_id: orderId,
+          tracking_code: trackingCode,
+          kit_id: kitId ?? "",
+          customer_name: customerName ?? "",
+          customer_email: customerEmail ?? "",
+        },
+      }),
+    });
+
+    if (!sessionRes.ok) {
+      const errBody = await sessionRes.text();
+      console.error("[CreateSession] Cooud error:", errBody);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Error al iniciar el pago. Inténtalo de nuevo." }));
+      return;
+    }
+
+    const session = await sessionRes.json() as { url: string; id: string };
+
+    const now = toUtcString(new Date());
 
     const utmProducts =
       items && items.length > 0
@@ -124,7 +164,6 @@ export default async function handler(
             },
           ];
 
-    // UTMify + DB in parallel (DB errors are non-blocking)
     await Promise.all([
       sendToUtmify({
         orderId,
@@ -183,15 +222,11 @@ export default async function handler(
     ]);
 
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(
-      JSON.stringify({ clientSecret: paymentIntent.client_secret, orderId })
-    );
+    res.end(JSON.stringify({ checkoutUrl: session.url, orderId }));
   } catch (err) {
-    console.error("[CreateIntent] error:", err);
+    console.error("[CreateSession] error:", err);
     res.writeHead(500, { "Content-Type": "application/json" });
-    res.end(
-      JSON.stringify({ error: "Error al crear el pago. Inténtalo de nuevo." })
-    );
+    res.end(JSON.stringify({ error: "Error al crear el pago. Inténtalo de nuevo." }));
   }
 }
 

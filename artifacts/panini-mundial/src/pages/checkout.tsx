@@ -1,99 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   ChevronRight, CheckCircle2, ShieldCheck, Truck, Lock,
   CreditCard, CheckCircle, Loader2, AlertCircle,
 } from "lucide-react";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Header } from "@/components/Header";
 import { kits } from "@/lib/kits";
 import { readUtms } from "@/lib/utm";
 import { apiUrl } from "@/lib/api";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "");
-
-function StripePaymentForm({
-  total,
-  orderId,
-  onSuccess,
-  onError,
-  onBack,
-}: {
-  total: number;
-  orderId: string;
-  onSuccess: () => void;
-  onError: (msg: string) => void;
-  onBack: () => void;
-}) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [loading, setLoading] = useState(false);
-
-  const handlePay = async () => {
-    if (!stripe || !elements) return;
-    setLoading(true);
-    onError("");
-
-    const { error: submitErr } = await elements.submit();
-    if (submitErr) {
-      onError(submitErr.message ?? "Error en el formulario de pago.");
-      setLoading(false);
-      return;
-    }
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout?return=1&orderId=${orderId}`,
-      },
-      redirect: "if_required",
-    });
-
-    if (error) {
-      onError(error.message ?? "Pago rechazado. Verifica tus datos e inténtalo de nuevo.");
-      setLoading(false);
-      return;
-    }
-
-    onSuccess();
-  };
-
-  return (
-    <div className="mt-4">
-      <PaymentElement
-        options={{
-          layout: "tabs",
-          terms: { card: "never" },
-        }}
-      />
-      <div className="flex gap-3 mt-5 mb-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
-        >
-          VOLVER
-        </button>
-        <button
-          type="button"
-          onClick={handlePay}
-          disabled={loading || !stripe || !elements}
-          className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-        >
-          {loading
-            ? <><Loader2 className="w-5 h-5 animate-spin" /> Procesando…</>
-            : <>Pagar ${total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} →</>
-          }
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function Checkout() {
-  const [, setLocation] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const kitId = searchParams.get("kit") || "campeao";
   const kit = kits.find((k) => k.id === kitId) || kits[2];
@@ -105,11 +21,9 @@ export default function Checkout() {
   const [selectedBumps, setSelectedBumps] = useState<Set<string>>(new Set());
   const [quantity, setQuantity] = useState(1);
 
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [creatingIntent, setCreatingIntent] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [pollConfirmed, setPollConfirmed] = useState(false);
-  const piAmountRef = useRef<number | null>(null);
 
   const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
@@ -147,57 +61,20 @@ export default function Checkout() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Handle return from Cooud checkout
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const returnOrderId = params.get("orderId");
-    const redirectStatus = params.get("redirect_status");
-    if (returnOrderId && redirectStatus === "succeeded") {
+    const isReturn = params.get("return");
+    if (returnOrderId && isReturn === "1") {
       setOrderId(returnOrderId);
       setStep(4);
     }
   }, []);
 
-  // Auto-create PI when user enters step 3
-  useEffect(() => {
-    if (step !== 3 || clientSecret || creatingIntent) return;
-    handleCreateIntent();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
-
-  // Update PI amount silently when bumps change (debounced)
-  useEffect(() => {
-    if (!orderId || !clientSecret) return;
-    if (piAmountRef.current === null) {
-      piAmountRef.current = orderTotal;
-      return;
-    }
-    if (piAmountRef.current === orderTotal) return;
-    piAmountRef.current = orderTotal;
-
-    const items = [
-      { id: kit.id, name: kit.name, quantity, price: kit.price },
-      ...orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({
-        id: b.id, name: b.label, quantity: 1, price: b.price,
-      })),
-    ];
-
-    const piId = clientSecret.split("_secret_")[0];
-    const t = setTimeout(() => {
-      fetch(apiUrl("/api/payment/update-intent"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ piId, amount: orderTotal, items }),
-      }).catch(() => { /* silent — payment will use confirmed amount */ });
-    }, 400);
-
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId, clientSecret, orderTotal]);
-
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     if (step < 3) {
       const nextStep = step + 1;
       setStep(nextStep);
@@ -213,13 +90,9 @@ export default function Checkout() {
     }
   };
 
-  const handleCreateIntent = async () => {
-    setCreatingIntent(true);
+  const handlePay = async () => {
+    setRedirecting(true);
     setError("");
-
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout")), 15000)
-    );
 
     try {
       const addr = [
@@ -236,47 +109,44 @@ export default function Checkout() {
         })),
       ];
 
-      const res = await Promise.race([
-        fetch(apiUrl("/api/payment/create"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: orderTotal,
-            customerEmail: formData.email,
-            customerName: formData.nome,
-            customerPhone: formData.telemovel,
-            customerDocument: formData.nif,
-            shippingAddress: addr,
-            shippingPostalCode: formData.codigoPostal,
-            shippingCity: formData.localidade,
-            shippingDistrict: formData.distrito,
-            kitId: kit.id,
-            productName: "Kit Panini FIFA World Cup 2026",
-            quantity,
-            items,
-            orderType: "main",
-            utmParams,
-          }),
+      const res = await fetch(apiUrl("/api/payment/create"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: orderTotal,
+          customerEmail: formData.email,
+          customerName: formData.nome,
+          customerPhone: formData.telemovel,
+          customerDocument: formData.nif,
+          shippingAddress: addr,
+          shippingPostalCode: formData.codigoPostal,
+          shippingCity: formData.localidade,
+          shippingDistrict: formData.distrito,
+          kitId: kit.id,
+          productName: "Kit Panini FIFA World Cup 2026",
+          quantity,
+          items,
+          utmParams,
         }),
-        timeout,
-      ]);
+      });
 
-      const data = await res.json() as { clientSecret?: string; orderId?: string; error?: string };
+      const data = await res.json() as { checkoutUrl?: string; orderId?: string; error?: string };
 
-      if (!res.ok) {
+      if (!res.ok || !data.checkoutUrl) {
         setError(data.error ?? "Error al iniciar el pago. Inténtalo de nuevo.");
-        setCreatingIntent(false);
+        setRedirecting(false);
         return;
       }
 
+      // Replace placeholder with real orderId in success_url happens server-side,
+      // but we track it in sessionStorage as fallback
       sessionStorage.setItem("pendingOrderId", data.orderId ?? "");
 
-      setClientSecret(data.clientSecret ?? null);
-      setOrderId(data.orderId ?? null);
+      // Redirect to Cooud hosted checkout
+      window.location.href = data.checkoutUrl;
     } catch {
       setError("No fue posible conectar con el servidor de pagos. Verifica tu conexión e inténtalo de nuevo.");
-    } finally {
-      setCreatingIntent(false);
+      setRedirecting(false);
     }
   };
 
@@ -351,7 +221,7 @@ export default function Checkout() {
               <div className="w-full bg-white border border-gray-100 rounded-xl p-4 mb-6 text-left shadow-sm">
                 <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumen del Pedido</h3>
                 <div className="flex justify-between mb-1.5 text-sm">
-                  <span className="text-gray-500">Producto</span>
+                  <span className="text-gray-500">Produto</span>
                   <span className="font-medium text-gray-900">{kit.name}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -527,24 +397,24 @@ export default function Checkout() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Número ext. <span className="text-red-500">*</span></label>
-                        <input required type="text" name="numero" value={formData.numero} onChange={handleChange}
+                        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Número ext.</label>
+                        <input type="text" name="numero" value={formData.numero} onChange={handleChange}
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white"
-                          placeholder="123" />
+                          placeholder="Ej. 12" />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Depto / Interior</label>
+                        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Int./Depto.</label>
                         <input type="text" name="andar" value={formData.andar} onChange={handleChange}
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white"
-                          placeholder="Apto 4B" />
+                          placeholder="Ej. Depto 3" />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Colonia <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">Colonia / Delegación <span className="text-red-500">*</span></label>
                       <input required type="text" name="localidade" value={formData.localidade} onChange={handleChange}
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-gray-50 focus:bg-white"
-                        placeholder="Roma Norte" />
+                        placeholder="Ej. Del Valle" />
                     </div>
 
                     <div>
@@ -621,58 +491,47 @@ export default function Checkout() {
                       </div>
                     )}
 
-                      <div className="border-t border-gray-100 pt-4 space-y-2 mb-5">
-                        <div className="flex justify-between text-sm text-gray-500">
-                          <span>Envío</span>
-                          <span className="text-primary font-semibold">Gratis</span>
-                        </div>
-                        <div className="flex justify-between text-sm text-gray-600">
-                          <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
-                          <span>{fmtMXN(kit.price * quantity)}</span>
-                        </div>
-                        {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
-                          <div key={b.id} className="flex justify-between text-sm text-gray-600">
-                            <span className="text-xs">{b.label}</span>
-                            <span>{fmtMXN(b.price)}</span>
-                          </div>
-                        ))}
-                        <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                          <span className="font-black text-gray-900 text-base">Total</span>
-                          <span className="font-black text-primary text-xl">{fmtMXN(orderTotal)}</span>
-                        </div>
+                    <div className="border-t border-gray-100 pt-4 space-y-2 mb-5">
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>Envío</span>
+                        <span className="text-primary font-semibold">Gratis</span>
                       </div>
-
-                    {creatingIntent && (
-                      <div className="flex items-center justify-center gap-3 py-10 text-gray-500">
-                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                        <span className="text-sm font-medium">A preparar pagamento…</span>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
+                        <span>{fmtMXN(kit.price * quantity)}</span>
                       </div>
-                    )}
+                      {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
+                        <div key={b.id} className="flex justify-between text-sm text-gray-600">
+                          <span className="text-xs">{b.label}</span>
+                          <span>{fmtMXN(b.price)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                        <span className="font-black text-gray-900 text-base">Total</span>
+                        <span className="font-black text-primary text-xl">{fmtMXN(orderTotal)}</span>
+                      </div>
+                    </div>
 
-                    {clientSecret && (
-                      <Elements
-                        key={clientSecret}
-                        stripe={stripePromise}
-                        options={{ clientSecret, locale: "es" }}
+                    <div className="flex gap-3 mt-2 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setStep(2)}
+                        className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
                       >
-                        <StripePaymentForm
-                          total={orderTotal}
-                          orderId={orderId!}
-                          onSuccess={() => {
-                            (window as any).fbq?.("track", "Purchase", {
-                              value: orderTotal,
-                              currency: "MXN",
-                              content_ids: [kit.id, ...Array.from(selectedBumps)],
-                              content_type: "product",
-                            }, { eventID: `purchase_${orderId}` });
-                            setPollConfirmed(true);
-                            setStep(4);
-                          }}
-                          onError={(msg) => setError(msg)}
-                          onBack={() => { setClientSecret(null); setOrderId(null); piAmountRef.current = null; setStep(2); }}
-                        />
-                      </Elements>
-                    )}
+                        VOLVER
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handlePay}
+                        disabled={redirecting}
+                        className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                      >
+                        {redirecting
+                          ? <><Loader2 className="w-5 h-5 animate-spin" /> Redireccionando…</>
+                          : <>Pagar {fmtMXN(orderTotal)} →</>
+                        }
+                      </button>
+                    </div>
 
                     <p className="text-center text-[11px] text-gray-400 mb-3">Compra segura SSL · Garantía de 7 días · Envío gratis México</p>
                     <div className="flex items-center justify-center gap-3 mb-3">
