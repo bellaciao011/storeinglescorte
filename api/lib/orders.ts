@@ -22,6 +22,11 @@ export interface Order {
   utm_medium: string | null;
   utm_content: string | null;
   utm_term: string | null;
+  src: string | null;
+  sck: string | null;
+  ttclid: string | null;
+  fbclid: string | null;
+  gclid: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -53,6 +58,11 @@ export async function createOrder(order: {
   utm_medium?: string | null;
   utm_content?: string | null;
   utm_term?: string | null;
+  src?: string | null;
+  sck?: string | null;
+  ttclid?: string | null;
+  fbclid?: string | null;
+  gclid?: string | null;
 }): Promise<void> {
   await query(
     `INSERT INTO panini_orders (
@@ -60,8 +70,9 @@ export async function createOrder(order: {
       customer_document, shipping_address, shipping_city, shipping_postal_code, shipping_district,
       product_name, amount_eur,
       status, order_status,
-      utm_source, utm_campaign, utm_medium, utm_content, utm_term
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'waiting_payment','preparing',$13,$14,$15,$16,$17)
+      utm_source, utm_campaign, utm_medium, utm_content, utm_term,
+      src, sck, ttclid, fbclid, gclid
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'waiting_payment','preparing',$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
     ON CONFLICT (id) DO NOTHING`,
     [
       order.id, order.tracking_code, order.customer_name, order.customer_email,
@@ -70,16 +81,38 @@ export async function createOrder(order: {
       order.product_name, order.amount_eur,
       order.utm_source ?? null, order.utm_campaign ?? null, order.utm_medium ?? null,
       order.utm_content ?? null, order.utm_term ?? null,
+      order.src ?? null, order.sck ?? null, order.ttclid ?? null,
+      order.fbclid ?? null, order.gclid ?? null,
     ]
   );
 }
 
-export async function markOrderPaid(id: string): Promise<{ tracking_code: string; customer_name: string; customer_email: string; product_name: string; amount_eur: number } | null> {
-  const res = await query<{ tracking_code: string; customer_name: string; customer_email: string; product_name: string; amount_eur: number }>(
+export interface PaidOrderInfo {
+  tracking_code: string;
+  customer_name: string;
+  customer_email: string;
+  product_name: string;
+  amount_eur: number;
+  utm_source: string | null;
+  utm_campaign: string | null;
+  utm_medium: string | null;
+  utm_content: string | null;
+  utm_term: string | null;
+  src: string | null;
+  sck: string | null;
+  ttclid: string | null;
+  fbclid: string | null;
+  gclid: string | null;
+}
+
+export async function markOrderPaid(id: string): Promise<PaidOrderInfo | null> {
+  const res = await query<PaidOrderInfo>(
     `UPDATE panini_orders
      SET status = 'paid', order_status = 'preparing', paid_at = NOW(), updated_at = NOW()
      WHERE id = $1
-     RETURNING tracking_code, customer_name, customer_email, product_name, amount_eur`,
+     RETURNING tracking_code, customer_name, customer_email, product_name, amount_eur,
+               utm_source, utm_campaign, utm_medium, utm_content, utm_term,
+               src, sck, ttclid, fbclid, gclid`,
     [id]
   );
   if (res.rowCount && res.rowCount > 0) return res.rows[0];

@@ -77,20 +77,23 @@ export default function Landing() {
   const utmParams = readUtms();
 
   const handleBuy = (kitId: string) => {
-    const kit = kits.find((k) => k.id === kitId);
-    if (!kit) return;
-    const url = new URL(kit.checkoutUrl);
+    const params = new URLSearchParams({ kit: kitId });
     if (utmParams) {
       const map: Record<string, string | null | undefined> = {
-        utm_source: utmParams.utm_source,
-        utm_medium: utmParams.utm_medium,
+        utm_source:   utmParams.utm_source,
+        utm_medium:   utmParams.utm_medium,
         utm_campaign: utmParams.utm_campaign,
-        utm_content: utmParams.utm_content,
-        utm_term: utmParams.utm_term,
+        utm_content:  utmParams.utm_content,
+        utm_term:     utmParams.utm_term,
+        src:          utmParams.src,
+        sck:          utmParams.sck,
+        ttclid:       utmParams.ttclid,
+        fbclid:       utmParams.fbclid,
+        gclid:        utmParams.gclid,
       };
-      Object.entries(map).forEach(([k, v]) => { if (v) url.searchParams.set(k, v); });
+      Object.entries(map).forEach(([k, v]) => { if (v) params.set(k, v); });
     }
-    window.location.href = url.toString();
+    window.location.href = `/api/go?${params.toString()}`;
   };
 
   const stagger = {
