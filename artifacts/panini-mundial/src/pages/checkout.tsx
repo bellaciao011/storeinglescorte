@@ -25,10 +25,6 @@ export default function Checkout() {
   const [redirecting, setRedirecting] = useState(false);
   const [pollConfirmed, setPollConfirmed] = useState(false);
 
-  const [elementConfig, setElementConfig] = useState<Record<string, unknown> | null>(null);
-  const [elementMounted, setElementMounted] = useState(false);
-  const [hostedCheckoutUrl, setHostedCheckoutUrl] = useState<string | null>(null);
-
   const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
   const orderBumps = [
@@ -138,7 +134,6 @@ export default function Checkout() {
         checkoutUrl?: string;
         orderId?: string;
         sessionId?: string;
-        elementConfig?: Record<string, unknown> | null;
         error?: string;
       };
 
@@ -150,14 +145,8 @@ export default function Checkout() {
 
       sessionStorage.setItem("pendingOrderId", data.orderId);
       setOrderId(data.orderId);
-      if (data.checkoutUrl) setHostedCheckoutUrl(data.checkoutUrl);
 
-      if (data.elementConfig) {
-        // Try to embed Cooud payment element — useEffect will mount it
-        // If CDN fails, falls back automatically to hostedCheckoutUrl
-        setElementConfig(data.elementConfig);
-        // redirecting stays true until element mounts or CDN fails
-      } else if (data.checkoutUrl) {
+      if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
         setError("Error al configurar el pago. Inténtalo de nuevo.");
@@ -168,58 +157,6 @@ export default function Checkout() {
       setRedirecting(false);
     }
   };
-
-  useEffect(() => {
-    if (!elementConfig) return;
-
-    function doMount() {
-      const CE = (window as any).CooudElements;
-      if (!CE) {
-        // CDN loaded but no export — fall back to hosted checkout
-        if (hostedCheckoutUrl) { window.location.href = hostedCheckoutUrl; return; }
-        setError("No se pudo cargar el formulario de pago.");
-        setRedirecting(false);
-        return;
-      }
-      try {
-        CE.mount("#cooud-payment-element", elementConfig, {
-          onSuccess: () => { setStep(4); setRedirecting(false); },
-          onError: (err: { message?: string }) => {
-            setError(err?.message ?? "Error al procesar el pago. Inténtalo de nuevo.");
-            setRedirecting(false);
-          },
-        });
-        setElementMounted(true);
-        setRedirecting(false);
-      } catch {
-        // mount threw — fall back to hosted checkout
-        if (hostedCheckoutUrl) { window.location.href = hostedCheckoutUrl; return; }
-        setError("Error al iniciar el formulario de pago.");
-        setRedirecting(false);
-      }
-    }
-
-    const existingScript = document.getElementById("cooud-elements-js");
-    if (existingScript && (window as any).CooudElements) {
-      doMount();
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.id = "cooud-elements-js";
-    script.src = "https://cdn.cooud.com/cdn/elements/v1.js";
-    script.onload = doMount;
-    script.onerror = () => {
-      // CDN unreachable — redirect to Cooud hosted checkout automatically
-      if (hostedCheckoutUrl) {
-        window.location.href = hostedCheckoutUrl;
-      } else {
-        setError("Error al cargar el formulario de pago. Inténtalo de nuevo.");
-        setRedirecting(false);
-      }
-    };
-    document.head.appendChild(script);
-  }, [elementConfig, hostedCheckoutUrl]);
 
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -583,45 +520,26 @@ export default function Checkout() {
                       </div>
                     </div>
 
-                    {elementConfig ? (
-                      <div className="mt-2 mb-4">
-                        <div id="cooud-payment-element" className="w-full min-h-[200px]" />
-                        {!elementMounted && (
-                          <div className="flex flex-col items-center justify-center py-10 gap-3">
-                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                            <p className="text-sm text-gray-500">Cargando formulario de pago…</p>
-                          </div>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => { setElementConfig(null); setElementMounted(false); setStep(2); }}
-                          className="mt-3 text-sm text-gray-400 hover:text-gray-600 underline w-full text-center"
-                        >
-                          Volver y editar dirección
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-3 mt-2 mb-4">
-                        <button
-                          type="button"
-                          onClick={() => setStep(2)}
-                          className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
-                        >
-                          VOLVER
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handlePay}
-                          disabled={redirecting}
-                          className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                        >
-                          {redirecting
-                            ? <><Loader2 className="w-5 h-5 animate-spin" /> Preparando pago…</>
-                            : <>Pagar {fmtMXN(orderTotal)} →</>
-                          }
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex gap-3 mt-2 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setStep(2)}
+                        className="flex-shrink-0 px-5 py-4 rounded-full border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
+                      >
+                        VOLVER
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handlePay}
+                        disabled={redirecting}
+                        className="flex-1 bg-primary hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                      >
+                        {redirecting
+                          ? <><Loader2 className="w-5 h-5 animate-spin" /> Preparando pago…</>
+                          : <>Pagar {fmtMXN(orderTotal)} →</>
+                        }
+                      </button>
+                    </div>
 
                     <p className="text-center text-[11px] text-gray-400 mb-3">Compra segura SSL · Garantía de 7 días · Envío gratis México</p>
                     <div className="flex items-center justify-center gap-3 mb-3">
