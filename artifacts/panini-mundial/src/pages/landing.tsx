@@ -77,23 +77,9 @@ export default function Landing() {
   const utmParams = readUtms();
 
   const handleBuy = (kitId: string) => {
-    const params = new URLSearchParams({ kit: kitId });
-    if (utmParams) {
-      const map: Record<string, string | null | undefined> = {
-        utm_source:   utmParams.utm_source,
-        utm_medium:   utmParams.utm_medium,
-        utm_campaign: utmParams.utm_campaign,
-        utm_content:  utmParams.utm_content,
-        utm_term:     utmParams.utm_term,
-        src:          utmParams.src,
-        sck:          utmParams.sck,
-        ttclid:       utmParams.ttclid,
-        fbclid:       utmParams.fbclid,
-        gclid:        utmParams.gclid,
-      };
-      Object.entries(map).forEach(([k, v]) => { if (v) params.set(k, v); });
-    }
-    window.location.href = `/api/go?${params.toString()}`;
+    const kit = kits.find((k) => k.id === kitId);
+    if (!kit) return;
+    window.location.href = kit.checkoutUrl;
   };
 
   const stagger = {
