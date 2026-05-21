@@ -33,7 +33,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       return;
     }
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ status: order.status }));
+    res.end(JSON.stringify({ status: order.status, tracking_code: order.tracking_code }));
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[PaymentStatus] error:", msg);

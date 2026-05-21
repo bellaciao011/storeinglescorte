@@ -109,6 +109,7 @@ export default function Checkout() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
   const [pollConfirmed, setPollConfirmed] = useState(false);
+  const [trackingCode, setTrackingCode] = useState<string | null>(null);
   const piAmountRef = useRef<number | null>(null);
 
   const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
@@ -293,9 +294,10 @@ export default function Checkout() {
       try {
         const r = await fetch(apiUrl(`/api/public/payment-status?orderId=${encodeURIComponent(orderId)}`));
         if (r.ok) {
-          const data = await r.json() as { status: string };
+          const data = await r.json() as { status: string; tracking_code?: string };
           if (data.status === "paid") {
             clearInterval(pollingRef.current!);
+            if (data.tracking_code) setTrackingCode(data.tracking_code);
             setPollConfirmed(true);
           }
         }
@@ -327,9 +329,22 @@ export default function Checkout() {
             <>
               <h1 className="text-2xl font-black text-green-700 mb-2">¡Pedido confirmado!</h1>
               <p className="text-gray-600 text-sm mb-6 max-w-xs leading-relaxed">
-                Tu pedido fue recibido con éxito.<br/>
-                En breve recibirás un correo con la confirmación y tu código de rastreo.
+                Tu pedido fue recibido con éxito. Recibirás un correo de confirmación en breve.
               </p>
+
+              {trackingCode && (
+                <div className="w-full bg-[#7B1C1C]/5 border border-[#7B1C1C]/20 rounded-xl p-4 mb-4 text-center">
+                  <p className="text-xs font-bold text-[#7B1C1C]/60 uppercase tracking-widest mb-1">Tu código de rastreo</p>
+                  <p className="text-2xl font-black text-[#7B1C1C] font-mono tracking-widest mb-3">{trackingCode}</p>
+                  <a
+                    href={`/rastreio?codigo=${trackingCode}`}
+                    className="inline-block bg-[#7B1C1C] text-white text-sm font-bold px-5 py-2 rounded-lg hover:bg-[#5a0c16] transition-colors"
+                  >
+                    Rastrear mi pedido →
+                  </a>
+                </div>
+              )}
+
               <div className="w-full bg-white border border-gray-100 rounded-xl p-4 text-left shadow-sm">
                 <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumen del Pedido</h3>
                 <div className="flex justify-between mb-1.5 text-sm">
