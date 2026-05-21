@@ -1,8 +1,8 @@
+import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronRight, Star, CheckCircle, Truck, ShieldCheck, Lock, Award, Package, ShoppingBag } from "lucide-react";
 import { Header } from "@/components/Header";
 import { kits } from "@/lib/kits";
-import { readUtms } from "@/lib/utm";
 
 const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
@@ -74,12 +74,10 @@ const reviews = [
 ];
 
 export default function Landing() {
-  const utmParams = readUtms();
+  const [, setLocation] = useLocation();
 
   const handleBuy = (kitId: string) => {
-    const kit = kits.find((k) => k.id === kitId);
-    if (!kit) return;
-    window.location.href = kit.checkoutUrl;
+    setLocation(`/checkout?kit=${kitId}`);
   };
 
   const stagger = {

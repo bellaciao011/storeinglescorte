@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Lock, ChevronRight, Loader2, AlertCircle } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "");
 
 const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
@@ -31,11 +34,86 @@ const SHIPPING_OPTIONS = [
   },
 ];
 
+function StripePaymentForm({
+  total,
+  orderId,
+  onSuccess,
+  onError,
+  onBack,
+}: {
+  total: number;
+  orderId: string;
+  onSuccess: () => void;
+  onError: (msg: string) => void;
+  onBack: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+
+  const handlePay = async () => {
+    if (!stripe || !elements) return;
+    setLoading(true);
+    onError("");
+
+    const { error: submitErr } = await elements.submit();
+    if (submitErr) {
+      onError(submitErr.message ?? "Error en el formulario.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/upsell?return=1&orderId=${orderId}`,
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      onError(error.message ?? "Pago rechazado. Inténtalo de nuevo.");
+      setLoading(false);
+      return;
+    }
+
+    onSuccess();
+  };
+
+  return (
+    <div className="mt-4">
+      <PaymentElement options={{ layout: "tabs", terms: { card: "never" } }} />
+      <div className="flex gap-3 mt-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex-shrink-0 px-4 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-black text-sm hover:border-gray-400 transition-all"
+        >
+          VOLVER
+        </button>
+        <button
+          type="button"
+          onClick={handlePay}
+          disabled={loading || !stripe || !elements}
+          className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-3 rounded-xl flex items-center justify-center gap-2"
+        >
+          {loading
+            ? <><Loader2 className="w-4 h-4 animate-spin" /> Procesando…</>
+            : <>Confirmar envío — {fmtMXN(total)} <ChevronRight className="w-4 h-4" /></>
+          }
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Upsell() {
   const [, setLocation] = useLocation();
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  const [redirecting, setRedirecting] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [creatingIntent, setCreatingIntent] = useState(false);
   const [error, setError] = useState<string>("");
   const [done, setDone] = useState(false);
 
@@ -46,8 +124,9 @@ export default function Upsell() {
     } catch { }
 
     const params = new URLSearchParams(window.location.search);
-    const isReturn = params.get("return");
-    if (isReturn === "1") {
+    const returnOrderId = params.get("orderId");
+    const redirectStatus = params.get("redirect_status");
+    if (returnOrderId && redirectStatus === "succeeded") {
       setDone(true);
       setTimeout(() => setLocation("/upsell2"), 1800);
     }
@@ -55,13 +134,13 @@ export default function Upsell() {
 
   const selectedOption = SHIPPING_OPTIONS.find(o => o.id === selected);
 
-  const handlePay = async () => {
+  const handleCreateIntent = async () => {
     if (!selectedOption || !customer) return;
-    setRedirecting(true);
+    setCreatingIntent(true);
     setError("");
 
     try {
-      const res = await fetch(apiUrl("/api/payment/create"), {
+      const res = await fetch("/api/payment/create-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -70,23 +149,24 @@ export default function Upsell() {
           customerName: customer.name,
           customerPhone: customer.phone,
           productName: `Envío ${selectedOption.label}`,
-          quantity: 1,
-          items: [{ id: selectedOption.id, name: `Envío ${selectedOption.label}`, quantity: 1, price: selectedOption.price }],
+          orderType: "upsell",
         }),
       });
 
-      const data = await res.json() as { checkoutUrl?: string; error?: string };
+      const data = await res.json() as { clientSecret?: string; orderId?: string; error?: string };
 
-      if (!res.ok || !data.checkoutUrl) {
+      if (!res.ok) {
         setError(data.error ?? "Error al iniciar el pago. Inténtalo de nuevo.");
-        setRedirecting(false);
+        setCreatingIntent(false);
         return;
       }
 
-      window.location.href = data.checkoutUrl;
+      setClientSecret(data.clientSecret ?? null);
+      setOrderId(data.orderId ?? null);
     } catch {
       setError("Error de conexión. Inténtalo de nuevo.");
-      setRedirecting(false);
+    } finally {
+      setCreatingIntent(false);
     }
   };
 
@@ -179,7 +259,12 @@ export default function Upsell() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + i * 0.08 }}
-              onClick={() => { setSelected(opt.id); setError(""); }}
+              onClick={() => {
+                setSelected(opt.id);
+                setClientSecret(null);
+                setOrderId(null);
+                setError("");
+              }}
               className={`w-full bg-white rounded-2xl border-2 p-4 flex items-center gap-4 text-left transition-all ${
                 selected === opt.id
                   ? "border-[#6b0f1a] shadow-sm"
@@ -217,16 +302,35 @@ export default function Upsell() {
                   </div>
                 )}
 
-                <button
-                  onClick={handlePay}
-                  disabled={redirecting}
-                  className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-xl flex items-center justify-center gap-2"
-                >
-                  {redirecting
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Redireccionando…</>
-                    : <>Confirmar envío — {fmtMXN(selectedOption!.price)} <ChevronRight className="w-4 h-4" /></>
-                  }
-                </button>
+                {!clientSecret ? (
+                  <button
+                    onClick={handleCreateIntent}
+                    disabled={creatingIntent}
+                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-black text-base py-4 rounded-xl flex items-center justify-center gap-2"
+                  >
+                    {creatingIntent
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Preparando…</>
+                      : <>Continuar con el pago <ChevronRight className="w-4 h-4" /></>
+                    }
+                  </button>
+                ) : (
+                  <Elements
+                    key={clientSecret}
+                    stripe={stripePromise}
+                    options={{ clientSecret, locale: "es" }}
+                  >
+                    <StripePaymentForm
+                      total={selectedOption!.price}
+                      orderId={orderId!}
+                      onSuccess={() => {
+                        setDone(true);
+                        setTimeout(() => setLocation("/upsell2"), 1800);
+                      }}
+                      onError={(msg) => setError(msg)}
+                      onBack={() => { setClientSecret(null); setOrderId(null); }}
+                    />
+                  </Elements>
+                )}
               </div>
             </motion.div>
           )}
@@ -243,7 +347,7 @@ export default function Upsell() {
 
         <p className="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-1.5">
           <Lock className="w-3.5 h-3.5" />
-          Pago 100% seguro
+          Pago 100% seguro vía Stripe
         </p>
       </div>
     </div>

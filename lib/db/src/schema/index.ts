@@ -31,12 +31,6 @@ export const paniniOrdersTable = pgTable("panini_orders", {
   utmContent: text("utm_content"),
   utmTerm: text("utm_term"),
 
-  src: text("src"),
-  sck: text("sck"),
-  ttclid: text("ttclid"),
-  fbclid: text("fbclid"),
-  gclid: text("gclid"),
-
   confirmationEmailSentAt: timestamp("confirmation_email_sent_at"),
   paidAt: timestamp("paid_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
