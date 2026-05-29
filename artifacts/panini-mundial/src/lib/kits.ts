@@ -34,10 +34,10 @@ export const kits: Kit[] = [
   {
     id: "paquete-rojo",
     name: "Paquete Especial Rojo",
-    contents: "Álbum + 50 sobres",
-    description: "Caja roja edición especial + álbum pasta dura + 50 sobres sellados (~350 cromos)",
-    price: 1099,
-    oldPrice: 1400,
+    contents: "Álbum + 60 sobres",
+    description: "Caja roja edición especial + álbum pasta dura + 60 sobres sellados (~420 cromos)",
+    price: 1199,
+    oldPrice: 1799,
     img: "/assets/paquete-rojo.jpg",
     badge: {
       text: "EDICIÓN ESPECIAL",
@@ -47,10 +47,10 @@ export const kits: Kit[] = [
   {
     id: "paquete-blanco",
     name: "Paquete Especial Blanco",
-    contents: "Álbum + 50 sobres",
-    description: "Caja blanca edición especial + álbum pasta dura + 50 sobres sellados (~350 cromos)",
-    price: 1099,
-    oldPrice: 1400,
+    contents: "Álbum + 60 sobres",
+    description: "Caja blanca edición especial + álbum pasta dura + 60 sobres sellados (~420 cromos)",
+    price: 1199,
+    oldPrice: 1799,
     img: "/assets/paquete-blanco.jpg",
     badge: {
       text: "EDICIÓN ESPECIAL",
@@ -60,27 +60,14 @@ export const kits: Kit[] = [
   {
     id: "paquete-verde",
     name: "Paquete Especial Verde",
-    contents: "Álbum + 50 sobres",
-    description: "Caja verde edición especial + álbum pasta dura + 50 sobres sellados (~350 cromos)",
-    price: 1099,
-    oldPrice: 1400,
+    contents: "Álbum + 60 sobres",
+    description: "Caja verde edición especial + álbum pasta dura + 60 sobres sellados (~420 cromos)",
+    price: 1199,
+    oldPrice: 1799,
     img: "/assets/paquete-verde.jpg",
     badge: {
       text: "EDICIÓN ESPECIAL",
       colorClass: "bg-green-700 text-white",
-    },
-  },
-  {
-    id: "campeao",
-    name: "Kit Campeón",
-    contents: "Álbum + 60 sobres",
-    description: "Tapa dura + 60 sobres sellados (~420 cromos)",
-    price: 1199,
-    oldPrice: 1799,
-    img: "/assets/kit-campeao.png",
-    badge: {
-      text: "MÁS VENDIDO",
-      colorClass: "bg-red-600 text-white",
     },
   },
   {
