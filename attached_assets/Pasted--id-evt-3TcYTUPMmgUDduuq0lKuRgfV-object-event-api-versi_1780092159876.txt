@@ -1,0 +1,85 @@
+{
+  "id": "evt_3TcYTUPMmgUDduuq0lKuRgfV",
+  "object": "event",
+  "api_version": "2026-04-22.dahlia",
+  "created": 1780092112,
+  "data": {
+    "object": {
+      "id": "pi_3TcYTUPMmgUDduuq0V1guchQ",
+      "object": "payment_intent",
+      "amount": 32900,
+      "amount_capturable": 0,
+      "amount_details": {
+        "tip": {}
+      },
+      "amount_received": 0,
+      "application": null,
+      "application_fee_amount": null,
+      "automatic_payment_methods": {
+        "allow_redirects": "always",
+        "enabled": true
+      },
+      "canceled_at": null,
+      "cancellation_reason": null,
+      "capture_method": "automatic_async",
+      "client_secret": "pi_3TcYTUPMmgUDduuq0V1guchQ_secret_f3FpkM6OczLMsHmwckf01pFCF",
+      "confirmation_method": "automatic",
+      "created": 1780092112,
+      "currency": "mxn",
+      "customer": null,
+      "customer_account": null,
+      "description": "Guía de automatizaciones con inteligencia artificial",
+      "excluded_payment_method_types": null,
+      "last_payment_error": null,
+      "latest_charge": null,
+      "livemode": true,
+      "managed_payments": {
+        "enabled": false
+      },
+      "metadata": {
+        "kit_id": "basico",
+        "order_id": "22776aca-1073-44ba-85d8-1f3ec90e4011",
+        "customer_email": "emailteste@gmail.com",
+        "tracking_code": "PANUB8U4F",
+        "customer_name": "pedro miguel"
+      },
+      "next_action": null,
+      "on_behalf_of": null,
+      "payment_method": null,
+      "payment_method_configuration_details": {
+        "id": "pmc_1TZG3SPMmgUDduuqso4Pmg7n",
+        "parent": null
+      },
+      "payment_method_options": {
+        "card": {
+          "installments": null,
+          "mandate_options": null,
+          "network": null,
+          "request_three_d_secure": "automatic"
+        }
+      },
+      "payment_method_types": [
+        "card"
+      ],
+      "processing": null,
+      "receipt_email": null,
+      "review": null,
+      "setup_future_usage": null,
+      "shared_payment_granted_token": null,
+      "shipping": null,
+      "source": null,
+      "statement_descriptor": null,
+      "statement_descriptor_suffix": "PANINI",
+      "status": "requires_payment_method",
+      "transfer_data": null,
+      "transfer_group": null
+    }
+  },
+  "livemode": true,
+  "pending_webhooks": 1,
+  "request": {
+    "id": "req_yQWw0UzKl7ZHIs",
+    "idempotency_key": "stripe-node-retry-468c7727-b7ba-4033-8dc0-33c39cd2c0fd"
+  },
+  "type": "payment_intent.created"
+}
