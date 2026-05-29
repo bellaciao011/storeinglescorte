@@ -38,7 +38,7 @@ export const kits: Kit[] = [
     description: "Caja roja edición especial + álbum pasta dura + 60 sobres sellados (~420 cromos)",
     price: 1199,
     oldPrice: 1799,
-    img: "/assets/paquete-rojo.jpg",
+    img: "/assets/paquete-rojo.png",
     badge: {
       text: "EDICIÓN ESPECIAL",
       colorClass: "bg-red-600 text-white",
@@ -51,7 +51,7 @@ export const kits: Kit[] = [
     description: "Caja blanca edición especial + álbum pasta dura + 60 sobres sellados (~420 cromos)",
     price: 1199,
     oldPrice: 1799,
-    img: "/assets/paquete-blanco.jpg",
+    img: "/assets/paquete-blanco.png",
     badge: {
       text: "EDICIÓN ESPECIAL",
       colorClass: "bg-gray-600 text-white",
@@ -64,7 +64,7 @@ export const kits: Kit[] = [
     description: "Caja verde edición especial + álbum pasta dura + 60 sobres sellados (~420 cromos)",
     price: 1199,
     oldPrice: 1799,
-    img: "/assets/paquete-verde.jpg",
+    img: "/assets/paquete-verde.png",
     badge: {
       text: "EDICIÓN ESPECIAL",
       colorClass: "bg-green-700 text-white",
