@@ -282,24 +282,24 @@ export default function Landing() {
                       )}
 
                       <div
-                        className={`w-full flex items-center justify-center p-6 pb-2 ${
+                        className={`w-full flex items-center justify-center p-3 pb-1 ${
                           isEstadio
                             ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
                             : "bg-gradient-to-br from-yellow-50 to-amber-50"
                         }`}
-                        style={{ minHeight: 200 }}
+                        style={{ minHeight: 110 }}
                       >
                         <img
                           src={kit.img}
                           alt={kit.name}
-                          className="max-h-48 w-auto object-contain drop-shadow-xl"
+                          className="max-h-24 w-auto object-contain drop-shadow-xl"
                           loading="lazy"
                         />
                       </div>
 
-                      <div className="p-5 flex flex-col flex-1">
+                      <div className="p-3 flex flex-col flex-1">
                         <h3
-                          className={`text-lg font-black mb-1 ${
+                          className={`text-sm font-black mb-0.5 ${
                             isEstadio
                               ? "bg-gradient-to-r from-yellow-600 via-amber-400 to-yellow-700 bg-clip-text text-transparent"
                               : "text-yellow-700"
@@ -307,26 +307,23 @@ export default function Landing() {
                         >
                           {kit.name}
                         </h3>
-                        <p className="text-sm font-bold text-[#16a34a] mb-1">{kit.contents}</p>
-                        <p className="text-xs text-gray-400 mb-5 border-b border-gray-100 pb-4">{kit.description}</p>
+                        <p className="text-xs font-bold text-[#16a34a] mb-0.5">{kit.contents}</p>
+                        <p className="text-[10px] text-gray-400 mb-2 border-b border-gray-100 pb-2 leading-tight">{kit.description}</p>
 
                         <div className="mt-auto">
-                          <div className="flex items-end gap-2 mb-4">
-                            <span className="text-3xl font-black text-gray-900 tracking-tight">
+                          <div className="flex items-end gap-1.5 mb-2">
+                            <span className="text-xl font-black text-gray-900 tracking-tight">
                               {fmtMXN(kit.price)}
                             </span>
-                            <span className="text-sm text-gray-400 line-through mb-0.5">
+                            <span className="text-xs text-gray-400 line-through mb-0.5">
                               {fmtMXN(kit.oldPrice)}
-                            </span>
-                            <span className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full ml-1 mb-0.5">
-                              Envío gratis
                             </span>
                           </div>
 
                           <motion.button
                             data-testid={`button-order-${kit.id}`}
                             onClick={() => handleBuy(kit.id)}
-                            className={`w-full active:scale-[0.98] font-black py-3.5 rounded-xl flex items-center justify-center gap-2 text-base text-gray-900 ${
+                            className={`w-full active:scale-[0.98] font-black py-2.5 rounded-xl flex items-center justify-center gap-1 text-sm text-gray-900 ${
                               isEstadio
                                 ? "bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-400"
                                 : "bg-gradient-to-r from-amber-400 to-yellow-400"
@@ -366,37 +363,34 @@ export default function Landing() {
                     </div>
                   )}
 
-                  <div className="w-full bg-white flex items-center justify-center p-6 pb-2" style={{ minHeight: 200 }}>
+                  <div className="w-full bg-white flex items-center justify-center p-3 pb-1" style={{ minHeight: 110 }}>
                     <img
                       src={kit.img}
                       alt={kit.name}
-                      className="max-h-48 w-auto object-contain"
+                      className="max-h-24 w-auto object-contain"
                       loading="lazy"
                     />
                   </div>
 
-                  <div className="p-5 flex flex-col flex-1">
-                    <h3 className="text-lg font-black text-gray-900 mb-1">{kit.name}</h3>
-                    <p className="text-sm font-bold text-[#16a34a] mb-1">{kit.contents}</p>
-                    <p className="text-xs text-gray-400 mb-5 border-b border-gray-100 pb-4">{kit.description}</p>
+                  <div className="p-3 flex flex-col flex-1">
+                    <h3 className="text-sm font-black text-gray-900 mb-0.5">{kit.name}</h3>
+                    <p className="text-xs font-bold text-[#16a34a] mb-0.5">{kit.contents}</p>
+                    <p className="text-[10px] text-gray-400 mb-2 border-b border-gray-100 pb-2 leading-tight">{kit.description}</p>
 
                     <div className="mt-auto">
-                      <div className="flex items-end gap-2 mb-4">
-                        <span className="text-3xl font-black text-gray-900 tracking-tight">
+                      <div className="flex items-end gap-1.5 mb-2">
+                        <span className="text-xl font-black text-gray-900 tracking-tight">
                           {fmtMXN(kit.price)}
                         </span>
-                        <span className="text-sm text-gray-400 line-through mb-0.5">
+                        <span className="text-xs text-gray-400 line-through mb-0.5">
                           {fmtMXN(kit.oldPrice)}
-                        </span>
-                        <span className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full ml-1 mb-0.5">
-                          Envío gratis
                         </span>
                       </div>
 
                       <button
                         data-testid={`button-order-${kit.id}`}
                         onClick={() => handleBuy(kit.id)}
-                        className="w-full bg-[#f5a623] hover:bg-[#e09400] active:scale-[0.98] text-gray-900 font-black py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all text-base shadow-sm"
+                        className="w-full bg-[#f5a623] hover:bg-[#e09400] active:scale-[0.98] text-gray-900 font-black py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all text-sm shadow-sm"
                       >
                         Asegurar mi kit <ChevronRight className="w-4 h-4" />
                       </button>
