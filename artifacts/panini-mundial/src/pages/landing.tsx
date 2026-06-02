@@ -193,21 +193,6 @@ export default function Landing() {
           </motion.div>
         </div>
 
-        {/* Hero product image */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.7 }}
-          className="w-full bg-[#f5f5f7] mt-2"
-        >
-          <div className="max-w-2xl mx-auto">
-            <img
-              src="/assets/hero-produto.png"
-              alt="Álbum oficial y cajas Panini FIFA World Cup 2026 México"
-              className="w-full h-auto object-contain block"
-            />
-          </div>
-        </motion.div>
       </section>
 
       {/* ─── Stats ─── */}
