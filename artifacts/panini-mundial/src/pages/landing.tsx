@@ -244,7 +244,7 @@ export default function Landing() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-2 gap-4"
           >
             {kits.map((kit) => {
               const isDourada = kit.id === "dourada";
