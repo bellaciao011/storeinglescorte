@@ -30,7 +30,7 @@ export const products: Product[] = [
     name: "TV QNED evo MiniLED AI 139cm (55\") LG 55QNED85A6C 4K Smart TV",
     shortName: "LG 55QNED85A6C TV QNED MiniLED 55\"",
     category: "Televisores",
-    price: 200,
+    price: 80,
     oldPrice: 999,
     img: "/assets/products/lg-55qned85-1.png",
     images: [
@@ -63,7 +63,7 @@ export const products: Product[] = [
     name: "Aspirador de escoba recargable Dyson V15 Detect Absolute",
     shortName: "Dyson V15 Detect Absolute",
     category: "Electrodomésticos",
-    price: 160,
+    price: 64,
     oldPrice: 799,
     img: "/assets/products/dyson-v15-1.png",
     images: [
@@ -93,7 +93,7 @@ export const products: Product[] = [
     name: "Portátil HP OmniBook 3 16-by0000ns Ryzen 5 40, 16GB, 512GB SSD, 16\", W11",
     shortName: "HP OmniBook 3 16\" Ryzen 5 16GB",
     category: "Informática",
-    price: 170,
+    price: 68,
     oldPrice: 849,
     img: "/assets/products/hp-omnibook3-1.png",
     images: [
@@ -124,7 +124,7 @@ export const products: Product[] = [
     name: "Frigorífico Combi LG Serie 500 Total No Frost Door Cooling+ GBBS524CSW Blanco",
     shortName: "LG GBBS524CSW Frigorífico Combi Blanco",
     category: "Electrodomésticos",
-    price: 220,
+    price: 88,
     oldPrice: 1099,
     img: "/assets/products/lg-gbbs524-1.png",
     images: [
@@ -156,7 +156,7 @@ export const products: Product[] = [
     name: "Xiaomi Redmi Note 15 Pro+ 5G 8GB 256GB Móvil libre Negro",
     shortName: "Xiaomi Redmi Note 15 Pro+ 5G 8/256GB",
     category: "Móviles",
-    price: 76,
+    price: 30,
     oldPrice: 379,
     img: "/assets/products/xiaomi-redmi-note15-pro-1.png",
     images: [
@@ -187,7 +187,7 @@ export const products: Product[] = [
     name: "Lavadora AEG 10,5 kg 1400 rpm LFE6G54H4B Blanco",
     shortName: "AEG LFE6G54H4B Lavadora 10,5 kg",
     category: "Electrodomésticos",
-    price: 140,
+    price: 56,
     oldPrice: 699,
     img: "/assets/products/aeg-lfe6g54-1.png",
     images: [
@@ -218,7 +218,7 @@ export const products: Product[] = [
     name: "Auriculares de botón Apple AirPods Pro 3 Blanco",
     shortName: "Apple AirPods Pro 3",
     category: "Audio",
-    price: 60,
+    price: 24,
     oldPrice: 299,
     img: "/assets/products/airpods-pro3-1.png",
     images: [
@@ -249,7 +249,7 @@ export const products: Product[] = [
     name: "Aire acondicionado Split 1×1 Daitsu Inverter con 2.235 frig/h y WiFi Artic Lite DS-9KLF Blanco",
     shortName: "Daitsu DS-9KLF Split Inverter WiFi 2.235 frig/h",
     category: "Climatización",
-    price: 120,
+    price: 48,
     oldPrice: 599,
     img: "/assets/products/daitsu-split-1.png",
     images: [
@@ -279,7 +279,7 @@ export const products: Product[] = [
     name: "Lavavajillas integrable Bosch 14 servicios bandeja para cubiertos 60 cm SMV4ECX28E",
     shortName: "Bosch SMV4ECX28E Lavavajillas Integrable 14 servicios",
     category: "Electrodomésticos",
-    price: 180,
+    price: 72,
     oldPrice: 899,
     img: "/assets/products/bosch-lavavajillas-1.png",
     images: [
@@ -310,7 +310,7 @@ export const products: Product[] = [
     name: "Aire acondicionado portátil Daitsu con 3.000 frig/h Aeris Dual APD-12FCXB Blanco",
     shortName: "Daitsu APD-12FCXB Portátil 3.000 frig/h",
     category: "Climatización",
-    price: 112,
+    price: 45,
     oldPrice: 559,
     img: "/assets/products/daitsu-portatil-1.png",
     images: [
@@ -340,7 +340,7 @@ export const products: Product[] = [
     name: "Frigorífico Combi Bosch Total No Frost 203 × 60cm KGN392LAG Acero antihuellas",
     shortName: "Bosch KGN392LAG Frigorífico Combi Acero",
     category: "Electrodomésticos",
-    price: 220,
+    price: 88,
     oldPrice: 1099,
     img: "/assets/products/bosch-frigorifico-kgn392-1.png",
     images: [
@@ -369,7 +369,7 @@ export const products: Product[] = [
     name: "Huawei Watch Fit 4 Negro Smartwatch",
     shortName: "Huawei Watch Fit 4 Negro",
     category: "Wearables",
-    price: 30,
+    price: 12,
     oldPrice: 149,
     img: "/assets/products/huawei-watch-fit4-1.png",
     images: [
@@ -399,7 +399,7 @@ export const products: Product[] = [
     name: "TV Neo QLED Mini LED 214cm (85\") Samsung TQ85QN74FATXXC 4K AI Upscaling Pro Smart TV",
     shortName: "Samsung 85\" Neo QLED 4K AI Smart TV",
     category: "Televisores",
-    price: 360,
+    price: 144,
     oldPrice: 1799,
     img: "/assets/products/samsung-tv-85-neo-qled-1.png",
     images: [
@@ -430,7 +430,7 @@ export const products: Product[] = [
     name: "Tablet Samsung Galaxy Tab A9+ Wi-Fi 8GB 256GB Gris",
     shortName: "Samsung Galaxy Tab A9+ 8/256GB Wi-Fi Gris",
     category: "Tablets",
-    price: 70,
+    price: 28,
     oldPrice: 349,
     img: "/assets/products/samsung-galaxy-tab-a9-1.png",
     images: [
@@ -461,7 +461,7 @@ export const products: Product[] = [
     name: "Pack Consola PlayStation 5 + Gran Turismo 7 + Ghost of Yotei",
     shortName: "PS5 Pack Gran Turismo 7 + Ghost of Yotei",
     category: "Videojuegos",
-    price: 154,
+    price: 62,
     oldPrice: 769,
     img: "/assets/products/ps5-gran-turismo-ghost-1.png",
     images: [
@@ -491,7 +491,7 @@ export const products: Product[] = [
     name: "Apple iPhone 17 256GB Negro Móvil libre",
     shortName: "Apple iPhone 17 256GB Negro",
     category: "Móviles",
-    price: 220,
+    price: 88,
     oldPrice: 1099,
     img: "/assets/products/apple-iphone-17-1.png",
     images: [
@@ -523,7 +523,7 @@ export const products: Product[] = [
     name: "Apple iPhone 17 256GB Azul Neblina Móvil libre",
     shortName: "Apple iPhone 17 256GB Azul Neblina",
     category: "Móviles",
-    price: 220,
+    price: 88,
     oldPrice: 1099,
     img: "/assets/products/apple-iphone-17-azul-1.png",
     images: [
@@ -553,7 +553,7 @@ export const products: Product[] = [
     name: "Apple iPhone 17 256GB Blanco Móvil libre",
     shortName: "Apple iPhone 17 256GB Blanco",
     category: "Móviles",
-    price: 220,
+    price: 88,
     oldPrice: 1099,
     img: "/assets/products/apple-iphone-17-blanco-1.png",
     images: [
@@ -583,7 +583,7 @@ export const products: Product[] = [
     name: "Lavadora Secadora LG 10 kg lavado 6 kg secado 1400 rpm AI F4DR6010A1W Blanco",
     shortName: "LG F4DR6010A1W Lavadora Secadora 10/6 kg",
     category: "Electrodomésticos",
-    price: 220,
+    price: 88,
     oldPrice: 1099,
     img: "/assets/products/lg-lavadora-secadora-f4dr-1.png",
     images: [
@@ -613,7 +613,7 @@ export const products: Product[] = [
     name: "Pack Nintendo Switch 2 + Minecraft",
     shortName: "Nintendo Switch 2 + Minecraft",
     category: "Videojuegos",
-    price: 100,
+    price: 40,
     oldPrice: 499,
     img: "/assets/products/nintendo-switch2-minecraft-1.png",
     images: [
@@ -642,7 +642,7 @@ export const products: Product[] = [
     name: "TV QNED evo MiniLED AI 139cm (55\") LG 55QNED93A6A 4K Smart TV Negro",
     shortName: "LG 55QNED93A6A TV QNED MiniLED 55\" 4K",
     category: "Televisores",
-    price: 240,
+    price: 96,
     oldPrice: 1199,
     img: "/assets/products/lg-55qned93a6a-1.png",
     images: [
@@ -672,7 +672,7 @@ export const products: Product[] = [
     name: "Lavadora Bosch 10 kg 1400 rpm Serie 6 WGG254ZEES Blanco",
     shortName: "Bosch WGG254ZEES Lavadora 10 kg Serie 6",
     category: "Electrodomésticos",
-    price: 160,
+    price: 64,
     oldPrice: 799,
     img: "/assets/products/bosch-lavadora-wgg254-1.png",
     images: [
@@ -702,7 +702,7 @@ export const products: Product[] = [
     name: "TV QLED 189cm (75\") Samsung TQ75Q7F5AUXXC 4K Vision AI Quantum Dot Smart TV Negro",
     shortName: "Samsung 75\" QLED 4K AI Quantum Dot",
     category: "Televisores",
-    price: 240,
+    price: 96,
     oldPrice: 1199,
     img: "/assets/products/samsung-tv-75-qled-1.png",
     images: [
@@ -733,7 +733,7 @@ export const products: Product[] = [
     name: "Sony Alpha 7C Cámara Evil Full Frame cuerpo con sensor CMOS Exmor R 24,2 MP Negro",
     shortName: "Sony Alpha 7C Full Frame 24,2 MP",
     category: "Fotografía",
-    price: 380,
+    price: 152,
     oldPrice: 1899,
     img: "/assets/products/sony-alpha-7c-1.png",
     images: [
@@ -763,7 +763,7 @@ export const products: Product[] = [
     name: "Máquina de helados y elaboraciones frías Ninja CREAMi Scoop & Swirl NC701EU 800W Plata",
     shortName: "Ninja CREAMi NC701EU 800W Heladería",
     category: "Pequeño electrodoméstico",
-    price: 50,
+    price: 20,
     oldPrice: 249,
     img: "/assets/products/ninja-creami-nc701-1.png",
     images: [
@@ -793,7 +793,7 @@ export const products: Product[] = [
     name: "Samsung Galaxy Watch7 40mm Crema Bluetooth Smartwatch",
     shortName: "Samsung Galaxy Watch7 40mm Crema",
     category: "Wearables",
-    price: 60,
+    price: 24,
     oldPrice: 299,
     img: "/assets/products/samsung-galaxy-watch7-1.png",
     images: [
@@ -827,7 +827,7 @@ export const products: Product[] = [
     name: "Cafetera Superautomática De'Longhi Magnifica S ECAM21.112.B con molinillo incorporado Negro",
     shortName: "De'Longhi Magnifica S ECAM21 Superautomática",
     category: "Pequeño electrodoméstico",
-    price: 90,
+    price: 36,
     oldPrice: 449,
     img: "/assets/products/delonghi-magnifica-s-1.png",
     images: [
@@ -858,7 +858,7 @@ export const products: Product[] = [
     name: "Frigorífico Americano Hisense Total No Frost WiFi RS818N4IIE1 Inox",
     shortName: "Hisense RS818N4IIE1 Americano No Frost WiFi",
     category: "Electrodomésticos",
-    price: 260,
+    price: 104,
     oldPrice: 1299,
     img: "/assets/products/hisense-frigorifico-americano-1.png",
     images: [
@@ -888,7 +888,7 @@ export const products: Product[] = [
     name: "Samsung Galaxy S26 Ultra 12GB 512GB Móvil libre Violeta Cobalto",
     shortName: "Samsung Galaxy S26 Ultra 12/512GB",
     category: "Móviles",
-    price: 340,
+    price: 136,
     oldPrice: 1699,
     img: "/assets/products/samsung-galaxy-s26-ultra-1.png",
     images: [
@@ -920,7 +920,7 @@ export const products: Product[] = [
     name: "Freidora de aire Cosori Dual Blaze TwinFry Chef Edition 10 litros con divisor flexible Negro",
     shortName: "Cosori TwinFry Chef 10L Freidora Dual",
     category: "Pequeño electrodoméstico",
-    price: 50,
+    price: 20,
     oldPrice: 249,
     img: "/assets/products/cosori-freidora-twinfry-1.png",
     images: [
@@ -952,7 +952,7 @@ export const products: Product[] = [
     name: "Samsung Galaxy Watch Ultra 2025 Azul Smartwatch",
     shortName: "Samsung Galaxy Watch Ultra 2025 Azul",
     category: "Wearables",
-    price: 140,
+    price: 56,
     oldPrice: 699,
     img: "/assets/products/samsung-watch-ultra-2025-1.png",
     images: [
@@ -983,7 +983,7 @@ export const products: Product[] = [
     name: "Cámara Evil Nikon Z50II con objetivo 16-50mm VR Negro",
     shortName: "Nikon Z50II + Objetivo 16-50mm VR",
     category: "Fotografía",
-    price: 250,
+    price: 100,
     oldPrice: 1249,
     img: "/assets/products/nikon-z50ii-1.png",
     images: [
@@ -1013,7 +1013,7 @@ export const products: Product[] = [
     name: "TV OLED evo AI C5 139cm (55\") LG OLED55C56LB Smart TV 4K Negro",
     shortName: "LG OLED55C5 EVO AI 55\" 4K",
     category: "Televisores",
-    price: 360,
+    price: 144,
     oldPrice: 1799,
     img: "/assets/products/lg-oled55c5-1.png",
     images: [
@@ -1043,7 +1043,7 @@ export const products: Product[] = [
     name: "Centro de planchado Rowenta Eco Steam Pro DG9661 con tecnología Microsteam 400 HD Laser Negro/Beige",
     shortName: "Rowenta DG9661 Eco Steam Pro Centro Planchado",
     category: "Pequeño electrodoméstico",
-    price: 56,
+    price: 22,
     oldPrice: 279,
     img: "/assets/products/rowenta-dg9661-1.png",
     images: [
@@ -1074,7 +1074,7 @@ export const products: Product[] = [
     name: "Frigorífico Americano Samsung Bespoke AI 178cm Twin Cooling Plus 634L Clase C Inox RS80F66KCTEF",
     shortName: "Samsung Bespoke AI RS80F66 Americano 634L",
     category: "Electrodomésticos",
-    price: 460,
+    price: 184,
     oldPrice: 2299,
     img: "/assets/products/samsung-bespoke-1.png",
     images: [
@@ -1105,7 +1105,7 @@ export const products: Product[] = [
     name: "Plancha secador de pelo Dyson Airstrait™ sin placas calientes Ceramic Pink Rose Gold",
     shortName: "Dyson Airstrait™ Ceramic Pink",
     category: "Cuidado personal",
-    price: 90,
+    price: 36,
     oldPrice: 449,
     img: "/assets/products/dyson-airstrait-1.png",
     images: [
