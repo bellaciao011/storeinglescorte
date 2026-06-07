@@ -20,17 +20,25 @@ function StripePaymentForm({
   orderId,
   onSuccess,
   onError,
+  validateDelivery,
 }: {
   total: number;
   orderId: string;
   onSuccess: () => void;
   onError: (msg: string) => void;
+  validateDelivery: () => string | null;
 }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
 
   const handlePay = async () => {
+    const deliveryErr = validateDelivery();
+    if (deliveryErr) {
+      onError(deliveryErr);
+      document.getElementById("entrega-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     if (!stripe || !elements) return;
     setLoading(true);
     onError("");
@@ -99,6 +107,7 @@ export default function Checkout() {
   const [step, setStep] = useState<1 | 4>(1);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const piAmountRef = useRef<number | null>(null);
+  const intentCreatedRef = useRef(false);
 
   const fmtEUR = (n: number) => n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
 
@@ -122,6 +131,13 @@ export default function Checkout() {
   const cartSubtotal = isCartMode ? cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0) : 0;
   const orderTotal = isCartMode ? cartSubtotal : kit.price;
 
+  const validateDelivery = (): string | null => {
+    if (!formData.codigoPostal || !formData.morada || !formData.numero || !formData.localidade || !formData.distrito) {
+      return "Por favor, completa tu dirección de entrega antes de pagar.";
+    }
+    return null;
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const returnOrderId = params.get("orderId");
@@ -131,6 +147,22 @@ export default function Checkout() {
       setStep(4);
     }
   }, []);
+
+  // Auto-crear PaymentIntent en cuanto el lead llena identificación
+  useEffect(() => {
+    if (intentCreatedRef.current) return;
+    if (!formData.email || !formData.nome || !formData.telemovel) return;
+    if (clientSecret || creatingIntent) return;
+
+    const timer = setTimeout(() => {
+      if (intentCreatedRef.current) return;
+      intentCreatedRef.current = true;
+      handleCreateIntent();
+    }, 600);
+
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.email, formData.nome, formData.telemovel]);
 
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -161,12 +193,7 @@ export default function Checkout() {
   }, [step, orderId]);
 
   const handleCreateIntent = async () => {
-    if (!formData.email || !formData.nome || !formData.telemovel ||
-        !formData.codigoPostal || !formData.morada || !formData.numero ||
-        !formData.localidade || !formData.distrito) {
-      setError("Por favor, completa todos los campos obligatorios antes de pagar.");
-      return;
-    }
+    if (!formData.email || !formData.nome || !formData.telemovel) return;
 
     setCreatingIntent(true);
     setError("");
@@ -426,7 +453,7 @@ export default function Checkout() {
         </section>
 
         {/* ── Entrega ── */}
-        <section className="mb-6">
+        <section id="entrega-section" className="mb-6">
           <h2 className="text-base font-bold text-gray-900 mb-3">Entrega</h2>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -494,20 +521,20 @@ export default function Checkout() {
             </div>
           )}
 
-          {!clientSecret && !creatingIntent && (
-            <button
-              type="button"
-              onClick={handleCreateIntent}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-black text-base py-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-            >
-              <Lock className="w-4 h-4" /> Continuar al pago
-            </button>
-          )}
-
-          {creatingIntent && (
-            <div className="flex items-center justify-center gap-3 py-10 text-gray-500">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-700" />
-              <span className="text-sm font-medium">Preparando pago seguro…</span>
+          {/* Placeholder enquanto o intent ainda não está pronto */}
+          {!clientSecret && (
+            <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 flex items-center gap-3 min-h-[64px]">
+              {creatingIntent ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-gray-400 flex-shrink-0" />
+                  <span className="text-sm text-gray-400">Preparando pago seguro…</span>
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                  <span className="text-sm text-gray-400">Completa tu contacto para ver las opciones de pago.</span>
+                </>
+              )}
             </div>
           )}
 
@@ -516,6 +543,7 @@ export default function Checkout() {
               <StripePaymentForm
                 total={orderTotal}
                 orderId={orderId!}
+                validateDelivery={validateDelivery}
                 onSuccess={() => {
                   (window as any).fbq?.("track", "Purchase", {
                     value: orderTotal,
