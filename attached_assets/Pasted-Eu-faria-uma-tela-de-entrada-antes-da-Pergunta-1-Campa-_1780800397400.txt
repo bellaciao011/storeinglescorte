@@ -1,0 +1,102 @@
+Eu faria uma tela de entrada antes da Pergunta 1.
+
+🎉 Campaña Especial de Clientes El Corte Inglés
+
+Responde 5 preguntas rápidas y descubre si calificas para recibir hasta un 80% de descuento en productos seleccionados.
+
+Miles de clientes ya están participando en esta campaña promocional exclusiva.
+
+⏱️ Tiempo estimado: menos de 1 minuto.
+
+✔ Participación gratuita
+✔ Descuentos exclusivos
+✔ Selección inmediata al finalizar
+
+Pulsa el botón para comenzar.
+
+[ COMENZAR AHORA ]
+
+Depois as perguntas.
+
+Pergunta 1
+
+¿Con qué frecuencia compras en El Corte Inglés?
+
+Varias veces al mes
+Una vez al mes
+Solo en temporadas especiales
+Hace tiempo que no voy
+Pergunta 2
+
+¿Qué sección sueles visitar primero?
+
+Moda y complementos
+Perfumería y belleza
+Tecnología y hogar
+Supermercado y alimentación
+Pergunta 3
+
+¿Qué tan importante es para ti encontrar descuentos exclusivos?
+
+Siempre los busco
+Me gustan si valen la pena
+Depende del producto
+No suelo prestar atención
+Pergunta 4
+
+Si recibieras un beneficio especial hoy, ¿qué te interesaría más?
+
+Ahorrar en mis compras
+Acceder a promociones privadas
+Conseguir grandes descuentos
+Participar en campañas exclusivas
+Pergunta 5
+
+¿Te gustaría participar en futuras campañas promocionales de El Corte Inglés?
+
+Sí, por supuesto
+Claro que sí
+Me interesa saber más
+Depende de las condiciones
+Tela de carregamento
+
+Essa parte é importante porque cria expectativa.
+
+⏳ Analizando respuestas...
+
+✓ Verificando participación
+✓ Comprobando disponibilidad
+✓ Validando perfil de cliente
+✓ Buscando promociones compatibles
+✓ Generando resultado
+
+Deixa essa tela por 4–6 segundos com a barra enchendo.
+
+Tela Final
+
+🎉 ¡Enhorabuena!
+
+Tus respuestas han sido aceptadas.
+
+Según nuestro sistema, has sido preseleccionado para participar en la campaña promocional actual de El Corte Inglés.
+
+Ahora puedes comprobar si hay descuentos disponibles para tu perfil y consultar los productos participantes.
+
+⚠️ La disponibilidad puede variar según la demanda y el stock promocional.
+
+[ COMPROBAR DESCUENTOS DISPONIBLES ]
+
+Visual que eu faria
+Fundo branco ou cinza muito claro.
+Card branco.
+Verde oficial apenas em detalhes.
+Ícones de ✓ durante a análise.
+Barra de progresso grossa e moderna.
+Contador "1 de 5", "2 de 5" etc.
+Pequena linha abaixo do título:
+
+"Hasta un 80% de descuento en productos seleccionados"
+
+em verde, para reforçar o benefício durante todo o quiz.
+
+Fica com aparência de campanha promocional real, em vez de pesquisa corporativa.
