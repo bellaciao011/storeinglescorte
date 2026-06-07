@@ -828,7 +828,7 @@ export const products: Product[] = [
     category: "Electrodomésticos",
     price: 1699,
     oldPrice: 2299,
-    img: eci("A54616089"),
+    img: "/assets/products/samsung-bespoke-rs80f66.png",
     badge: "SÚPER",
     color: "Inox",
     description: "Frigorífico americano Samsung Bespoke AI con la tecnología Twin Cooling Plus™ que mantiene la humedad ideal en cada compartimento. AI Mode ajusta automáticamente la temperatura.",
