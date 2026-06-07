@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Star, CheckCircle, Heart, Lock, Truck, ShieldCheck, Award } from "lucide-react";
+import { Star, CheckCircle, Heart, Lock, Truck, ShieldCheck, Award, ShoppingCart } from "lucide-react";
+import { useCart } from "@/lib/CartContext";
 import { Header } from "@/components/Header";
 import { products } from "@/lib/products";
 
@@ -26,6 +27,8 @@ export default function Landing() {
   const [, setLocation] = useLocation();
   const [activeCategory, setActiveCategory] = useState("Todo");
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const { addItem, open: openCart } = useCart();
 
   const filtered = activeCategory === "Todo"
     ? products
@@ -38,6 +41,24 @@ export default function Landing() {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  };
+
+  const handleAddToCart = (product: typeof products[0], e: React.MouseEvent) => {
+    e.stopPropagation();
+    addItem(product);
+    openCart();
+    setAddedIds(prev => {
+      const next = new Set(prev);
+      next.add(product.id);
+      return next;
+    });
+    setTimeout(() => {
+      setAddedIds(prev => {
+        const next = new Set(prev);
+        next.delete(product.id);
+        return next;
+      });
+    }, 1500);
   };
 
   return (
@@ -91,17 +112,21 @@ export default function Landing() {
           {filtered.map((product) => {
             const discountPct = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
             const wished = wishlist.has(product.id);
+            const added = addedIds.has(product.id);
 
             return (
               <motion.div
                 key={product.id}
                 variants={item}
                 data-testid={`card-kit-${product.id}`}
-                onClick={() => setLocation(`/producto/${product.id}`)}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col cursor-pointer"
+                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col"
               >
-                {/* Image */}
-                <div className="relative bg-white overflow-hidden" style={{ height: 160 }}>
+                {/* Image — clicável → produto */}
+                <div
+                  className="relative bg-white overflow-hidden cursor-pointer"
+                  style={{ height: 160 }}
+                  onClick={() => setLocation(`/producto/${product.id}`)}
+                >
                   <img
                     src={product.img}
                     alt={product.shortName}
@@ -122,8 +147,11 @@ export default function Landing() {
                   )}
                 </div>
 
-                {/* Info */}
-                <div className="p-3 flex flex-col flex-1">
+                {/* Info — clicável → produto */}
+                <div
+                  className="px-3 pt-3 pb-0 flex flex-col flex-1 cursor-pointer"
+                  onClick={() => setLocation(`/producto/${product.id}`)}
+                >
                   <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-0.5">{product.brand}</p>
                   <h3 className="text-xs font-semibold text-gray-800 leading-snug mb-2 line-clamp-2">
                     {product.shortName}
@@ -142,16 +170,24 @@ export default function Landing() {
                         <span className="text-[10px] font-black text-[#0B8A43] uppercase tracking-wide">SÚPER</span>
                       )}
                     </div>
-
-                    <button
-                      data-testid={`button-order-${product.id}`}
-                      onClick={(e) => { e.stopPropagation(); setLocation(`/producto/${product.id}`); }}
-                      className="w-full py-2.5 rounded-xl text-white font-bold text-xs transition-all active:scale-[0.98]"
-                      style={{ background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
-                    >
-                      Ver producto
-                    </button>
                   </div>
+                </div>
+
+                {/* Botão "Añadir" — NÃO navega */}
+                <div className="px-3 pb-3">
+                  <button
+                    data-testid={`button-order-${product.id}`}
+                    onClick={(e) => handleAddToCart(product, e)}
+                    className={`w-full py-2.5 rounded-xl text-white font-bold text-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 ${
+                      added ? "bg-green-600" : ""
+                    }`}
+                    style={added ? undefined : { background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
+                  >
+                    {added
+                      ? <><CheckCircle className="w-3.5 h-3.5" /> Añadido</>
+                      : <><ShoppingCart className="w-3.5 h-3.5" /> Añadir a la cesta</>
+                    }
+                  </button>
                 </div>
               </motion.div>
             );
