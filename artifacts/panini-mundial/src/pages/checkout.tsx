@@ -217,7 +217,7 @@ export default function Checkout() {
       const firstItem = isCartMode && cartItems.length > 0 ? cartItems[0].product : kit;
 
       const res = await Promise.race([
-        fetch(apiUrl("/api/payment/create"), {
+        fetch(apiUrl("/api/payment/create-intent"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
