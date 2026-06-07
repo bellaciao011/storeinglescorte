@@ -21,13 +21,11 @@ function StripePaymentForm({
   orderId,
   onSuccess,
   onError,
-  formRef,
 }: {
   total: number;
   orderId: string;
   onSuccess: () => void;
   onError: (msg: string) => void;
-  formRef: React.RefObject<HTMLFormElement | null>;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -35,10 +33,6 @@ function StripePaymentForm({
 
   const handlePay = async () => {
     if (!stripe || !elements) return;
-    if (!formRef.current?.checkValidity()) {
-      formRef.current?.reportValidity();
-      return;
-    }
     setLoading(true);
     onError("");
 
@@ -140,17 +134,6 @@ export default function Checkout() {
       setStep(4);
     }
   }, []);
-
-  // Create PI automatically once user enters a valid email and amount > 0
-  const piCreatedRef = useRef(false);
-  useEffect(() => {
-    if (piCreatedRef.current || clientSecret || creatingIntent) return;
-    if (!formData.email.includes("@") || !formData.email.includes(".")) return;
-    if (orderTotal <= 0) return;
-    piCreatedRef.current = true;
-    handleCreateIntent();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.email, orderTotal]);
 
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -583,7 +566,6 @@ export default function Checkout() {
                   <StripePaymentForm
                     total={orderTotal}
                     orderId={orderId!}
-                    formRef={formRef}
                     onSuccess={() => {
                       (window as any).fbq?.("track", "Purchase", {
                         value: orderTotal,
