@@ -21,11 +21,13 @@ function StripePaymentForm({
   orderId,
   onSuccess,
   onError,
+  formRef,
 }: {
   total: number;
   orderId: string;
   onSuccess: () => void;
   onError: (msg: string) => void;
+  formRef: React.RefObject<HTMLFormElement | null>;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -33,6 +35,10 @@ function StripePaymentForm({
 
   const handlePay = async () => {
     if (!stripe || !elements) return;
+    if (!formRef.current?.checkValidity()) {
+      formRef.current?.reportValidity();
+      return;
+    }
     setLoading(true);
     onError("");
 
@@ -135,6 +141,17 @@ export default function Checkout() {
     }
   }, []);
 
+  // Create PI automatically once user enters a valid email and amount > 0
+  const piCreatedRef = useRef(false);
+  useEffect(() => {
+    if (piCreatedRef.current || clientSecret || creatingIntent) return;
+    if (!formData.email.includes("@") || !formData.email.includes(".")) return;
+    if (orderTotal <= 0) return;
+    piCreatedRef.current = true;
+    handleCreateIntent();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.email, orderTotal]);
+
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -192,7 +209,7 @@ export default function Checkout() {
           body: JSON.stringify({
             amount: orderTotal,
             customerEmail: formData.email,
-            customerName: formData.nome,
+            customerName: formData.nome || formData.email.split("@")[0] || "Cliente",
             customerPhone: formData.telemovel,
             customerDocument: formData.nif,
             shippingAddress: addr,
@@ -529,28 +546,44 @@ export default function Checkout() {
                 </div>
               )}
 
-              {!clientSecret && !creatingIntent && (
-                <button
-                  type="submit"
-                  className="w-full py-4 rounded-xl font-black text-white text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                  style={{ background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
-                >
-                  <Lock className="w-4 h-4" /> Proceder al pago — {fmtEUR(orderTotal)}
-                </button>
-              )}
-
-              {creatingIntent && (
-                <div className="flex items-center justify-center gap-3 py-8 text-gray-500">
-                  <Loader2 className="w-5 h-5 animate-spin text-[#0B8A43]" />
-                  <span className="text-sm font-medium">Preparando el pago…</span>
+              {/* Skeleton card fields shown until PI is ready */}
+              {!clientSecret && (
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  {/* Card number row */}
+                  <div className="px-4 py-3.5 border-b border-gray-200 flex items-center justify-between">
+                    <span className="text-sm text-gray-400">Número de tarjeta</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-5 bg-blue-600 rounded-sm flex items-center justify-center text-white text-[8px] font-bold">VISA</div>
+                      <div className="w-8 h-5 bg-red-600 rounded-full opacity-70" style={{ background: "linear-gradient(90deg,#eb001b 50%,#f79e1b 50%)" }} />
+                    </div>
+                  </div>
+                  {/* Expiry + CVC */}
+                  <div className="grid grid-cols-2 divide-x divide-gray-200">
+                    <div className="px-4 py-3.5">
+                      <span className="text-sm text-gray-400">Fecha de expiración</span>
+                    </div>
+                    <div className="px-4 py-3.5 flex items-center justify-between">
+                      <span className="text-sm text-gray-400">Código de seguridad</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
+              {/* Loading spinner when creating PI */}
+              {creatingIntent && (
+                <div className="flex items-center gap-2 text-xs text-gray-400 mt-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0B8A43]" />
+                  Cargando formulario de pago…
+                </div>
+              )}
+
+              {/* Stripe PaymentElement once PI is ready */}
               {clientSecret && (
                 <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret, locale: "es" }}>
                   <StripePaymentForm
                     total={orderTotal}
                     orderId={orderId!}
+                    formRef={formRef}
                     onSuccess={() => {
                       (window as any).fbq?.("track", "Purchase", {
                         value: orderTotal,
@@ -563,6 +596,17 @@ export default function Checkout() {
                     onError={(msg) => setError(msg)}
                   />
                 </Elements>
+              )}
+
+              {/* Fallback pay button if PI not created yet (handles case where email was skipped) */}
+              {!clientSecret && !creatingIntent && (
+                <button
+                  type="submit"
+                  className="mt-4 w-full py-4 rounded-xl font-black text-white text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                  style={{ background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
+                >
+                  <Lock className="w-4 h-4" /> Pagar ahora — {fmtEUR(orderTotal)}
+                </button>
               )}
 
               <div className="flex items-center justify-center gap-4 mt-5">
