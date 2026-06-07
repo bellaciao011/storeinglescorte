@@ -11,6 +11,8 @@ import Admin from "@/pages/admin";
 import Rastreio from "@/pages/rastreio";
 import Quiz from "@/pages/quiz";
 import ProductPage from "@/pages/product";
+import { CartProvider } from "@/lib/CartContext";
+import { CartDrawer } from "@/components/CartDrawer";
 
 const queryClient = new QueryClient();
 
@@ -53,10 +55,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
+        <CartProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <CartDrawer />
+          <Toaster />
+        </CartProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

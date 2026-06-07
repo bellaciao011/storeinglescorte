@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Search, User, Heart, ShoppingBag, Package } from "lucide-react";
+import { useCart } from "@/lib/CartContext";
 
 export function Header() {
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [buying, setBuying] = useState(() => Math.floor(Math.random() * 60) + 80);
   const [sold, setSold] = useState(() => Math.floor(Math.random() * 400) + 400);
+  const { count, open } = useCart();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -36,7 +38,7 @@ export function Header() {
             {buying} personas comprando ahora
           </span>
           <span className="text-white/30">·</span>
-          <span>Hasta <strong className="text-yellow-300">−80%</strong> en productos seleccionados</span>
+          <span>Hasta <strong className="text-yellow-300">−92%</strong> en productos seleccionados</span>
           <span className="text-white/30">·</span>
           <span className="text-white/70">Oferta expira en <strong className="text-white tabular-nums">{mm}:{ss}</strong></span>
         </span>
@@ -59,7 +61,18 @@ export function Header() {
         <div className="flex items-center gap-3 flex-shrink-0 text-gray-600">
           <User className="w-5 h-5" />
           <Heart className="w-5 h-5" />
-          <ShoppingBag className="w-5 h-5" />
+          <button
+            onClick={open}
+            className="relative"
+            aria-label="Abrir cesta"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            {count > 0 && (
+              <span className="absolute -top-2 -right-2 w-4.5 h-4.5 min-w-[18px] min-h-[18px] bg-[#0B8A43] text-white text-[10px] font-black rounded-full flex items-center justify-center leading-none px-0.5">
+                {count > 9 ? "9+" : count}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 

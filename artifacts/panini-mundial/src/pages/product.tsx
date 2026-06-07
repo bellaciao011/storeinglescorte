@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Heart, Share2, Star, CheckCircle, ShieldCheck, Truck, RotateCcw, Zap, ChevronLeft as Prev, ChevronRight as Next } from "lucide-react";
 import { Header } from "@/components/Header";
 import { products } from "@/lib/products";
+import { useCart } from "@/lib/CartContext";
 
 const fmtEUR = (n: number) =>
   n.toLocaleString("es-ES", { style: "currency", currency: "EUR", minimumFractionDigits: 2 });
@@ -14,6 +15,7 @@ interface ProductPageProps {
 
 export default function ProductPage({ params }: ProductPageProps) {
   const [, setLocation] = useLocation();
+  const cart = useCart();
   const product = products.find((p) => p.id === params?.id);
   const [activeImg, setActiveImg] = useState(0);
   const [wished, setWished] = useState(false);
@@ -33,7 +35,8 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   const gallery = product.images && product.images.length > 0 ? product.images : [product.img];
   const discountPct = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
-  const handleBuy = () => setLocation(`/checkout?kit=${product.id}`);
+  const handleAddToCart = () => cart.addItem(product);
+  const handleBuy = () => { cart.addItem(product); setLocation("/checkout?cart=1"); };
 
   const related = products
     .filter((p) => p.category === product.category && p.id !== product.id)
@@ -195,7 +198,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             {/* Buttons */}
             <motion.button
               whileTap={{ scale: 0.98 }}
-              onClick={handleBuy}
+              onClick={handleAddToCart}
               className="w-full py-4 rounded-xl font-black text-white text-base mb-3"
               style={{ background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
             >

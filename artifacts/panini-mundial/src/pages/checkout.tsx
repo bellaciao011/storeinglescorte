@@ -11,6 +11,7 @@ import { Header } from "@/components/Header";
 import { kits } from "@/lib/kits";
 import { readUtms } from "@/lib/utm";
 import { apiUrl } from "@/lib/api";
+import { CART_STORAGE_KEY, type CartItem } from "@/lib/CartContext";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "");
 
@@ -95,6 +96,11 @@ function StripePaymentForm({
 export default function Checkout() {
   const [, setLocation] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
+  const isCartMode = searchParams.get("cart") === "1";
+  const cartItems: CartItem[] = isCartMode ? (() => {
+    try { return JSON.parse(localStorage.getItem(CART_STORAGE_KEY) ?? "[]"); }
+    catch { return []; }
+  })() : [];
   const kitId = searchParams.get("kit") || "campeao";
   const kit = kits.find((k) => k.id === kitId) || kits[2];
 
@@ -121,7 +127,8 @@ export default function Checkout() {
   ];
 
   const bumpsTotal = orderBumps.filter(b => selectedBumps.has(b.id)).reduce((s, b) => s + b.price, 0);
-  const orderTotal = kit.price * quantity + bumpsTotal;
+  const cartSubtotal = isCartMode ? cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0) : 0;
+  const orderTotal = isCartMode ? cartSubtotal + bumpsTotal : kit.price * quantity + bumpsTotal;
 
   const toggleBump = (id: string) => {
     setSelectedBumps(prev => {
@@ -175,12 +182,15 @@ export default function Checkout() {
     if (piAmountRef.current === orderTotal) return;
     piAmountRef.current = orderTotal;
 
-    const items = [
-      { id: kit.id, name: kit.name, quantity, price: kit.price },
-      ...orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({
-        id: b.id, name: b.label, quantity: 1, price: b.price,
-      })),
-    ];
+    const items = isCartMode
+      ? [
+        ...cartItems.map(i => ({ id: i.product.id, name: i.product.name, quantity: i.quantity, price: i.product.price })),
+        ...orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({ id: b.id, name: b.label, quantity: 1, price: b.price })),
+      ]
+      : [
+        { id: kit.id, name: kit.name, quantity, price: kit.price },
+        ...orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({ id: b.id, name: b.label, quantity: 1, price: b.price })),
+      ];
 
     const piId = clientSecret.split("_secret_")[0];
     const t = setTimeout(() => {
@@ -230,12 +240,17 @@ export default function Checkout() {
         [formData.codigoPostal, formData.localidade].filter(Boolean).join(" "),
       ].filter(Boolean).join(", ");
 
-      const items = [
-        { id: kit.id, name: kit.name, quantity, price: kit.price },
-        ...orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({
-          id: b.id, name: b.label, quantity: 1, price: b.price,
-        })),
-      ];
+      const items = isCartMode
+        ? [
+          ...cartItems.map(i => ({ id: i.product.id, name: i.product.name, quantity: i.quantity, price: i.product.price })),
+          ...orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({ id: b.id, name: b.label, quantity: 1, price: b.price })),
+        ]
+        : [
+          { id: kit.id, name: kit.name, quantity, price: kit.price },
+          ...orderBumps.filter(b => selectedBumps.has(b.id)).map(b => ({ id: b.id, name: b.label, quantity: 1, price: b.price })),
+        ];
+
+      const firstItem = isCartMode && cartItems.length > 0 ? cartItems[0].product : kit;
 
       const res = await Promise.race([
         fetch(apiUrl("/api/payment/create"), {
@@ -251,9 +266,9 @@ export default function Checkout() {
             shippingPostalCode: formData.codigoPostal,
             shippingCity: formData.localidade,
             shippingDistrict: formData.distrito,
-            kitId: kit.id,
-            productName: "Kit Panini FIFA World Cup 2026",
-            quantity,
+            kitId: firstItem.id,
+            productName: isCartMode ? `Pedido (${cartItems.length} producto${cartItems.length !== 1 ? "s" : ""})` : "Kit Panini FIFA World Cup 2026",
+            quantity: isCartMode ? cartItems.reduce((s, i) => s + i.quantity, 0) : quantity,
             items,
             orderType: "main",
             utmParams,
@@ -349,7 +364,9 @@ export default function Checkout() {
                 <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumen del Pedido</h3>
                 <div className="flex justify-between mb-1.5 text-sm">
                   <span className="text-gray-500">Producto</span>
-                  <span className="font-medium text-gray-900">{kit.name}</span>
+                  <span className="font-medium text-gray-900">
+                    {isCartMode ? `${cartItems.length} producto${cartItems.length !== 1 ? "s" : ""}` : kit.name}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Total</span>
@@ -367,7 +384,9 @@ export default function Checkout() {
                 <h3 className="font-bold text-gray-900 text-sm mb-3 border-b pb-2">Resumen del Pedido</h3>
                 <div className="flex justify-between mb-1.5 text-sm">
                   <span className="text-gray-500">Producto</span>
-                  <span className="font-medium text-gray-900">{kit.name}</span>
+                  <span className="font-medium text-gray-900">
+                    {isCartMode ? `${cartItems.length} producto${cartItems.length !== 1 ? "s" : ""}` : kit.name}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Total</span>
@@ -406,69 +425,113 @@ export default function Checkout() {
 
           <div className="lg:col-span-5 lg:col-start-8 lg:row-start-1">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden sticky top-6">
-              <div className="relative overflow-hidden bg-gray-50 border-b border-gray-100">
-                <img src={kit.img} alt={kit.name} className="w-full h-28 lg:h-36 object-contain py-2 px-8" />
-                <div
-                  className="absolute top-[28px] right-[-36px] w-[148px] text-center py-[5px] rotate-45 shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #f5a623 0%, #fbbf24 40%, #f5a623 100%)" }}
-                >
-                  <span className="text-[10px] font-black tracking-[0.18em] uppercase text-[#7c4a00]">Promoción</span>
-                </div>
-              </div>
-              <div className="px-4 py-3">
-                <div className="flex items-center justify-between mb-0.5">
-                  <p className="font-bold text-gray-900 text-sm">{kit.name}</p>
-                  <span className="text-xs font-black text-primary">{fmtMXN(kit.price)}</span>
-                </div>
-                <p className="text-xs text-gray-400 mb-1">{kit.contents}</p>
-                <div className="flex items-center gap-1 text-yellow-500 text-xs mb-3">
-                  ★★★★★ <span className="text-gray-400">4.9 · +2,200 calificaciones</span>
-                </div>
 
-                <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 mb-3 border border-gray-200">
-                  <span className="text-xs font-semibold text-gray-700">Cantidad</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                      className="w-7 h-7 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 font-black hover:border-primary hover:text-primary transition-all text-sm"
-                    >−</button>
-                    <span className="w-6 text-center font-black text-gray-900 text-sm">{quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(q => Math.min(10, q + 1))}
-                      className="w-7 h-7 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 font-black hover:border-primary hover:text-primary transition-all text-sm"
-                    >+</button>
-                  </div>
-                </div>
-
-                <div className="space-y-1 border-t border-gray-100 pt-2">
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <span>Precio normal</span>
-                    <span className="line-through">{fmtMXN(kit.oldPrice * quantity)}</span>
-                  </div>
-                  {quantity > 1 && (
+              {isCartMode ? (
+                /* ── Cart mode sidebar ── */
+                <div className="px-4 py-4">
+                  <p className="font-black text-gray-900 text-sm mb-3">Tu cesta</p>
+                  <ul className="divide-y divide-gray-100 mb-3">
+                    {cartItems.map(({ product, quantity: qty }) => (
+                      <li key={product.id} className="py-2.5 flex gap-3 items-center">
+                        <img
+                          src={product.img}
+                          alt={product.shortName}
+                          className="w-12 h-12 object-contain rounded-lg border border-gray-100 flex-shrink-0 bg-white p-1"
+                          onError={(e) => { (e.target as HTMLImageElement).src = "/assets/kit-basico.png"; }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-800 font-semibold line-clamp-2 leading-snug">{product.shortName}</p>
+                          <p className="text-[10px] text-gray-400">× {qty}</p>
+                        </div>
+                        <span className="text-xs font-black text-gray-900 flex-shrink-0">{fmtMXN(product.price * qty)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="space-y-1 border-t border-gray-100 pt-2">
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>{kit.name} × {quantity}</span>
-                      <span>{fmtMXN(kit.price * quantity)}</span>
+                      <span>Envío</span>
+                      <span className="text-green-600 font-semibold">Gratis</span>
                     </div>
-                  )}
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Envío</span>
-                    <span className="text-green-600 font-semibold">Gratis</span>
-                  </div>
-                  {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
-                    <div key={b.id} className="flex justify-between text-xs text-gray-500">
-                      <span className="truncate pr-2">{b.label}</span>
-                      <span className="flex-shrink-0">+{fmtMXN(b.price)}</span>
+                    {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
+                      <div key={b.id} className="flex justify-between text-xs text-gray-500">
+                        <span className="truncate pr-2">{b.label}</span>
+                        <span className="flex-shrink-0">+{fmtMXN(b.price)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                      <span className="font-bold text-gray-900 text-xs">Total</span>
+                      <span className="text-base font-black text-primary">{fmtMXN(orderTotal)}</span>
                     </div>
-                  ))}
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                    <span className="font-bold text-gray-900 text-xs">Total</span>
-                    <span className="text-base font-black text-primary">{fmtMXN(orderTotal)}</span>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* ── Single product sidebar ── */
+                <>
+                  <div className="relative overflow-hidden bg-gray-50 border-b border-gray-100">
+                    <img src={kit.img} alt={kit.name} className="w-full h-28 lg:h-36 object-contain py-2 px-8" />
+                    <div
+                      className="absolute top-[28px] right-[-36px] w-[148px] text-center py-[5px] rotate-45 shadow-lg"
+                      style={{ background: "linear-gradient(135deg, #f5a623 0%, #fbbf24 40%, #f5a623 100%)" }}
+                    >
+                      <span className="text-[10px] font-black tracking-[0.18em] uppercase text-[#7c4a00]">Promoción</span>
+                    </div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <p className="font-bold text-gray-900 text-sm">{kit.name}</p>
+                      <span className="text-xs font-black text-primary">{fmtMXN(kit.price)}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-1">{(kit as any).contents}</p>
+                    <div className="flex items-center gap-1 text-yellow-500 text-xs mb-3">
+                      ★★★★★ <span className="text-gray-400">4.9 · +2,200 calificaciones</span>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 mb-3 border border-gray-200">
+                      <span className="text-xs font-semibold text-gray-700">Cantidad</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                          className="w-7 h-7 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 font-black hover:border-primary hover:text-primary transition-all text-sm"
+                        >−</button>
+                        <span className="w-6 text-center font-black text-gray-900 text-sm">{quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(q => Math.min(10, q + 1))}
+                          className="w-7 h-7 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 font-black hover:border-primary hover:text-primary transition-all text-sm"
+                        >+</button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 border-t border-gray-100 pt-2">
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <span>Precio normal</span>
+                        <span className="line-through">{fmtMXN(kit.oldPrice * quantity)}</span>
+                      </div>
+                      {quantity > 1 && (
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>{kit.name} × {quantity}</span>
+                          <span>{fmtMXN(kit.price * quantity)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Envío</span>
+                        <span className="text-green-600 font-semibold">Gratis</span>
+                      </div>
+                      {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
+                        <div key={b.id} className="flex justify-between text-xs text-gray-500">
+                          <span className="truncate pr-2">{b.label}</span>
+                          <span className="flex-shrink-0">+{fmtMXN(b.price)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <span className="font-bold text-gray-900 text-xs">Total</span>
+                        <span className="text-base font-black text-primary">{fmtMXN(orderTotal)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -641,10 +704,19 @@ export default function Checkout() {
                           <span>Envío</span>
                           <span className="text-primary font-semibold">Gratis</span>
                         </div>
-                        <div className="flex justify-between text-sm text-gray-600">
-                          <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
-                          <span>{fmtMXN(kit.price * quantity)}</span>
-                        </div>
+                        {isCartMode ? (
+                          cartItems.map(i => (
+                            <div key={i.product.id} className="flex justify-between text-sm text-gray-600">
+                              <span className="truncate pr-2">{i.product.shortName}{i.quantity > 1 ? ` × ${i.quantity}` : ""}</span>
+                              <span>{fmtMXN(i.product.price * i.quantity)}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex justify-between text-sm text-gray-600">
+                            <span>{kit.name}{quantity > 1 ? ` × ${quantity}` : ""}</span>
+                            <span>{fmtMXN(kit.price * quantity)}</span>
+                          </div>
+                        )}
                         {orderBumps.filter(b => selectedBumps.has(b.id)).map(b => (
                           <div key={b.id} className="flex justify-between text-sm text-gray-600">
                             <span className="text-xs">{b.label}</span>
