@@ -852,7 +852,7 @@ export const products: Product[] = [
     category: "Cuidado personal",
     price: 349,
     oldPrice: 449,
-    img: eci("A55088275"),
+    img: "/assets/products/dyson-airstrait.png",
     badge: "NUEVO",
     color: "Ceramic Pink/Rose Gold",
     description: "La plancha alisadora Dyson que no usa calor extremo sino aire forzado para alisar el cabello sin dañarlo. Dos modos: húmedo (para alisar mojado) y seco (para retoques).",
