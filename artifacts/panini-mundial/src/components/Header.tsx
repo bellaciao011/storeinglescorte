@@ -28,14 +28,11 @@ export function Header() {
 
   return (
     <header className="w-full flex flex-col items-center sticky top-0 z-50 shadow-md">
-      {/* Main top bar */}
-      <div className="w-full bg-[#6b0f1a] text-white py-2.5 px-4 flex items-center justify-between gap-4">
-        <a href="/" className="flex-shrink-0 bg-white rounded-md px-2 py-1">
-          <img
-            src="/assets/logo-panini-oficial.png"
-            alt="Panini"
-            className="h-7 w-auto object-contain"
-          />
+      <div className="w-full bg-[#007A3D] text-white py-2.5 px-4 flex items-center justify-between gap-4">
+        <a href="/" className="flex-shrink-0 bg-white rounded-md px-3 py-1.5">
+          <span className="text-[#007A3D] font-black text-sm tracking-tight leading-none">
+            El Corte Inglés
+          </span>
         </a>
 
         <div className="flex flex-col items-end gap-0.5">
@@ -51,7 +48,7 @@ export function Header() {
                 <>
                   {[h, m, s].map((unit, i) => (
                     <span key={i} className="flex items-center gap-1">
-                      <span className="bg-black/40 border border-white/20 rounded px-1.5 py-0.5 text-yellow-300 font-black text-sm tabular-nums leading-none min-w-[26px] text-center">
+                      <span className="bg-black/30 border border-white/20 rounded px-1.5 py-0.5 text-yellow-300 font-black text-sm tabular-nums leading-none min-w-[26px] text-center">
                         {unit}
                       </span>
                       {i < 2 && <span className="text-yellow-300 font-black text-sm leading-none">:</span>}
@@ -64,8 +61,7 @@ export function Header() {
         </div>
       </div>
 
-      {/* Social Proof Bar */}
-      <div className="w-full bg-[#3d0710] text-white/90 py-1.5 px-4 flex justify-center gap-6 text-xs font-medium border-b border-white/10">
+      <div className="w-full bg-[#005A2B] text-white/90 py-1.5 px-4 flex justify-center gap-6 text-xs font-medium border-b border-white/10">
         <span className="flex items-center gap-1.5 text-orange-300 font-bold">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
@@ -80,12 +76,11 @@ export function Header() {
         </span>
       </div>
 
-      {/* Trust Badges Row */}
       <div className="w-full py-2 px-4 flex flex-wrap justify-center gap-x-5 gap-y-1 text-[11px] text-gray-500 bg-white border-b border-gray-100">
         <span className="flex items-center gap-1 font-medium"><Lock className="w-3 h-3 text-green-600" /> Pago 100% seguro</span>
         <span className="flex items-center gap-1 font-medium"><ShieldCheck className="w-3 h-3 text-green-600" /> Compra protegida</span>
-        <span className="flex items-center gap-1 font-medium"><Truck className="w-3 h-3 text-green-600" /> Envío gratis México</span>
-        <span className="flex items-center gap-1 font-medium"><ShieldCheck className="w-3 h-3 text-green-600" /> Producto original</span>
+        <span className="flex items-center gap-1 font-medium"><Truck className="w-3 h-3 text-green-600" /> Envío gratis España</span>
+        <span className="flex items-center gap-1 font-medium"><ShieldCheck className="w-3 h-3 text-green-600" /> Producto oficial</span>
       </div>
     </header>
   );

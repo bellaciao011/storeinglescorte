@@ -102,38 +102,38 @@ export default function Landing() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white text-gray-800 text-xs font-black uppercase tracking-widest mb-8 border border-amber-300 shadow-sm"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white text-gray-800 text-xs font-black uppercase tracking-widest mb-8 border border-green-300 shadow-sm"
           >
-            1 compra por persona — Oferta de preventa
+            Oferta exclusiva — Solo por tiempo limitado
           </motion.div>
 
-          {/* FIFA WC26 Official Logo */}
+          {/* ECI Logo */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
             className="flex justify-center mb-5"
           >
-            <img
-              src="/assets/fifa-wc26-logo.png"
-              alt="FIFA World Cup 26 — Producto con Licencia Oficial"
-              className="h-36 sm:h-44 w-auto object-contain drop-shadow-md"
-            />
+            <div className="bg-[#007A3D] px-8 py-4 rounded-2xl shadow-lg">
+              <span className="text-white font-black text-3xl tracking-tight leading-none">
+                El Corte Inglés
+              </span>
+            </div>
           </motion.div>
 
-          {/* Álbum Oficial — green label */}
+          {/* Oferta Exclusiva label */}
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
             className="text-[#16a34a] font-black text-base uppercase tracking-widest mb-1"
           >
-            Álbum Oficial
+            Oferta Exclusiva
           </motion.p>
 
           {/* Subtitle */}
           <p className="text-gray-400 font-medium text-sm mb-4">
-            FIFA World Cup 26™ | Panini · Somos México
+            El Corte Inglés · Ofertas Especiales
           </p>
 
           {/* Main headline */}
@@ -143,7 +143,7 @@ export default function Landing() {
             transition={{ delay: 0.2 }}
             className="text-6xl sm:text-7xl font-black text-gray-900 leading-[1.0] mb-6 tracking-tight"
           >
-            MUNDIAL<br />2026
+            EL CORTE<br />INGLÉS
           </motion.h1>
 
           <motion.p
@@ -152,7 +152,7 @@ export default function Landing() {
             transition={{ delay: 0.25 }}
             className="text-base text-gray-600 max-w-sm mx-auto mb-2 leading-relaxed"
           >
-            ¡El evento más grande del fútbol mundial está llegando!
+            ¡Las mejores ofertas exclusivas de El Corte Inglés están aquí!
           </motion.p>
           <motion.p
             initial={{ opacity: 0 }}
@@ -160,17 +160,17 @@ export default function Landing() {
             transition={{ delay: 0.28 }}
             className="text-base text-gray-600 max-w-sm mx-auto mb-5 leading-relaxed"
           >
-            Consigue tu álbum de tapa dura con 10, 30 o 90 sobres de cromos incluidos.
+            Productos premium con descuentos especiales para clientes seleccionados.
           </motion.p>
 
-          {/* Stock warning */}
+          {/* Urgency warning */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
             className="text-[#c8102e] font-black text-sm mb-7"
           >
-            ¡Solo 5,000 unidades disponibles para México!
+            ¡Oferta exclusiva por tiempo limitado!
           </motion.p>
 
           <motion.div
@@ -196,13 +196,13 @@ export default function Landing() {
       </section>
 
       {/* ─── Stats ─── */}
-      <section className="bg-[#6b0f1a] py-3 px-4 text-white">
+      <section className="bg-[#007A3D] py-3 px-4 text-white">
         <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center divide-x divide-white/20">
           {[
-            { stat: "7", label: "cromos por sobre" },
-            { stat: "670+", label: "cromos únicos en el álbum" },
-            { stat: "48", label: "selecciones" },
-            { stat: "4.9★", label: "calificación promedio" },
+            { stat: "85", label: "años de historia" },
+            { stat: "94", label: "grandes almacenes" },
+            { stat: "1M+", label: "clientes satisfechos" },
+            { stat: "4.9★", label: "valoración media" },
           ].map((s, i) => (
             <div key={i} className="flex items-center gap-2 px-4 py-1">
               <span className="text-yellow-300 font-black text-sm tabular-nums">{s.stat}</span>
@@ -217,10 +217,10 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3 tracking-tight">
-              Elige tu kit
+              Nuestros Productos
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
-              ¡Cuantos más sobres, más posibilidades de completar el álbum! Envío gratuito en todos los kits a todo México.
+              Ofertas exclusivas seleccionadas para ti. Envío gratuito en todos los pedidos.
             </p>
           </div>
 
@@ -393,56 +393,57 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">
-              El álbum oficial más esperado del mundo
+              La tienda de referencia en España desde 1940
             </h2>
             <p className="text-gray-500 max-w-2xl mx-auto text-sm">
-              Desde 1970, Panini es la marca de referencia mundial en cromos de fútbol. El álbum del FIFA World Cup 26™ es el único producto con licencia oficial FIFA.
+              El Corte Inglés es la cadena de grandes almacenes líder en España y Portugal, con más de 85 años de historia ofreciendo la mejor calidad y servicio.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-8 mb-12 py-6 border-y border-gray-100">
-            <img src="/assets/logo-panini-oficial.png" alt="Panini" className="h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
-            <img src="/assets/fifa-wc26-logo.png" alt="FIFA World Cup 26" className="h-14 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity" />
+            <div className="bg-[#007A3D] px-5 py-2 rounded-xl">
+              <span className="text-white font-black text-base tracking-tight">El Corte Inglés</span>
+            </div>
             <div className="flex flex-col items-center gap-1 text-center">
-              <span className="text-2xl font-black text-[#16a34a]">+55 años</span>
+              <span className="text-2xl font-black text-[#16a34a]">+85 años</span>
               <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">de historia</span>
             </div>
             <div className="flex flex-col items-center gap-1 text-center">
-              <span className="text-2xl font-black text-[#16a34a]">140+</span>
-              <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">países</span>
+              <span className="text-2xl font-black text-[#16a34a]">94</span>
+              <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">grandes almacenes</span>
             </div>
             <div className="flex flex-col items-center gap-1 text-center">
-              <span className="text-2xl font-black text-[#16a34a]">+1,000 mill.</span>
-              <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">cromos vendidos/año</span>
+              <span className="text-2xl font-black text-[#16a34a]">+1M</span>
+              <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">clientes al año</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="flex gap-4 items-start bg-gray-50 rounded-2xl p-5 border border-gray-100">
-              <div className="w-10 h-10 rounded-xl bg-[#6b0f1a]/10 flex items-center justify-center flex-shrink-0">
-                <Award className="w-5 h-5 text-[#6b0f1a]" />
+              <div className="w-10 h-10 rounded-xl bg-[#007A3D]/10 flex items-center justify-center flex-shrink-0">
+                <Award className="w-5 h-5 text-[#007A3D]" />
               </div>
               <div>
-                <h4 className="font-bold text-gray-900 text-sm mb-1">Licencia FIFA Oficial</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">El único álbum con licencia oficial de la FIFA para el Mundial 2026. Producto auténtico y certificado.</p>
+                <h4 className="font-bold text-gray-900 text-sm mb-1">Marca de confianza desde 1940</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">El Corte Inglés es sinónimo de calidad y confianza en España y Portugal. Más de 85 años avalando cada producto.</p>
               </div>
             </div>
             <div className="flex gap-4 items-start bg-gray-50 rounded-2xl p-5 border border-gray-100">
-              <div className="w-10 h-10 rounded-xl bg-[#6b0f1a]/10 flex items-center justify-center flex-shrink-0">
-                <Package className="w-5 h-5 text-[#6b0f1a]" />
+              <div className="w-10 h-10 rounded-xl bg-[#007A3D]/10 flex items-center justify-center flex-shrink-0">
+                <Package className="w-5 h-5 text-[#007A3D]" />
               </div>
               <div>
-                <h4 className="font-bold text-gray-900 text-sm mb-1">Cajas 100% Selladas</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">Todas las cajas llegan con sello de fábrica intacto. Nunca abiertas, nunca manipuladas.</p>
+                <h4 className="font-bold text-gray-900 text-sm mb-1">Productos 100% Originales</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">Todos los productos son auténticos y llegan en perfectas condiciones. Garantía de calidad El Corte Inglés.</p>
               </div>
             </div>
             <div className="flex gap-4 items-start bg-gray-50 rounded-2xl p-5 border border-gray-100">
-              <div className="w-10 h-10 rounded-xl bg-[#6b0f1a]/10 flex items-center justify-center flex-shrink-0">
-                <Truck className="w-5 h-5 text-[#6b0f1a]" />
+              <div className="w-10 h-10 rounded-xl bg-[#007A3D]/10 flex items-center justify-center flex-shrink-0">
+                <Truck className="w-5 h-5 text-[#007A3D]" />
               </div>
               <div>
                 <h4 className="font-bold text-gray-900 text-sm mb-1">Envío Rastreable</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">Envío con número de rastreo. Entrega en 3–5 días hábiles a todo México.</p>
+                <p className="text-xs text-gray-500 leading-relaxed">Envío con número de rastreo. Entrega en 3–5 días hábiles a toda España.</p>
               </div>
             </div>
           </div>
@@ -453,18 +454,18 @@ export default function Landing() {
       <section className="bg-white py-16 px-4 border-t border-gray-100">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
-            <p className="text-[#16a34a] font-black text-xs uppercase tracking-widest mb-3">Sobre el Álbum Oficial</p>
+            <p className="text-[#16a34a] font-black text-xs uppercase tracking-widest mb-3">Sobre El Corte Inglés</p>
             <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">
-              El mejor álbum en la historia del Mundial
+              La mejor experiencia de compra desde 1940
             </h2>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             {[
-              { stat: "112", label: "Páginas", sub: "El álbum más grande de Panini" },
-              { stat: "670+", label: "Cromos", sub: "Cromos únicos en el álbum" },
-              { stat: "7", label: "Cromos por sobre", sub: "Más cromos por empaque" },
-              { stat: "48", label: "Selecciones", sub: "Todas las selecciones clasificadas" },
+              { stat: "1940", label: "Fundación", sub: "Más de 85 años de historia" },
+              { stat: "94", label: "Almacenes", sub: "En España y Portugal" },
+              { stat: "4.9★", label: "Valoración", sub: "Miles de clientes satisfechos" },
+              { stat: "1M+", label: "Clientes", sub: "Nos eligen cada año" },
             ].map((s, i) => (
               <div key={i} className="bg-gray-50 border border-gray-100 rounded-2xl p-5 text-center">
                 <div className="text-4xl font-black text-[#16a34a] mb-1">{s.stat}</div>
@@ -475,7 +476,7 @@ export default function Landing() {
           </div>
 
           <p className="text-center text-xs text-gray-400 mb-12">
-            3ª edición histórica — edición Mundial 26 con 48 selecciones
+            La cadena de grandes almacenes líder en España desde 1940
           </p>
 
           <div className="text-center mb-8">
@@ -488,7 +489,7 @@ export default function Landing() {
             {[
               { emoji: "🚚", title: "Envío prioritario", desc: "Recibe antes que todos" },
               { emoji: "🎁", title: "Descuento exclusivo", desc: "Solo en esta oferta en línea" },
-              { emoji: "✅", title: "Producto original Panini", desc: "Garantía de autenticidad" },
+              { emoji: "✅", title: "Producto oficial El Corte Inglés", desc: "Garantía de autenticidad" },
               { emoji: "📦", title: "Envío gratis", desc: "Envío gratis a todo México" },
             ].map((b, i) => (
               <div key={i} className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex flex-col items-center text-center gap-2">
@@ -578,12 +579,12 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: <Truck className="w-6 h-6" />, title: "Envío Rápido", desc: "3-5 días hábiles a todo México" },
-              { icon: <Award className="w-6 h-6" />, title: "Producto Oficial", desc: "Licencia oficial FIFA y Panini" },
+              { icon: <Award className="w-6 h-6" />, title: "Producto Oficial", desc: "Calidad y garantía El Corte Inglés" },
               { icon: <Lock className="w-6 h-6" />, title: "Compra Segura", desc: "Pago protegido + SSL" },
               { icon: <ShieldCheck className="w-6 h-6" />, title: "Sin Riesgos", desc: "Satisfacción garantizada" },
             ].map((w, i) => (
               <div key={i} className="text-center bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <div className="w-11 h-11 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3 text-[#6b0f1a]">
+                <div className="w-11 h-11 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3 text-[#007A3D]">
                   {w.icon}
                 </div>
                 <h4 className="font-bold text-gray-900 text-sm mb-0.5">{w.title}</h4>
@@ -595,14 +596,14 @@ export default function Landing() {
       </section>
 
       {/* ─── Footer ─── */}
-      <footer className="bg-[#6b0f1a] text-white px-6 pt-10 pb-0">
+      <footer className="bg-[#007A3D] text-white px-6 pt-10 pb-0">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
-            <div className="bg-white rounded-md px-2 py-1 inline-flex mb-4">
-              <img src="/assets/logo-panini-oficial.png" alt="Panini" className="h-6 w-auto object-contain" />
+            <div className="bg-white rounded-md px-3 py-1.5 inline-flex mb-4">
+              <span className="text-[#007A3D] font-black text-sm tracking-tight leading-none">El Corte Inglés</span>
             </div>
             <p className="text-white/70 text-sm leading-relaxed max-w-sm">
-              La colección oficial del Mundial 2026. 1 compra por persona, envío gratis a todo México.
+              Ofertas exclusivas seleccionadas para ti. Envío gratis en todos los pedidos.
             </p>
           </div>
 
@@ -630,7 +631,7 @@ export default function Landing() {
         </div>
 
         <div className="border-t border-white/10 py-4 text-center text-white/40 text-xs">
-          © 2026 Panini México — Todos los derechos reservados. Oferta promocional limitada.
+          © 2026 El Corte Inglés — Todos los derechos reservados. Oferta promocional limitada.
         </div>
       </footer>
     </div>

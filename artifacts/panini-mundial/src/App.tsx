@@ -1,4 +1,5 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,13 +9,25 @@ import Checkout from "@/pages/checkout";
 import Presell from "@/pages/presell";
 import Admin from "@/pages/admin";
 import Rastreio from "@/pages/rastreio";
+import Quiz from "@/pages/quiz";
 
 const queryClient = new QueryClient();
+
+function GuardedLanding() {
+  const [, navigate] = useLocation();
+  const quizDone = sessionStorage.getItem("quiz_done");
+  useEffect(() => {
+    if (!quizDone) navigate("/quiz");
+  }, [quizDone, navigate]);
+  if (!quizDone) return null;
+  return <Landing />;
+}
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Landing} />
+      <Route path="/" component={GuardedLanding} />
+      <Route path="/quiz" component={Quiz} />
       <Route path="/presell" component={Presell} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/admin" component={Admin} />
