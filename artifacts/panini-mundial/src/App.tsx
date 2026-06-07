@@ -10,6 +10,7 @@ import Presell from "@/pages/presell";
 import Admin from "@/pages/admin";
 import Rastreio from "@/pages/rastreio";
 import Quiz from "@/pages/quiz";
+import ProductPage from "@/pages/product";
 
 const queryClient = new QueryClient();
 
@@ -23,11 +24,22 @@ function GuardedLanding() {
   return <Landing />;
 }
 
+function GuardedProduct({ params }: { params?: { id?: string } }) {
+  const [, navigate] = useLocation();
+  const quizDone = sessionStorage.getItem("quiz_done");
+  useEffect(() => {
+    if (!quizDone) navigate("/quiz");
+  }, [quizDone, navigate]);
+  if (!quizDone) return null;
+  return <ProductPage params={params} />;
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={GuardedLanding} />
       <Route path="/quiz" component={Quiz} />
+      <Route path="/producto/:id" component={GuardedProduct} />
       <Route path="/presell" component={Presell} />
       <Route path="/checkout" component={Checkout} />
       <Route path="/admin" component={Admin} />
