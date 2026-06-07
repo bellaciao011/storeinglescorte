@@ -336,7 +336,12 @@ export const products: Product[] = [
     category: "Electrodomésticos",
     price: 799,
     oldPrice: 1099,
-    img: eci("A55025496"),
+    img: "/assets/products/bosch-frigorifico-kgn392-1.png",
+    images: [
+      "/assets/products/bosch-frigorifico-kgn392-1.png",
+      "/assets/products/bosch-frigorifico-kgn392-2.png",
+      "/assets/products/bosch-frigorifico-kgn392-3.png",
+    ],
     badge: "SÚPER",
     color: "Acero antihuellas",
     description: "Frigorífico combi Bosch con Total No Frost para olvidarte de descongelar. Acabado acero antihuellas elegante y duradero. Alarma de puerta y filtro MultiAirFlow.",
