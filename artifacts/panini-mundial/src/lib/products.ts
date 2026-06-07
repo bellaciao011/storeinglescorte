@@ -528,7 +528,12 @@ export const products: Product[] = [
     category: "Videojuegos",
     price: 449,
     oldPrice: 499,
-    img: eci("A200916418"),
+    img: "/assets/products/nintendo-switch2-minecraft-1.png",
+    images: [
+      "/assets/products/nintendo-switch2-minecraft-1.png",
+      "/assets/products/nintendo-switch2-minecraft-2.png",
+      "/assets/products/nintendo-switch2-minecraft-3.png",
+    ],
     badge: "PACK",
     color: "Negro/Rojo",
     description: "La nueva Nintendo Switch 2 con pantalla LCD de 7,9\" y Joy-Con magnéticos. Incluye Minecraft para disfrutar desde el primer momento.",
