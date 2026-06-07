@@ -138,14 +138,7 @@ export default function Quiz() {
 
       {/* Logo */}
       <div className="mb-6">
-        <div
-          className="px-5 py-2 rounded-xl"
-          style={{ background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
-        >
-          <span className="text-white font-black text-base tracking-tight leading-none">
-            El Corte Inglés
-          </span>
-        </div>
+        <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-10 w-auto object-contain" />
       </div>
 
       {/* Card */}

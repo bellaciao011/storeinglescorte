@@ -1,520 +1,191 @@
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ChevronRight, Star, CheckCircle, Truck, ShieldCheck, Lock, Award, Package, ShoppingBag } from "lucide-react";
+import { Star, CheckCircle, Heart, Lock, Truck, ShieldCheck, Award } from "lucide-react";
 import { Header } from "@/components/Header";
 import { kits } from "@/lib/kits";
 
-const fmtMXN = (n: number) => `$${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+const fmtEUR = (n: number) =>
+  n.toLocaleString("es-ES", { style: "currency", currency: "EUR", minimumFractionDigits: 2 });
 
 const reviews = [
-  {
-    avatar: "/assets/avatar-carlos.png",
-    name: "Carlos Ramírez",
-    city: "Ciudad de México",
-    title: "Entrega rapidísima",
-    text: "Pedí el miércoles y el viernes ya lo tenía en casa. El kit llegó perfecto, sin golpes, y mi hijo se emocionó mucho al abrirlo. ¡Excelente servicio!",
-    verified: "Compra verificada — hace 2 días",
-  },
-  {
-    avatar: "/assets/avatar-amanda.png",
-    name: "Amanda Torres",
-    city: "Guadalajara",
-    title: "Precio inmejorable",
-    text: "Estuve comparando en varias tiendas y aquí tenían el mejor precio. Además con envío gratis. Ya lo recomendé a dos amigas que también compraron.",
-    verified: "Compra verificada — hace 3 días",
-  },
-  {
-    avatar: "/assets/avatar-roberto.png",
-    name: "Roberto Hernández",
-    city: "Monterrey",
-    title: "Todo original Panini",
-    text: "Confieso que tenía dudas por ser en línea, pero llegó todo sellado con la marca Panini. Calidad igual a la de las papelerías y mucho más barato.",
-    verified: "Compra verificada — hace 4 días",
-  },
-  {
-    avatar: "/assets/avatar-fernanda.png",
-    name: "Fernanda López",
-    city: "Puebla",
-    title: "Valió cada peso",
-    text: "Compré el kit grande para completarlo con mi esposo. En dos tardes ya habíamos pegado más de la mitad. Vale mucho la pena.",
-    verified: "Compra verificada — hace 5 días",
-  },
-  {
-    avatar: "/assets/avatar-marcos.png",
-    name: "Marcos García",
-    city: "Tijuana",
-    title: "Segunda compra, igual que la primera",
-    text: "Es mi segundo pedido y el servicio sigue siendo excelente. Bien empacado, entrega a tiempo y precio honesto. Sin duda vuelvo.",
-    verified: "Compra verificada — hace 6 días",
-  },
-  {
-    avatar: "/assets/avatar-rita.png",
-    name: "Rita Martínez",
-    city: "Querétaro",
-    title: "Por fin encontré esta oferta",
-    text: "Mi hija llevaba meses pidiendo el álbum. El precio estaba increíble y llegó en 3 días. ¡Súper recomendado!",
-    verified: "Compra verificada — hace 1 día",
-  },
-  {
-    avatar: "/assets/avatar-paulo.png",
-    name: "Pablo Sánchez",
-    city: "Mérida",
-    title: "El mejor negocio de 2026",
-    text: "Pagué rápido con tarjeta. Cajas todas selladas, igual a la descripción. Ya estoy esperando el intercambio de cromos repetidos.",
-    verified: "Compra verificada — hace 8 horas",
-  },
-  {
-    avatar: "/assets/avatar-soraia.png",
-    name: "Sofía Núñez",
-    city: "Ciudad de México",
-    title: "Excelente para regalo",
-    text: "Se lo regalé a mi hermano y quedó encantado. El soporte por email respondió en pocas horas cuando tenía una duda sobre la entrega.",
-    verified: "Compra verificada — hace 12 horas",
-  },
+  { avatar: "/assets/avatar-carlos.png", name: "Carlos Ramírez", city: "Madrid", title: "Entrega rapidísima", text: "Pedí el miércoles y el viernes ya lo tenía en casa. Todo perfecto, sin golpes. ¡Excelente servicio!", verified: "Compra verificada — hace 2 días" },
+  { avatar: "/assets/avatar-amanda.png", name: "Amanda Torres", city: "Barcelona", title: "Precio inmejorable", text: "Estuve comparando y aquí tenían el mejor precio con envío gratis. Ya lo recomendé a dos amigas.", verified: "Compra verificada — hace 3 días" },
+  { avatar: "/assets/avatar-roberto.png", name: "Roberto Hernández", city: "Sevilla", title: "Todo original", text: "Confieso que tenía dudas por ser en línea, pero llegó todo sellado. Calidad igual a la tienda física.", verified: "Compra verificada — hace 4 días" },
+  { avatar: "/assets/avatar-fernanda.png", name: "Fernanda López", city: "Valencia", title: "Valió cada euro", text: "Compré el kit grande y quedé encantada. Vale mucho la pena.", verified: "Compra verificada — hace 5 días" },
+  { avatar: "/assets/avatar-marcos.png", name: "Marcos García", city: "Bilbao", title: "Segunda compra", text: "Es mi segundo pedido y el servicio sigue siendo excelente. Bien empacado, entrega a tiempo.", verified: "Compra verificada — hace 6 días" },
+  { avatar: "/assets/avatar-rita.png", name: "Rita Martínez", city: "Zaragoza", title: "Por fin encontré esta oferta", text: "Llevaba meses buscando este precio. Llegó en 3 días. ¡Súper recomendado!", verified: "Compra verificada — hace 1 día" },
+  { avatar: "/assets/avatar-paulo.png", name: "Pablo Sánchez", city: "Málaga", title: "El mejor negocio", text: "Pagué rápido con tarjeta. Calidad igual a la descripción. Muy satisfecho.", verified: "Compra verificada — hace 8 horas" },
+  { avatar: "/assets/avatar-soraia.png", name: "Sofía Núñez", city: "Alicante", title: "Excelente para regalo", text: "Se lo regalé a mi hermano y quedó encantado. El soporte respondió en pocas horas.", verified: "Compra verificada — hace 12 horas" },
 ];
+
+const stagger = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } };
+const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 280, damping: 22 } } };
 
 export default function Landing() {
   const [, setLocation] = useLocation();
-
-  const handleBuy = (kitId: string) => {
-    setLocation(`/checkout?kit=${kitId}`);
-  };
-
-  const stagger = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 24 },
-    show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 280, damping: 22 } },
-  };
+  const handleBuy = (kitId: string) => setLocation(`/checkout?kit=${kitId}`);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8F8F8] flex flex-col font-sans">
       <Header />
 
-      {/* ─── Hero ─── */}
-      <section className="bg-[#f5f5f7] pt-10 pb-0 px-4 overflow-hidden">
-        <div className="max-w-lg mx-auto text-center">
+      {/* ─── Promo banner ─── */}
+      <div className="bg-[#0B8A43] text-white px-4 py-2.5 text-center">
+        <p className="text-sm font-bold">
+          Súper ofertas exclusivas · <span className="text-yellow-300">Hasta −80%</span>
+        </p>
+        <p className="text-xs text-white/70">Selección especial para clientes preseleccionados</p>
+      </div>
 
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white text-gray-800 text-xs font-black uppercase tracking-widest mb-8 border border-green-300 shadow-sm"
-          >
-            Oferta exclusiva — Solo por tiempo limitado
-          </motion.div>
-
-          {/* ECI Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="flex justify-center mb-5"
-          >
-            <div className="bg-[#007A3D] px-8 py-4 rounded-2xl shadow-lg">
-              <span className="text-white font-black text-3xl tracking-tight leading-none">
-                El Corte Inglés
-              </span>
-            </div>
-          </motion.div>
-
-          {/* Oferta Exclusiva label */}
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="text-[#16a34a] font-black text-base uppercase tracking-widest mb-1"
-          >
-            Oferta Exclusiva
-          </motion.p>
-
-          {/* Subtitle */}
-          <p className="text-gray-400 font-medium text-sm mb-4">
-            El Corte Inglés · Ofertas Especiales
-          </p>
-
-          {/* Main headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-6xl sm:text-7xl font-black text-gray-900 leading-[1.0] mb-6 tracking-tight"
-          >
-            EL CORTE<br />INGLÉS
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.25 }}
-            className="text-base text-gray-600 max-w-sm mx-auto mb-2 leading-relaxed"
-          >
-            ¡Las mejores ofertas exclusivas de El Corte Inglés están aquí!
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.28 }}
-            className="text-base text-gray-600 max-w-sm mx-auto mb-5 leading-relaxed"
-          >
-            Productos premium con descuentos especiales para clientes seleccionados.
-          </motion.p>
-
-          {/* Urgency warning */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-[#c8102e] font-black text-sm mb-7"
-          >
-            ¡Oferta exclusiva por tiempo limitado!
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
-          >
-            <button
-              data-testid="button-buy-hero"
-              onClick={() => document.getElementById("kits")?.scrollIntoView({ behavior: "smooth" })}
-              className="bg-[#16a34a] hover:bg-[#15803d] active:scale-[0.98] text-white font-black text-xl px-10 py-5 rounded-xl shadow-[0_6px_0_0_#15803d] hover:shadow-[0_3px_0_0_#15803d] hover:translate-y-[3px] transition-all flex items-center gap-3"
-            >
-              Comprar Ahora <ShoppingBag className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Lock className="w-4 h-4 text-green-600" />
-              Pago 100% seguro
-            </div>
-          </motion.div>
+      {/* ─── Section header ─── */}
+      <div className="px-4 pt-4 pb-2 bg-white border-b border-gray-100">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <span className="font-black text-gray-900 text-base">Ofertas especiales</span>
+            <span className="text-gray-400 text-sm ml-2">| {kits.length} productos</span>
+          </div>
+          <span className="text-xs text-[#0B8A43] font-semibold">Ver todo</span>
         </div>
 
+        {/* Category chips */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+          {["Todo", "Más vendidos", "Ofertas", "Colección", "Edición especial"].map((cat, i) => (
+            <button
+              key={i}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                i === 0
+                  ? "bg-gray-900 text-white border-gray-900"
+                  : "bg-white text-gray-600 border-gray-200"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Product grid ─── */}
+      <section id="kits" className="px-3 pt-3 pb-8 bg-[#F8F8F8]">
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-2 gap-3"
+        >
+          {kits.map((kit) => {
+            const discountPct = Math.round(((kit.oldPrice - kit.price) / kit.oldPrice) * 100);
+            const isSpecial = kit.id === "dourada" || kit.id === "estadio";
+
+            return (
+              <motion.div
+                key={kit.id}
+                variants={item}
+                data-testid={`card-kit-${kit.id}`}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col"
+              >
+                {/* Image area */}
+                <div className="relative bg-gray-50 flex items-center justify-center p-4"
+                  style={{ minHeight: 140 }}>
+                  <img
+                    src={kit.img}
+                    alt={kit.name}
+                    className="max-h-28 w-auto object-contain"
+                    loading="lazy"
+                  />
+                  {/* Heart */}
+                  <button className="absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow flex items-center justify-center">
+                    <Heart className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                  {/* Badge */}
+                  {kit.badge && (
+                    <div className={`absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide ${kit.badge.colorClass}`}>
+                      {kit.badge.text}
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="p-3 flex flex-col flex-1">
+                  <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-0.5">El Corte Inglés</p>
+                  <h3 className="text-xs font-semibold text-gray-800 leading-snug mb-2 line-clamp-2">
+                    {kit.name}
+                    {kit.contents ? ` — ${kit.contents}` : ""}
+                  </h3>
+
+                  <div className="mt-auto">
+                    {/* Prices */}
+                    <div className="flex items-baseline gap-1.5 mb-0.5">
+                      <span className="text-base font-black text-gray-900">
+                        {fmtEUR(kit.price)}
+                      </span>
+                      <span className="text-xs text-gray-400 line-through">
+                        {fmtEUR(kit.oldPrice)}
+                      </span>
+                    </div>
+
+                    {/* Discount + SÚPER */}
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded">
+                        −{discountPct}%
+                      </span>
+                      {isSpecial && (
+                        <span className="text-[10px] font-black text-[#0B8A43] uppercase tracking-wide">
+                          SÚPER
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      data-testid={`button-order-${kit.id}`}
+                      onClick={() => handleBuy(kit.id)}
+                      className="w-full py-2.5 rounded-xl text-white font-bold text-sm transition-all active:scale-[0.98]"
+                      style={{ background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
+                    >
+                      Añadir al carrito
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </section>
 
-      {/* ─── Stats ─── */}
-      <section className="bg-[#007A3D] py-3 px-4 text-white">
-        <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center divide-x divide-white/20">
+      {/* ─── Trust strip ─── */}
+      <section className="bg-white border-t border-gray-100 py-6 px-4">
+        <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
           {[
-            { stat: "85", label: "años de historia" },
-            { stat: "94", label: "grandes almacenes" },
-            { stat: "1M+", label: "clientes satisfechos" },
-            { stat: "4.9★", label: "valoración media" },
-          ].map((s, i) => (
-            <div key={i} className="flex items-center gap-2 px-4 py-1">
-              <span className="text-yellow-300 font-black text-sm tabular-nums">{s.stat}</span>
-              <span className="text-white/70 text-xs">{s.label}</span>
+            { icon: <Truck className="w-5 h-5 text-[#0B8A43]" />, title: "Envío gratis", sub: "En todos los pedidos" },
+            { icon: <ShieldCheck className="w-5 h-5 text-[#0B8A43]" />, title: "Compra segura", sub: "Pago protegido · SSL" },
+            { icon: <Award className="w-5 h-5 text-[#0B8A43]" />, title: "Original garantizado", sub: "Calidad El Corte Inglés" },
+            { icon: <Lock className="w-5 h-5 text-[#0B8A43]" />, title: "Sin riesgos", sub: "Satisfacción garantizada" },
+          ].map((t, i) => (
+            <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
+              <div className="w-9 h-9 rounded-lg bg-[#E8F8EF] flex items-center justify-center flex-shrink-0">
+                {t.icon}
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-900">{t.title}</p>
+                <p className="text-[10px] text-gray-400">{t.sub}</p>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ─── Kits ─── */}
-      <section id="kits" className="py-20 px-4 bg-gray-50">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3 tracking-tight">
-              Nuestros Productos
-            </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
-              Ofertas exclusivas seleccionadas para ti. Envío gratuito en todos los pedidos.
-            </p>
-          </div>
-
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-2 gap-4"
-          >
-            {kits.map((kit) => {
-              const isDourada = kit.id === "dourada";
-              const isEstadio = kit.id === "estadio";
-              const isCampeao = kit.id === "campeao";
-
-              if (isDourada || isEstadio) {
-                return (
-                  <motion.div
-                    key={kit.id}
-                    variants={item}
-                    data-testid={`card-kit-${kit.id}`}
-                    className="relative p-[3px] rounded-2xl overflow-hidden hover:-translate-y-1 transition-transform duration-200 shadow-2xl"
-                  >
-                    {/* Rotating gradient border */}
-                    <motion.div
-                      className="absolute w-[200%] h-[200%] top-[-50%] left-[-50%] z-0"
-                      style={{
-                        background: isEstadio
-                          ? "conic-gradient(from 0deg, #f59e0b, #ef4444, #3b82f6, #10b981, #a855f7, #ec4899, #fbbf24, #f59e0b)"
-                          : "conic-gradient(from 0deg, #f59e0b, #fbbf24, #fde68a, #fffbeb, #fcd34d, #d97706, #b45309, #f59e0b)",
-                      }}
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: isEstadio ? 4 : 6, repeat: Infinity, ease: "linear" }}
-                    />
-
-                    {/* Card inner */}
-                    <div className="relative z-10 bg-white rounded-[13px] flex flex-col overflow-hidden h-full">
-                      {kit.badge && (
-                        <div
-                          className={`absolute top-3 right-3 z-10 px-3 py-1 rounded-md text-[10px] font-black tracking-widest uppercase ${kit.badge.colorClass} shadow`}
-                        >
-                          {kit.badge.text}
-                        </div>
-                      )}
-
-                      <div
-                        className={`w-full flex items-center justify-center p-3 pb-1 ${
-                          isEstadio
-                            ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
-                            : "bg-gradient-to-br from-yellow-50 to-amber-50"
-                        }`}
-                        style={{ minHeight: 110 }}
-                      >
-                        <img
-                          src={kit.img}
-                          alt={kit.name}
-                          className="max-h-24 w-auto object-contain drop-shadow-xl"
-                          loading="lazy"
-                        />
-                      </div>
-
-                      <div className="p-3 flex flex-col flex-1">
-                        <h3
-                          className={`text-sm font-black mb-0.5 ${
-                            isEstadio
-                              ? "bg-gradient-to-r from-yellow-600 via-amber-400 to-yellow-700 bg-clip-text text-transparent"
-                              : "text-yellow-700"
-                          }`}
-                        >
-                          {kit.name}
-                        </h3>
-                        <p className="text-xs font-bold text-[#16a34a] mb-0.5">{kit.contents}</p>
-                        <p className="text-[10px] text-gray-400 mb-2 border-b border-gray-100 pb-2 leading-tight">{kit.description}</p>
-
-                        <div className="mt-auto">
-                          <div className="flex items-end gap-1.5 mb-2">
-                            <span className="text-xl font-black text-gray-900 tracking-tight">
-                              {fmtMXN(kit.price)}
-                            </span>
-                            <span className="text-xs text-gray-400 line-through mb-0.5">
-                              {fmtMXN(kit.oldPrice)}
-                            </span>
-                          </div>
-
-                          <motion.button
-                            data-testid={`button-order-${kit.id}`}
-                            onClick={() => handleBuy(kit.id)}
-                            className={`w-full active:scale-[0.98] font-black py-2.5 rounded-xl flex items-center justify-center gap-1 text-sm text-gray-900 ${
-                              isEstadio
-                                ? "bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-400"
-                                : "bg-gradient-to-r from-amber-400 to-yellow-400"
-                            }`}
-                            animate={{
-                              boxShadow: isEstadio
-                                ? ["0 0 0px rgba(251,191,36,0)", "0 0 28px rgba(251,191,36,0.9)", "0 0 0px rgba(251,191,36,0)"]
-                                : ["0 0 0px rgba(251,191,36,0)", "0 0 20px rgba(251,191,36,0.7)", "0 0 0px rgba(251,191,36,0)"],
-                            }}
-                            transition={{ duration: isEstadio ? 1.4 : 1.8, repeat: Infinity, ease: "easeInOut" }}
-                          >
-                            Asegurar mi kit <ChevronRight className="w-4 h-4" />
-                          </motion.button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              }
-
-              return (
-                <motion.div
-                  key={kit.id}
-                  variants={item}
-                  data-testid={`card-kit-${kit.id}`}
-                  className={`bg-white rounded-2xl border-2 relative flex flex-col overflow-hidden transition-all duration-200 hover:-translate-y-1 ${
-                    isCampeao
-                      ? "border-[#16a34a] shadow-xl ring-1 ring-green-200"
-                      : "border-gray-100 shadow-sm hover:border-gray-200 hover:shadow-md"
-                  }`}
-                >
-                  {kit.badge && (
-                    <div
-                      className={`absolute top-3 right-3 z-10 px-3 py-1 rounded-md text-[10px] font-black tracking-widest uppercase ${kit.badge.colorClass} shadow`}
-                    >
-                      {kit.badge.text}
-                    </div>
-                  )}
-
-                  <div className="w-full bg-white flex items-center justify-center p-3 pb-1" style={{ minHeight: 110 }}>
-                    <img
-                      src={kit.img}
-                      alt={kit.name}
-                      className="max-h-24 w-auto object-contain"
-                      loading="lazy"
-                    />
-                  </div>
-
-                  <div className="p-3 flex flex-col flex-1">
-                    <h3 className="text-sm font-black text-gray-900 mb-0.5">{kit.name}</h3>
-                    <p className="text-xs font-bold text-[#16a34a] mb-0.5">{kit.contents}</p>
-                    <p className="text-[10px] text-gray-400 mb-2 border-b border-gray-100 pb-2 leading-tight">{kit.description}</p>
-
-                    <div className="mt-auto">
-                      <div className="flex items-end gap-1.5 mb-2">
-                        <span className="text-xl font-black text-gray-900 tracking-tight">
-                          {fmtMXN(kit.price)}
-                        </span>
-                        <span className="text-xs text-gray-400 line-through mb-0.5">
-                          {fmtMXN(kit.oldPrice)}
-                        </span>
-                      </div>
-
-                      <button
-                        data-testid={`button-order-${kit.id}`}
-                        onClick={() => handleBuy(kit.id)}
-                        className="w-full bg-[#f5a623] hover:bg-[#e09400] active:scale-[0.98] text-gray-900 font-black py-2.5 rounded-xl flex items-center justify-center gap-1 transition-all text-sm shadow-sm"
-                      >
-                        Asegurar mi kit <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ─── Trust / Credibility ─── */}
-      <section className="bg-white py-14 px-4 border-t border-gray-100">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">
-              La tienda de referencia en España desde 1940
-            </h2>
-            <p className="text-gray-500 max-w-2xl mx-auto text-sm">
-              El Corte Inglés es la cadena de grandes almacenes líder en España y Portugal, con más de 85 años de historia ofreciendo la mejor calidad y servicio.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-8 mb-12 py-6 border-y border-gray-100">
-            <div className="bg-[#007A3D] px-5 py-2 rounded-xl">
-              <span className="text-white font-black text-base tracking-tight">El Corte Inglés</span>
-            </div>
-            <div className="flex flex-col items-center gap-1 text-center">
-              <span className="text-2xl font-black text-[#16a34a]">+85 años</span>
-              <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">de historia</span>
-            </div>
-            <div className="flex flex-col items-center gap-1 text-center">
-              <span className="text-2xl font-black text-[#16a34a]">94</span>
-              <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">grandes almacenes</span>
-            </div>
-            <div className="flex flex-col items-center gap-1 text-center">
-              <span className="text-2xl font-black text-[#16a34a]">+1M</span>
-              <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">clientes al año</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="flex gap-4 items-start bg-gray-50 rounded-2xl p-5 border border-gray-100">
-              <div className="w-10 h-10 rounded-xl bg-[#007A3D]/10 flex items-center justify-center flex-shrink-0">
-                <Award className="w-5 h-5 text-[#007A3D]" />
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900 text-sm mb-1">Marca de confianza desde 1940</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">El Corte Inglés es sinónimo de calidad y confianza en España y Portugal. Más de 85 años avalando cada producto.</p>
-              </div>
-            </div>
-            <div className="flex gap-4 items-start bg-gray-50 rounded-2xl p-5 border border-gray-100">
-              <div className="w-10 h-10 rounded-xl bg-[#007A3D]/10 flex items-center justify-center flex-shrink-0">
-                <Package className="w-5 h-5 text-[#007A3D]" />
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900 text-sm mb-1">Productos 100% Originales</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">Todos los productos son auténticos y llegan en perfectas condiciones. Garantía de calidad El Corte Inglés.</p>
-              </div>
-            </div>
-            <div className="flex gap-4 items-start bg-gray-50 rounded-2xl p-5 border border-gray-100">
-              <div className="w-10 h-10 rounded-xl bg-[#007A3D]/10 flex items-center justify-center flex-shrink-0">
-                <Truck className="w-5 h-5 text-[#007A3D]" />
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900 text-sm mb-1">Envío Rastreable</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">Envío con número de rastreo. Entrega en 3–5 días hábiles a toda España.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Sobre el Álbum ─── */}
-      <section className="bg-white py-16 px-4 border-t border-gray-100">
+      {/* ─── Reviews ─── */}
+      <section className="bg-[#F8F8F8] py-10 px-4 border-t border-gray-100">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <p className="text-[#16a34a] font-black text-xs uppercase tracking-widest mb-3">Sobre El Corte Inglés</p>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">
-              La mejor experiencia de compra desde 1940
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            {[
-              { stat: "1940", label: "Fundación", sub: "Más de 85 años de historia" },
-              { stat: "94", label: "Almacenes", sub: "En España y Portugal" },
-              { stat: "4.9★", label: "Valoración", sub: "Miles de clientes satisfechos" },
-              { stat: "1M+", label: "Clientes", sub: "Nos eligen cada año" },
-            ].map((s, i) => (
-              <div key={i} className="bg-gray-50 border border-gray-100 rounded-2xl p-5 text-center">
-                <div className="text-4xl font-black text-[#16a34a] mb-1">{s.stat}</div>
-                <div className="font-bold text-gray-900 text-sm mb-0.5">{s.label}</div>
-                <div className="text-xs text-gray-400">{s.sub}</div>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="font-black text-gray-900 text-base">Valoraciones de clientes</h2>
+              <div className="flex items-center gap-1 mt-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+                ))}
+                <span className="text-xs text-gray-500 ml-1.5">4,9 · +2.200 reseñas</span>
               </div>
-            ))}
-          </div>
-
-          <p className="text-center text-xs text-gray-400 mb-12">
-            La cadena de grandes almacenes líder en España desde 1940
-          </p>
-
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900">
-              ¿Por qué asegurar tu kit ahora?
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {[
-              { emoji: "🚚", title: "Envío prioritario", desc: "Recibe antes que todos" },
-              { emoji: "🎁", title: "Descuento exclusivo", desc: "Solo en esta oferta en línea" },
-              { emoji: "✅", title: "Producto oficial El Corte Inglés", desc: "Garantía de autenticidad" },
-              { emoji: "📦", title: "Envío gratis", desc: "Envío gratis a todo México" },
-            ].map((b, i) => (
-              <div key={i} className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex flex-col items-center text-center gap-2">
-                <span className="text-3xl">{b.emoji}</span>
-                <p className="font-bold text-gray-900 text-sm">{b.title}</p>
-                <p className="text-xs text-gray-400 leading-snug">{b.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-center text-xs text-gray-400">
-            ✓ Envío gratis &nbsp;·&nbsp; ✓ Producto original
-          </p>
-        </div>
-      </section>
-
-      {/* ─── Testimonials ─── */}
-      <section className="bg-gray-50 py-20 px-4 border-t border-gray-100">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-gray-900 mb-3">Lo que dicen nuestros clientes</h2>
-            <div className="flex justify-center items-center gap-0.5 text-yellow-400 mb-2">
-              {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
             </div>
-            <p className="text-sm text-gray-500 font-medium">Calificación Excelente · +2,200 reseñas</p>
           </div>
 
           <motion.div
@@ -522,32 +193,28 @@ export default function Landing() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-60px" }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
           >
             {reviews.map((r, i) => (
               <motion.article
                 key={i}
                 variants={item}
-                className="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col"
+                className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex flex-col"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <img
-                    src={r.avatar}
-                    alt={r.name}
-                    className="w-11 h-11 rounded-full object-cover flex-shrink-0 border-2 border-white shadow-sm"
-                  />
+                <div className="flex items-center gap-2.5 mb-2">
+                  <img src={r.avatar} alt={r.name} className="w-9 h-9 rounded-full object-cover border border-gray-100" />
                   <div>
-                    <p className="font-bold text-gray-900 text-sm leading-tight">{r.name}</p>
-                    <p className="text-xs text-gray-400">{r.city}</p>
+                    <p className="font-bold text-gray-900 text-xs leading-tight">{r.name}</p>
+                    <p className="text-[10px] text-gray-400">{r.city}</p>
                   </div>
                 </div>
-                <div className="flex text-yellow-400 mb-2">
-                  {[...Array(5)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 fill-current" />)}
+                <div className="flex text-yellow-400 mb-1.5">
+                  {[...Array(5)].map((_, j) => <Star key={j} className="w-3 h-3 fill-current" />)}
                 </div>
-                <h4 className="font-bold text-gray-800 text-sm mb-1">{r.title}</h4>
-                <p className="text-gray-600 text-xs leading-relaxed flex-1">"{r.text}"</p>
-                <p className="text-[10px] text-green-700 font-semibold mt-3 flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" /> {r.verified}
+                <h4 className="font-bold text-gray-800 text-xs mb-1">{r.title}</h4>
+                <p className="text-gray-500 text-[11px] leading-relaxed flex-1">"{r.text}"</p>
+                <p className="text-[9px] text-[#0B8A43] font-semibold mt-2 flex items-center gap-1">
+                  <CheckCircle className="w-2.5 h-2.5" /> {r.verified}
                 </p>
               </motion.article>
             ))}
@@ -555,83 +222,41 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ─── CTA Final ─── */}
-      <section className="py-10 px-4 bg-gray-50 border-t border-gray-100 text-center">
-        <div className="max-w-xl mx-auto">
-          <p className="text-sm text-gray-500 mb-4 flex items-center justify-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse inline-block"></span>
-            Stock limitado — la oferta puede terminar en cualquier momento
-          </p>
-          <button
-            data-testid="button-cta-final"
-            onClick={() => document.getElementById("kits")?.scrollIntoView({ behavior: "smooth" })}
-            className="bg-[#f5a623] hover:bg-[#e09400] active:scale-[0.98] text-gray-900 font-black text-lg px-10 py-4 rounded-xl shadow-sm transition-all inline-flex items-center gap-2"
-          >
-            Asegurar Mi Kit <ShoppingBag className="w-5 h-5" />
-          </button>
-        </div>
-      </section>
-
-      {/* ─── Why Us ─── */}
-      <section className="py-12 px-4 bg-gray-50 border-t border-gray-100">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-xl font-black text-gray-900 text-center mb-8">¿Por qué comprar con nosotros?</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { icon: <Truck className="w-6 h-6" />, title: "Envío Rápido", desc: "3-5 días hábiles a todo México" },
-              { icon: <Award className="w-6 h-6" />, title: "Producto Oficial", desc: "Calidad y garantía El Corte Inglés" },
-              { icon: <Lock className="w-6 h-6" />, title: "Compra Segura", desc: "Pago protegido + SSL" },
-              { icon: <ShieldCheck className="w-6 h-6" />, title: "Sin Riesgos", desc: "Satisfacción garantizada" },
-            ].map((w, i) => (
-              <div key={i} className="text-center bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <div className="w-11 h-11 mx-auto bg-red-50 rounded-xl flex items-center justify-center mb-3 text-[#007A3D]">
-                  {w.icon}
-                </div>
-                <h4 className="font-bold text-gray-900 text-sm mb-0.5">{w.title}</h4>
-                <p className="text-xs text-gray-400">{w.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ─── Footer ─── */}
-      <footer className="bg-[#007A3D] text-white px-6 pt-10 pb-0">
+      <footer className="bg-white border-t border-gray-200 pt-8 pb-6 px-6">
         <div className="max-w-2xl mx-auto">
-          <div className="mb-8">
-            <div className="bg-white rounded-md px-3 py-1.5 inline-flex mb-4">
-              <span className="text-[#007A3D] font-black text-sm tracking-tight leading-none">El Corte Inglés</span>
-            </div>
-            <p className="text-white/70 text-sm leading-relaxed max-w-sm">
-              Ofertas exclusivas seleccionadas para ti. Envío gratis en todos los pedidos.
+          <div className="mb-6">
+            <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-7 w-auto object-contain mb-3" />
+            <p className="text-xs text-gray-400 leading-relaxed max-w-xs">
+              Ofertas exclusivas seleccionadas para clientes preseleccionados. Envío gratis en todos los pedidos.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 mb-10">
+          <div className="grid grid-cols-2 gap-6 mb-6 text-xs">
             <div>
-              <p className="text-[#f5a623] font-black text-xs uppercase tracking-widest mb-4">Institucional</p>
-              <ul className="space-y-3 text-sm text-white/80">
-                <li><a href="#" className="hover:text-white transition-colors">Sobre nosotros</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Política de privacidad</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Términos de uso</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Política de cambio</a></li>
+              <p className="font-black text-gray-700 uppercase tracking-widest text-[10px] mb-3">Información</p>
+              <ul className="space-y-2 text-gray-500">
+                {["Sobre nosotros", "Política de privacidad", "Términos de uso", "Política de devolución"].map((l) => (
+                  <li key={l}><a href="#" className="hover:text-gray-800 transition-colors">{l}</a></li>
+                ))}
               </ul>
             </div>
             <div>
-              <p className="text-[#f5a623] font-black text-xs uppercase tracking-widest mb-4">Pago Seguro</p>
-              <div className="flex items-center gap-3 mb-4">
-                <span className="bg-blue-600 text-white text-xs font-black px-2.5 py-1 rounded">VISA</span>
-                <span className="bg-gray-800 text-white text-xs font-black px-2.5 py-1 rounded">MASTERCARD</span>
+              <p className="font-black text-gray-700 uppercase tracking-widest text-[10px] mb-3">Pago seguro</p>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded">VISA</span>
+                <span className="bg-gray-800 text-white text-[10px] font-black px-2 py-0.5 rounded">MC</span>
+                <span className="bg-blue-800 text-white text-[10px] font-black px-2 py-0.5 rounded">AMEX</span>
               </div>
-              <p className="text-white/60 text-xs flex items-center gap-1.5">
-                <Lock className="w-3 h-3" /> Sitio 100% seguro · SSL activo
+              <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                <Lock className="w-3 h-3" /> SSL activo · Compra protegida
               </p>
             </div>
           </div>
-        </div>
 
-        <div className="border-t border-white/10 py-4 text-center text-white/40 text-xs">
-          © 2026 El Corte Inglés — Todos los derechos reservados. Oferta promocional limitada.
+          <div className="border-t border-gray-100 pt-4 text-center text-[10px] text-gray-400">
+            © 2026 El Corte Inglés — Todos los derechos reservados. Oferta promocional limitada.
+          </div>
         </div>
       </footer>
     </div>

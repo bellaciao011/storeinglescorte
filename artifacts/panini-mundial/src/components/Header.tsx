@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Truck, Lock, Package } from "lucide-react";
+import { Search, User, Heart, ShoppingBag, Package } from "lucide-react";
 
 export function Header() {
   const [timeLeft, setTimeLeft] = useState(15 * 60);
@@ -14,74 +14,65 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    const buyingTimer = setInterval(() => {
-      setBuying((prev) => Math.max(60, prev + (Math.random() > 0.4 ? 1 : -1)));
-    }, 4000);
-    const soldTimer = setInterval(() => {
-      setSold((prev) => prev + Math.floor(Math.random() * 2) + 1);
-    }, 7000);
-    return () => {
-      clearInterval(buyingTimer);
-      clearInterval(soldTimer);
-    };
+    const b = setInterval(() => setBuying((p) => Math.max(60, p + (Math.random() > 0.4 ? 1 : -1))), 4000);
+    const s = setInterval(() => setSold((p) => p + Math.floor(Math.random() * 2) + 1), 7000);
+    return () => { clearInterval(b); clearInterval(s); };
   }, []);
 
+  const mm = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+  const ss = (timeLeft % 60).toString().padStart(2, "0");
+
   return (
-    <header className="w-full flex flex-col items-center sticky top-0 z-50 shadow-md">
-      <div className="w-full bg-[#007A3D] text-white py-2.5 px-4 flex items-center justify-between gap-4">
-        <a href="/" className="flex-shrink-0 bg-white rounded-md px-3 py-1.5">
-          <span className="text-[#007A3D] font-black text-sm tracking-tight leading-none">
-            El Corte Inglés
+    <header className="w-full flex flex-col sticky top-0 z-50">
+
+      {/* ── Announcement bar ── */}
+      <div className="w-full bg-black text-white py-2 px-4 text-center text-xs font-medium">
+        <span className="flex items-center justify-center gap-3 flex-wrap">
+          <span className="flex items-center gap-1.5 text-yellow-300 font-bold">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-yellow-400" />
+            </span>
+            {buying} personas comprando ahora
           </span>
+          <span className="text-white/30">·</span>
+          <span>Hasta <strong className="text-yellow-300">−80%</strong> en productos seleccionados</span>
+          <span className="text-white/30">·</span>
+          <span className="text-white/70">Oferta expira en <strong className="text-white tabular-nums">{mm}:{ss}</strong></span>
+        </span>
+      </div>
+
+      {/* ── Main header ── */}
+      <div className="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+        {/* Logo */}
+        <a href="/" className="flex-shrink-0">
+          <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-8 w-auto object-contain" />
         </a>
 
-        <div className="flex flex-col items-end gap-0.5">
-          <span className="text-white/60 text-[10px] font-semibold uppercase tracking-widest leading-none">
-            ⏱ Oferta expira en
-          </span>
-          <div className="flex items-center gap-1">
-            {(() => {
-              const h = Math.floor(timeLeft / 3600).toString().padStart(2, "0");
-              const m = Math.floor((timeLeft % 3600) / 60).toString().padStart(2, "0");
-              const s = (timeLeft % 60).toString().padStart(2, "0");
-              return (
-                <>
-                  {[h, m, s].map((unit, i) => (
-                    <span key={i} className="flex items-center gap-1">
-                      <span className="bg-black/30 border border-white/20 rounded px-1.5 py-0.5 text-yellow-300 font-black text-sm tabular-nums leading-none min-w-[26px] text-center">
-                        {unit}
-                      </span>
-                      {i < 2 && <span className="text-yellow-300 font-black text-sm leading-none">:</span>}
-                    </span>
-                  ))}
-                </>
-              );
-            })()}
-          </div>
+        {/* Search bar */}
+        <div className="flex-1 flex items-center bg-gray-100 rounded-full px-4 py-2 gap-2">
+          <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <span className="text-sm text-gray-400 truncate">¿Qué estás buscando?</span>
+        </div>
+
+        {/* Icons */}
+        <div className="flex items-center gap-3 flex-shrink-0 text-gray-600">
+          <User className="w-5 h-5" />
+          <Heart className="w-5 h-5" />
+          <ShoppingBag className="w-5 h-5" />
         </div>
       </div>
 
-      <div className="w-full bg-[#005A2B] text-white/90 py-1.5 px-4 flex justify-center gap-6 text-xs font-medium border-b border-white/10">
-        <span className="flex items-center gap-1.5 text-orange-300 font-bold">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-400"></span>
-          </span>
-          {buying} comprando ahora
-        </span>
-        <span className="text-white/40">|</span>
-        <span className="flex items-center gap-1.5">
-          <Package className="w-3.5 h-3.5 text-green-400" />
-          <span className="text-green-300 font-bold">{sold} vendidos hoy</span>
-        </span>
+      {/* ── Trust strip ── */}
+      <div className="w-full bg-[#F8F8F8] border-b border-gray-100 py-1.5 px-4 flex items-center justify-center gap-1.5 text-[10px] text-gray-500">
+        <Package className="w-3 h-3 text-[#0B8A43]" />
+        <span className="text-[#0B8A43] font-bold">{sold} vendidos hoy</span>
+        <span className="text-gray-300 mx-1">·</span>
+        <span>Envío gratis en todos los pedidos</span>
+        <span className="text-gray-300 mx-1">·</span>
+        <span>Pago 100% seguro</span>
       </div>
 
-      <div className="w-full py-2 px-4 flex flex-wrap justify-center gap-x-5 gap-y-1 text-[11px] text-gray-500 bg-white border-b border-gray-100">
-        <span className="flex items-center gap-1 font-medium"><Lock className="w-3 h-3 text-green-600" /> Pago 100% seguro</span>
-        <span className="flex items-center gap-1 font-medium"><ShieldCheck className="w-3 h-3 text-green-600" /> Compra protegida</span>
-        <span className="flex items-center gap-1 font-medium"><Truck className="w-3 h-3 text-green-600" /> Envío gratis España</span>
-        <span className="flex items-center gap-1 font-medium"><ShieldCheck className="w-3 h-3 text-green-600" /> Producto oficial</span>
-      </div>
     </header>
   );
 }
