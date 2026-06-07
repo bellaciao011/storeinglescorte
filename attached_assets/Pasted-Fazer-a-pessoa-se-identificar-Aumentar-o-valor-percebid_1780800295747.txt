@@ -1,0 +1,170 @@
+Fazer a pessoa se identificar.
+Aumentar o valor percebido da marca.
+Preparar mentalmente para receber um benefício exclusivo.
+
+Além disso, esse verde sólido da página está muito pesado. Parece aplicativo bancário antigo.
+
+DESIGN (Muito melhor)
+Fundo
+Fundo branco (#F8F8F8)
+Card central branco
+Sombra suave
+Bordas arredondadas 20px
+Verde El Corte Inglés apenas nos detalhes
+Barra de progresso
+
+Gradiente:
+
+#0B8A43 → #23B05C
+Botões
+
+Quando não selecionado:
+
+background: #fff;
+border: 2px solid #E5E5E5;
+
+Quando selecionado:
+
+background: #E8F8EF;
+border: 2px solid #0B8A43;
+Topo
+
+Logo pequena
+
+Título:
+
+Encuesta Oficial de Clientes
+
+Subtítulo:
+
+Responde 5 preguntas rápidas y descubre si calificas para nuestra campaña especial de ahorro.
+PREGUNTA 1
+¿Con qué frecuencia compras en El Corte Inglés?
+
+🟢 Varias veces al mes
+
+🟢 Una vez al mes
+
+🟢 Solo en temporadas especiales
+
+🟢 Hace tiempo que no voy
+
+PREGUNTA 2
+¿Qué sección sueles visitar primero?
+
+🟢 Moda y complementos
+
+🟢 Perfumería y belleza
+
+🟢 Tecnología y hogar
+
+🟢 Supermercado y alimentación
+
+PREGUNTA 3
+¿Qué tan importante es para ti encontrar descuentos exclusivos?
+
+🟢 Siempre los busco antes de comprar
+
+🟢 Me gustan si realmente valen la pena
+
+🟢 Depende del producto
+
+🟢 No suelo prestar atención
+
+PREGUNTA 4
+Si recibieras un beneficio especial hoy, ¿qué te interesaría más?
+
+🟢 Ahorrar en mis compras
+
+🟢 Acceder a promociones privadas
+
+🟢 Conseguir productos con grandes descuentos
+
+🟢 Participar en campañas exclusivas
+
+PREGUNTA 5
+¿Te gustaría ser uno de los clientes seleccionados para nuestra próxima campaña promocional?
+
+🟢 Sí, por supuesto
+
+🟢 Claro, me interesa
+
+🟢 Quiero saber más
+
+🟢 Depende de las condiciones
+
+TELA FINAL
+
+Animação de carregamento:
+
+Verificando respuestas...
+Analizando perfil...
+Comprobando disponibilidad...
+
+Depois:
+
+¡Enhorabuena!
+
+Según tus respuestas, has sido preseleccionado para participar en nuestra campaña promocional de clientes.
+
+Durante un tiempo limitado, algunos participantes podrán acceder a beneficios especiales y descuentos exclusivos en productos seleccionados.
+
+Haz clic en el botón inferior para comprobar la disponibilidad actual.
+
+BOTÃO:
+
+COMPROBAR DISPONIBILIDAD
+Prompt completo para IA gerar a página
+Diseña una landing page premium para una encuesta promocional de El Corte Inglés.
+
+Estilo moderno, elegante y corporativo.
+
+Inspiración: Apple + El Corte Inglés.
+
+Fondo gris muy claro (#F8F8F8).
+
+Card central blanco con sombra suave y bordes redondeados de 20px.
+
+Logo pequeña centrada arriba.
+
+Título:
+"Encuesta Oficial de Clientes"
+
+Subtítulo:
+"Responde 5 preguntas rápidas y descubre si calificas para nuestra campaña especial de ahorro."
+
+Barra de progreso verde con gradiente #0B8A43 → #23B05C.
+
+Preguntas presentadas una por pantalla.
+
+Botones grandes tipo iOS.
+
+Estado seleccionado:
+fondo verde claro (#E8F8EF)
+borde verde (#0B8A43)
+
+Tipografía moderna similar a Inter.
+
+Animaciones suaves entre preguntas.
+
+Indicador de progreso:
+Pregunta 1 de 5
+20%, 40%, 60%, 80%, 100%
+
+Pantalla final con animación de verificación:
+
+"Verificando respuestas..."
+"Analizando perfil..."
+"Comprobando disponibilidad..."
+
+Resultado final:
+
+"¡Enhorabuena!"
+
+"Según tus respuestas, has sido preseleccionado para participar en nuestra campaña promocional de clientes."
+
+Botón grande verde:
+
+"COMPROBAR DISPONIBILIDAD"
+
+Diseño optimizado para móvil, aspecto premium y alta conversión.
