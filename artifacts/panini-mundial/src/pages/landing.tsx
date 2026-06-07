@@ -101,11 +101,11 @@ export default function Landing() {
                 className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col cursor-pointer"
               >
                 {/* Image */}
-                <div className="relative bg-gray-50 flex items-center justify-center p-4" style={{ minHeight: 140 }}>
+                <div className="relative bg-white overflow-hidden" style={{ height: 160 }}>
                   <img
                     src={product.img}
                     alt={product.shortName}
-                    className="max-h-28 w-auto object-contain"
+                    className="absolute inset-0 w-full h-full object-contain p-4"
                     loading="lazy"
                     onError={(e) => { (e.target as HTMLImageElement).src = "/assets/kit-basico.png"; }}
                   />

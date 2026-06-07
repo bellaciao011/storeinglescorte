@@ -13,6 +13,7 @@ export type Product = {
   price: number;
   oldPrice: number;
   img: string;
+  images?: string[];
   badge?: string;
   color?: string;
   description: string;
@@ -828,7 +829,14 @@ export const products: Product[] = [
     category: "Electrodomésticos",
     price: 1699,
     oldPrice: 2299,
-    img: "/assets/products/samsung-bespoke-rs80f66.png",
+    img: "/assets/products/samsung-bespoke-1.png",
+    images: [
+      "/assets/products/samsung-bespoke-1.png",
+      "/assets/products/samsung-bespoke-2.png",
+      "/assets/products/samsung-bespoke-3.png",
+      "/assets/products/samsung-bespoke-4.png",
+      "/assets/products/samsung-bespoke-5.png",
+    ],
     badge: "SÚPER",
     color: "Inox",
     description: "Frigorífico americano Samsung Bespoke AI con la tecnología Twin Cooling Plus™ que mantiene la humedad ideal en cada compartimento. AI Mode ajusta automáticamente la temperatura.",
@@ -852,7 +860,13 @@ export const products: Product[] = [
     category: "Cuidado personal",
     price: 349,
     oldPrice: 449,
-    img: "/assets/products/dyson-airstrait.png",
+    img: "/assets/products/dyson-airstrait-1.png",
+    images: [
+      "/assets/products/dyson-airstrait-1.png",
+      "/assets/products/dyson-airstrait-2.png",
+      "/assets/products/dyson-airstrait-3.png",
+      "/assets/products/dyson-airstrait-4.png",
+    ],
     badge: "NUEVO",
     color: "Ceramic Pink/Rose Gold",
     description: "La plancha alisadora Dyson que no usa calor extremo sino aire forzado para alisar el cabello sin dañarlo. Dos modos: húmedo (para alisar mojado) y seco (para retoques).",
