@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Timer, Gift, Zap } from "lucide-react";
+import { Check, Timer, Zap } from "lucide-react";
 
 const questions = [
   {
@@ -75,7 +75,6 @@ export default function Quiz() {
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
 
-  // loading state
   const [loadingStep, setLoadingStep] = useState(-1);
   const [checkedSteps, setCheckedSteps] = useState<number[]>([]);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -85,7 +84,6 @@ export default function Quiz() {
     let step = 0;
     setLoadingStep(0);
 
-    // progress bar animation
     const startTime = Date.now();
     const tick = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -94,7 +92,6 @@ export default function Quiz() {
       if (pct >= 100) clearInterval(tick);
     }, 50);
 
-    // step checker animation
     const advance = () => {
       setCheckedSteps((prev) => [...prev, step]);
       step++;
@@ -134,15 +131,15 @@ export default function Quiz() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] flex flex-col items-center justify-start px-4 py-8">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-start px-4 py-8">
 
       {/* Logo */}
       <div className="mb-6">
-        <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-10 w-auto object-contain" />
+        <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-12 w-auto object-contain" />
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-sm bg-white rounded-[20px] shadow-[0_8px_40px_rgba(0,0,0,0.10)] overflow-hidden">
+      <div className="w-full max-w-sm bg-white rounded-[20px] border border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.08)] overflow-hidden">
 
         <AnimatePresence mode="wait">
 
@@ -157,8 +154,12 @@ export default function Quiz() {
               className="px-6 py-7 flex flex-col"
             >
               <div className="text-center mb-5">
-                <span className="text-3xl">🎉</span>
-                <h1 className="text-lg font-black text-gray-900 mt-2 leading-snug">
+                <img
+                  src="/assets/gift-box.png"
+                  alt="Regalo"
+                  className="w-16 h-16 object-contain mx-auto mb-3"
+                />
+                <h1 className="text-lg font-black text-gray-900 leading-snug">
                   Campaña Especial de Clientes
                   <br />
                   <span className="text-[#0B8A43]">El Corte Inglés</span>
@@ -167,7 +168,7 @@ export default function Quiz() {
 
               <p className="text-sm text-gray-500 text-center leading-relaxed mb-5">
                 Responde 5 preguntas rápidas y descubre si calificas para recibir{" "}
-                <strong className="text-[#0B8A43]">hasta un 80% de descuento</strong> en
+                <strong className="text-[#0B8A43]">hasta un 92% de descuento</strong> en
                 productos seleccionados.
               </p>
 
@@ -178,7 +179,7 @@ export default function Quiz() {
               {/* Perks */}
               <div className="flex flex-col gap-2.5 mb-6">
                 {[
-                  { icon: <Gift className="w-4 h-4 text-[#0B8A43]" />, text: "Participación gratuita" },
+                  { icon: <img src="/assets/gift-box.png" alt="" className="w-4 h-4 object-contain" />, text: "Participación gratuita" },
                   { icon: <Zap className="w-4 h-4 text-[#0B8A43]" />, text: "Descuentos exclusivos" },
                   { icon: <Check className="w-4 h-4 text-[#0B8A43]" />, text: "Selección inmediata al finalizar" },
                 ].map((p, i) => (
@@ -218,9 +219,10 @@ export default function Quiz() {
               className="px-6 py-5"
             >
               {/* Benefit strip */}
-              <div className="bg-[#E8F8EF] rounded-xl px-3 py-2 mb-4 text-center">
+              <div className="bg-[#E8F8EF] rounded-xl px-3 py-2 mb-4 text-center flex items-center justify-center gap-1.5">
+                <img src="/assets/gift-box.png" alt="" className="w-4 h-4 object-contain" />
                 <span className="text-[11px] font-black text-[#0B8A43] tracking-wide">
-                  🎁 Hasta un 80% de descuento en productos seleccionados
+                  Hasta un 92% de descuento en productos seleccionados
                 </span>
               </div>
 
@@ -295,7 +297,6 @@ export default function Quiz() {
                 ⏳ Analizando respuestas...
               </h3>
 
-              {/* Fat progress bar */}
               <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-7">
                 <motion.div
                   className="h-full rounded-full"
@@ -305,7 +306,6 @@ export default function Quiz() {
                 />
               </div>
 
-              {/* Steps */}
               <div className="w-full flex flex-col gap-3">
                 {loadingSteps.map((step, idx) => {
                   const done = checkedSteps.includes(idx);
@@ -362,17 +362,16 @@ export default function Quiz() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.1, type: "spring", stiffness: 400, damping: 20 }}
-                className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                style={{ background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
+                className="mb-4"
               >
-                <Check className="w-8 h-8 text-white" strokeWidth={3} />
+                <img src="/assets/gift-box.png" alt="Regalo" className="w-20 h-20 object-contain mx-auto" />
               </motion.div>
 
               <p className="text-[10px] font-black text-[#0B8A43] uppercase tracking-widest mb-1">
                 ¡Resultado listo!
               </p>
               <h2 className="text-2xl font-black text-gray-900 mb-2">
-                🎉 ¡Enhorabuena!
+                ¡Enhorabuena!
               </h2>
               <p className="text-sm font-bold text-gray-800 mb-3">
                 Tus respuestas han sido aceptadas.
@@ -388,7 +387,6 @@ export default function Quiz() {
                 perfil y consultar los productos participantes.
               </p>
 
-              {/* Warning */}
               <div className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-left">
                 <p className="text-xs text-amber-700 leading-relaxed">
                   ⚠️ La disponibilidad puede variar según la demanda y el stock promocional.
