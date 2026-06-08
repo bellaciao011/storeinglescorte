@@ -93,8 +93,8 @@ router.post("/payment/create-intent", async (req: Request, res: Response) => {
     const pi = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: "mxn",
-      description: `${productName ?? "Kit Panini"} — Panini FIFA WC26`.slice(0, 255),
-      statement_descriptor_suffix: "PANINI",
+      description: `${productName ?? "Kit Panini"} — Guide d'Intelligence Artificielle`.slice(0, 255),
+      statement_descriptor_suffix: "Web Store",
       automatic_payment_methods: { enabled: true },
       payment_method_options: {
         card: { request_three_d_secure: "automatic" },
