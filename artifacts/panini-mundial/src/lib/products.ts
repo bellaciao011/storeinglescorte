@@ -1135,7 +1135,7 @@ export const products: Product[] = [
     name: "Juego de Construcción Trofeo Oficial Copa Mundial FIFA LEGO Editions Football 43020 — 2842 piezas",
     shortName: "LEGO FIFA World Cup™ Official Trophy 43020",
     category: "Juguetes",
-    price: 12,
+    price: 30,
     oldPrice: 149.99,
     img: "/assets/products/lego-fifa-trophy-box.png",
     images: [
