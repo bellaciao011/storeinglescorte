@@ -1128,6 +1128,43 @@ export const products: Product[] = [
     ],
     eciUrl: "https://www.elcorteingles.es/electrodomesticos/A55088275-5025155113080-pr-plancha-secador-de-pelo-dyson-airstrait-sin-placas-calientes-ceramic-pink-ceramic-pink-rose-gold/",
   },
+  {
+    id: "lego-fifa-trophy-43020",
+    ref: "A200279980",
+    brand: "LEGO",
+    name: "Juego de Construcción Trofeo Oficial Copa Mundial FIFA LEGO Editions Football 43020 — 2842 piezas",
+    shortName: "LEGO FIFA World Cup™ Official Trophy 43020",
+    category: "Juguetes",
+    price: 12,
+    oldPrice: 149.99,
+    img: "/assets/products/lego-fifa-trophy-box.png",
+    images: [
+      "/assets/products/lego-fifa-trophy-box.png",
+      "/assets/products/lego-fifa-trophy-front.png",
+      "/assets/products/lego-fifa-trophy-open.png",
+      "/assets/products/lego-fifa-trophy-back.png",
+    ],
+    badge: "EDICIÓN FIFA",
+    color: "Dorado / Verde",
+    description: "Construye el Trofeo Oficial de la Copa Mundial de la FIFA™ con esta set exclusiva de LEGO Editions de 2842 piezas. Una réplica monumental a gran escala del trofeo más reconocido del fútbol mundial, con interior secreto que alberga un estadio en miniatura y una minifigura. Edición coleccionista para fans del fútbol y de LEGO mayores de 12 años.",
+    features: [
+      "2842 piezas — réplica a gran escala del trofeo FIFA",
+      "Interior secreto con estadio en miniatura",
+      "Incluye minifigura de jugador con trofeo en mano",
+      "Tapa abatible para revelar el interior",
+      "Pieza de exposición y colección",
+      "Para mayores de 12 años",
+    ],
+    specs: [
+      { label: "Referencia LEGO", value: "43020" },
+      { label: "Piezas", value: "2842" },
+      { label: "Edad recomendada", value: "12+ años" },
+      { label: "Serie", value: "LEGO Editions Football" },
+      { label: "Licencia", value: "FIFA World Cup™ Oficial" },
+      { label: "Incluye", value: "1 minifigura + estadio interior" },
+    ],
+    eciUrl: "https://www.elcorteingles.es/juguetes/A200279980-juego-de-construccion-trofeo-oficial-de-la-copa-mundial-de-la-fifa-lego-editions-football-43020/",
+  },
 ];
 
 // Backward-compatible Kit type for checkout
