@@ -218,6 +218,74 @@ router.post("/stripe-webhook", async (req: Request, res: Response) => {
           .set({ status: "PAID", paidAt: new Date(), trackingCode, stripePaymentIntentId: pi.id, updatedAt: new Date() })
           .where(eq(paniniOrdersTable.id, orderId));
         req.log.info({ orderId, piId: pi.id, trackingCode }, "Order marked as PAID");
+
+        // Auto-send confirmation email
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (RESEND_API_KEY) {
+          try {
+            const [order] = await db.select().from(paniniOrdersTable).where(eq(paniniOrdersTable.id, orderId));
+            if (order?.customerEmail) {
+              const firstName = (order.customerName ?? "Cliente").split(" ")[0];
+              const productName = order.productName ?? "Producto El Corte Inglés";
+              const amountFmt = Number(order.amountEur ?? 0).toLocaleString("es-ES", { style: "currency", currency: "EUR" });
+              const trackingUrl = `${process.env.SITE_URL ?? "https://elcorteingles-outlet.com"}/rastreio?codigo=${trackingCode}`;
+
+              const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/></head><body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 16px;"><tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+<tr><td style="background:#0B8A43;border-radius:12px 12px 0 0;padding:20px 32px;text-align:center;">
+  <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:2px;text-transform:uppercase;">El Corte Inglés</p>
+  <p style="margin:4px 0 0;font-size:22px;font-weight:900;color:#fff;">Confirmación de pedido</p>
+</td></tr>
+<tr><td style="background:#fff;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.10);padding:32px;">
+  <p style="margin:0 0 16px;font-size:15px;color:#374151;">Hola <strong>${firstName}</strong>,</p>
+  <p style="margin:0 0 16px;font-size:15px;color:#374151;">Tu pedido de <strong>${productName}</strong> ha sido confirmado con éxito.</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:24px;">
+    <tr><td style="background:#f9fafb;padding:12px 20px;border-bottom:1px solid #e5e7eb;">
+      <strong style="font-size:12px;color:#374151;text-transform:uppercase;letter-spacing:1px;">Resumen del pedido</strong>
+    </td></tr>
+    <tr><td style="padding:16px 20px;">
+      <table width="100%"><tr>
+        <td style="font-size:14px;color:#6b7280;">Producto</td>
+        <td style="font-size:14px;color:#111827;font-weight:600;text-align:right;">${productName}</td>
+      </tr><tr style="margin-top:8px;">
+        <td style="font-size:14px;color:#6b7280;padding-top:8px;">Total</td>
+        <td style="font-size:16px;color:#0B8A43;font-weight:900;text-align:right;padding-top:8px;">${amountFmt}</td>
+      </tr></table>
+    </td></tr>
+  </table>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #d1fae5;border-radius:10px;background:#f0fdf4;margin-bottom:24px;padding:16px 20px;">
+    <tr><td>
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:1.5px;">Tu código de rastreo</p>
+      <p style="margin:0 0 12px;font-size:24px;font-weight:900;color:#065f46;font-family:monospace;letter-spacing:4px;">${trackingCode}</p>
+      <a href="${trackingUrl}" style="background:#0B8A43;color:#fff;text-decoration:none;font-weight:700;font-size:13px;padding:10px 20px;border-radius:8px;display:inline-block;">Rastrear mi pedido →</a>
+    </td></tr>
+  </table>
+  <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Oferta sujeta a disponibilidad · El Corte Inglés</p>
+</td></tr>
+</table></td></tr></table></body></html>`;
+
+              await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+                body: JSON.stringify({
+                  from: "El Corte Inglés <noreply@confirmedorder.site>",
+                  to: order.customerEmail,
+                  subject: `¡Pedido confirmado! · Código ${trackingCode}`,
+                  html,
+                }),
+              });
+
+              await db.update(paniniOrdersTable)
+                .set({ confirmationEmailSentAt: new Date(), updatedAt: new Date() })
+                .where(eq(paniniOrdersTable.id, orderId));
+
+              req.log.info({ orderId, email: order.customerEmail, trackingCode }, "Auto confirmation email sent");
+            }
+          } catch (emailErr) {
+            req.log.error({ emailErr }, "Failed to send auto confirmation email");
+          }
+        }
       }
     }
 

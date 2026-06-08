@@ -15,6 +15,12 @@ import { CART_STORAGE_KEY, type CartItem } from "@/lib/CartContext";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "");
 
+const SHIPPING_OPTIONS = [
+  { id: "standard", label: "Envío estándar",   days: "8–15 días hábiles", price: 0 },
+  { id: "express",  label: "Envío express",     days: "3–5 días hábiles",  price: 4.99 },
+  { id: "priority", label: "Envío prioritario", days: "1–2 días hábiles",  price: 9.99 },
+];
+
 function StripePaymentForm({
   total,
   orderId,
@@ -106,6 +112,7 @@ export default function Checkout() {
   const [trackingCode, setTrackingCode] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 4>(1);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [selectedShipping, setSelectedShipping] = useState("standard");
   const piAmountRef = useRef<number | null>(null);
   const intentCreatedRef = useRef(false);
 
@@ -129,7 +136,23 @@ export default function Checkout() {
   };
 
   const cartSubtotal = isCartMode ? cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0) : 0;
-  const orderTotal = isCartMode ? cartSubtotal : kit.price;
+  const baseTotal = isCartMode ? cartSubtotal : kit.price;
+  const shippingOpt = SHIPPING_OPTIONS.find(o => o.id === selectedShipping) ?? SHIPPING_OPTIONS[0];
+  const shippingCost = shippingOpt.price;
+  const orderTotal = baseTotal + shippingCost;
+
+  const handleShippingChange = (id: string) => {
+    setSelectedShipping(id);
+    if (orderId) {
+      const opt = SHIPPING_OPTIONS.find(o => o.id === id) ?? SHIPPING_OPTIONS[0];
+      const newTotal = baseTotal + opt.price;
+      fetch(apiUrl("/api/payment/update-intent"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, amount: newTotal }),
+      }).catch(() => {});
+    }
+  };
 
   const validateDelivery = (): string | null => {
     if (!formData.codigoPostal || !formData.morada || !formData.numero || !formData.localidade || !formData.distrito) {
@@ -412,8 +435,10 @@ export default function Checkout() {
               </div>
             )}
             <div className="border-t border-gray-100 px-3 py-2.5 flex items-center justify-between">
-              <div className="text-xs text-gray-500 flex items-center gap-1"><Truck className="w-3.5 h-3.5 text-green-500" /> Envío</div>
-              <span className="text-xs font-bold text-green-600">Gratis</span>
+              <div className="text-xs text-gray-500 flex items-center gap-1"><Truck className="w-3.5 h-3.5 text-green-500" /> {shippingOpt.label}</div>
+              <span className={`text-xs font-bold ${shippingCost === 0 ? "text-green-600" : "text-gray-900"}`}>
+                {shippingCost === 0 ? "Gratis" : fmtEUR(shippingCost)}
+              </span>
             </div>
             <div className="border-t border-gray-200 px-3 py-2.5 flex items-center justify-between bg-gray-50">
               <span className="text-sm font-bold text-gray-900">Total</span>
@@ -496,14 +521,39 @@ export default function Checkout() {
             </select>
           </div>
 
-          {/* Shipping method pill */}
-          <div className="mt-3 border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between bg-gray-50">
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Truck className="w-4 h-4 text-green-600" />
-              <span className="font-semibold">Envío estándar</span>
-              <span className="text-gray-400 text-xs">· 3–5 días hábiles</span>
-            </div>
-            <span className="text-sm font-bold text-green-600">Gratis</span>
+          {/* Shipping options */}
+          <div className="mt-3 flex flex-col gap-2">
+            {SHIPPING_OPTIONS.map((opt) => {
+              const active = selectedShipping === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => handleShippingChange(opt.id)}
+                  className="w-full text-left rounded-xl border px-4 py-3 flex items-center justify-between transition-all"
+                  style={active
+                    ? { borderColor: "#0B8A43", background: "#F0FBF4" }
+                    : { borderColor: "#E5E7EB", background: "#fff" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
+                      style={active ? { borderColor: "#0B8A43" } : { borderColor: "#D1D5DB" }}
+                    >
+                      {active && <div className="w-2 h-2 rounded-full bg-[#0B8A43]" />}
+                    </div>
+                    <Truck className="w-4 h-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{opt.label}</p>
+                      <p className="text-xs text-gray-400">{opt.days}</p>
+                    </div>
+                  </div>
+                  <span className={`text-sm font-bold ${opt.price === 0 ? "text-green-600" : "text-gray-900"}`}>
+                    {opt.price === 0 ? "Gratis" : fmtEUR(opt.price)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -564,11 +614,13 @@ export default function Checkout() {
         <div className="border-t border-gray-200 pt-4 space-y-2 mb-6">
           <div className="flex justify-between text-sm text-gray-500">
             <span>Subtotal</span>
-            <span>{fmtEUR(orderTotal)}</span>
+            <span>{fmtEUR(baseTotal)}</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
-            <span>Envío</span>
-            <span className="text-green-600 font-semibold">Gratis</span>
+            <span>Envío · <span className="text-xs">{shippingOpt.label}</span></span>
+            <span className={shippingCost === 0 ? "text-green-600 font-semibold" : "text-gray-900 font-semibold"}>
+              {shippingCost === 0 ? "Gratis" : fmtEUR(shippingCost)}
+            </span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-gray-200">
             <span className="font-bold text-gray-900">Total</span>
