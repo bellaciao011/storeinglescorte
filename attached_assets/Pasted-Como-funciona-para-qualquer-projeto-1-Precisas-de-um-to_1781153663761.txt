@@ -1,0 +1,55 @@
+Como funciona (para qualquer projeto)
+1. Precisas de um token
+No GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+
+Permission: Contents → Read & Write no repositório
+Guarda-o como secret no Replit: GITHUB_TOKEN
+
+2. O fluxo para enviar ficheiros (tree API)
+É sempre a mesma sequência de 4 chamadas:
+
+TOKEN="$GITHUB_TOKEN"
+REPO="utilizador/repositorio"
+API="https://api.github.com"
+# 1️⃣ Buscar o SHA do último commit do main
+BASE=$(curl -s -H "Authorization: Bearer $TOKEN" \
+  "$API/repos/$REPO/git/ref/heads/main" | jq -r '.object.sha')
+# 2️⃣ Buscar o SHA da tree desse commit
+BASE_TREE=$(curl -s -H "Authorization: Bearer $TOKEN" \
+  "$API/repos/$REPO/git/commits/$BASE" | jq -r '.tree.sha')
+# 3️⃣ Criar nova tree com os ficheiros alterados
+NEW_TREE=$(curl -s -X POST -H "Authorization: Bearer $TOKEN" \
+  "$API/repos/$REPO/git/trees" \
+  -d "{
+    \"base_tree\": \"$BASE_TREE\",
+    \"tree\": [{
+      \"path\": \"src/pages/checkout.tsx\",
+      \"mode\": \"100644\",
+      \"type\": \"blob\",
+      \"content\": $(jq -Rs '.' < src/pages/checkout.tsx)
+    }]
+  }" | jq -r '.sha')
+# 4️⃣ Criar commit + actualizar referência do main
+NEW_COMMIT=$(curl -s -X POST -H "Authorization: Bearer $TOKEN" \
+  "$API/repos/$REPO/git/commits" \
+  -d "{\"message\": \"feat: ...\", \"tree\": \"$NEW_TREE\", \"parents\": [\"$BASE\"]}" \
+  | jq -r '.sha')
+curl -s -X PATCH -H "Authorization: Bearer $TOKEN" \
+  "$API/repos/$REPO/git/refs/heads/main" \
+  -d "{\"sha\": \"$NEW_COMMIT\"}"
+
+3. Para múltiplos ficheiros ao mesmo tempo
+No passo 3, o array tree aceita vários objectos:
+
+"tree": [
+  { "path": "ficheiro1.ts", "mode": "100644", "type": "blob", "content": "..." },
+  { "path": "ficheiro2.ts", "mode": "100644", "type": "blob", "content": "..." }
+]
+
+Porquê este método em vez de git push?
+git push	GitHub API
+Precisa de git instalado	Só precisa de curl + jq
+Precisa de clonar o repo	Funciona sem cópia local
+Pode ter conflitos de merge	Controlo total sobre a tree
+Lento com repos grandes	Rápido — só envia o diff
+É o método que uso aqui porque o ambiente Replit não tem acesso SSH configurado para o GitHub, mas tem o token via secrets.
