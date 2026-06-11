@@ -1,9 +1,10 @@
 {
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter @workspace/panini-mundial run build",
+  "buildCommand": "pnpm --filter @workspace/api-server run build:vercel && pnpm --filter @workspace/panini-mundial run build",
   "outputDirectory": "artifacts/panini-mundial/dist/public",
   "rewrites": [
-    { "source": "/((?!api/|.well-known/).*)", "destination": "/index.html" }
+    { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/((?!.well-known/).*)", "destination": "/index.html" }
   ],
   "crons": [
     {
