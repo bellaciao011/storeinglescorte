@@ -1,0 +1,92 @@
+Deployment Details
+Build Failed
+No entrypoint found in output directory: "artifacts/panini-mundial/dist/public". Searched for: - app.{js,cjs,mjs,ts,cts,mts} - index.{js,cjs,mjs,ts,cts,mts} - server.{js,cjs,mjs,ts,cts,mts} - src/app.{js,cjs,mjs,ts,cts,mts} - src/index.{js,cjs,mjs,ts,cts,mts} - src/server.{js,cjs,mjs,ts,cts,mts}
+Created
+github/bellaciao011
+bellaciao011
+Just now
+Status
+Error
+Latest
+Duration
+23s
+Just now
+Environment
+Production
+Domains
+storespainss-git-main-bellaciao011s-projects.vercel.app
+storespainss-8lb3bj0sg-bellaciao011s-projects.vercel.app
+Source
+main
+c890979
+fix: use import.meta.url for reliable runtime path resolution
+
+Deployment Settings
+1 Recommendation
+Build Logs
+23s
+94 lines
+
+2
+
+2
+Find in logs
+CtrlF
+02:31:04.333 
+  dist/vercel/pino-worker.mjs.map           256.9kb
+02:31:04.333 
+  dist/vercel/pino-file.mjs.map             229.0kb
+02:31:04.333 
+  dist/vercel/thread-stream-worker.mjs.map   12.0kb
+02:31:04.333 
+02:31:04.333 
+⚡ Done in 409ms
+02:31:04.748 
+02:31:04.748 
+> @workspace/panini-mundial@0.0.0 build /vercel/path0/artifacts/panini-mundial
+02:31:04.748 
+> vite build --config vite.config.ts
+02:31:04.748 
+02:31:05.157 
+vite v7.3.2 building client environment for production...
+02:31:05.273 
+transforming...
+02:31:05.829 
+src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+02:31:09.049 
+✓ 2187 modules transformed.
+02:31:09.490 
+rendering chunks...
+02:31:09.503 
+computing gzip size...
+02:31:09.529 
+dist/public/index.html                   3.89 kB │ gzip:   1.38 kB
+02:31:09.529 
+dist/public/assets/index-MD-aacQm.css  109.53 kB │ gzip:  18.36 kB
+02:31:09.529 
+dist/public/assets/index-Iu6LuyNR.js   595.04 kB │ gzip: 184.14 kB
+02:31:09.530 
+02:31:09.530 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+02:31:09.530 
+- Using dynamic import() to code-split the application
+02:31:09.530 
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+02:31:09.530 
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+02:31:09.530 
+✓ built in 4.33s
+02:31:09.625 
+Error: No entrypoint found in output directory: "artifacts/panini-mundial/dist/public". Searched for: 
+02:31:09.625 
+- app.{js,cjs,mjs,ts,cts,mts}
+02:31:09.625 
+- index.{js,cjs,mjs,ts,cts,mts}
+02:31:09.625 
+- server.{js,cjs,mjs,ts,cts,mts}
+02:31:09.625 
+- src/app.{js,cjs,mjs,ts,cts,mts}
+02:31:09.626 
+- src/index.{js,cjs,mjs,ts,cts,mts}
+02:31:09.626 
+- src/server.{js,cjs,mjs,ts,cts,mts}
