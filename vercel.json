@@ -1,5 +1,5 @@
 {
-  "installCommand": "pnpm install --frozen-lockfile",
+  "installCommand": "npm i -g pnpm && pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm --filter @workspace/api-server run build:vercel && pnpm --filter @workspace/panini-mundial run build",
   "outputDirectory": "artifacts/panini-mundial/dist/public",
   "rewrites": [
