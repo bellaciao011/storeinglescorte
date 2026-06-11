@@ -1,0 +1,92 @@
+Deployment Details
+Build Failed
+No Output Directory named "public" found after the Build completed. Configure the Output Directory in your Project Settings. Alternatively, configure vercel.json#outputDirectory.
+Created
+github/bellaciao011
+bellaciao011
+Just now
+Status
+Error
+Latest
+Duration
+19s
+Just now
+Environment
+Production
+Domains
+storespain-api-server-1xhp-git-main-bellaciao011s-projects.vercel.app
+storespain-api-server-1xhp-51poh3q1q-bellaciao011s-projects.vercel.app
+Source
+main
+4af23e1
+fix: add framework null to treat output as static site
+
+Deployment Settings
+1 Recommendation
+Build Logs
+19s
+89 lines
+
+2
+
+2
+Find in logs
+CtrlF
+02:35:06.124 
+  dist/vercel/handler.mjs                     2.4mb ⚠️
+02:35:06.124 
+  dist/vercel/pino-worker.mjs               153.4kb
+02:35:06.124 
+  dist/vercel/pino-file.mjs                 142.0kb
+02:35:06.124 
+  dist/vercel/thread-stream-worker.mjs        7.3kb
+02:35:06.125 
+  dist/vercel/handler.mjs.map                 3.2mb
+02:35:06.125 
+  dist/vercel/pino-worker.mjs.map           256.9kb
+02:35:06.125 
+  dist/vercel/pino-file.mjs.map             229.0kb
+02:35:06.125 
+  dist/vercel/thread-stream-worker.mjs.map   12.0kb
+02:35:06.125 
+02:35:06.125 
+⚡ Done in 288ms
+02:35:06.458 
+02:35:06.458 
+> @workspace/panini-mundial@0.0.0 build /vercel/path0/artifacts/panini-mundial
+02:35:06.458 
+> vite build --config vite.config.ts
+02:35:06.458 
+02:35:07.026 
+vite v7.3.2 building client environment for production...
+02:35:07.110 
+transforming...
+02:35:07.544 
+src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+02:35:10.019 
+✓ 2187 modules transformed.
+02:35:10.325 
+rendering chunks...
+02:35:10.337 
+computing gzip size...
+02:35:10.356 
+dist/public/index.html                   3.89 kB │ gzip:   1.38 kB
+02:35:10.356 
+dist/public/assets/index-MD-aacQm.css  109.53 kB │ gzip:  18.36 kB
+02:35:10.356 
+dist/public/assets/index-Iu6LuyNR.js   595.04 kB │ gzip: 184.14 kB
+02:35:10.357 
+02:35:10.357 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+02:35:10.357 
+- Using dynamic import() to code-split the application
+02:35:10.357 
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+02:35:10.358 
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+02:35:10.358 
+✓ built in 3.30s
+02:35:10.431 
+Error: No Output Directory named "public" found after the Build completed. Configure the Output Directory in your Project Settings. Alternatively, configure vercel.json#outputDirectory.
+02:35:10.432 
+Learn More: https://vercel.link/missing-public-directory
