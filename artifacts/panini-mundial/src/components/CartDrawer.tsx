@@ -23,6 +23,7 @@ export function CartDrawer() {
   const handleCheckout = () => {
     close();
     setLocation("/checkout?cart=1");
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 50);
   };
 
   return (

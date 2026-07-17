@@ -162,6 +162,7 @@ export default function Checkout() {
   };
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
     const params = new URLSearchParams(window.location.search);
     const returnOrderId = params.get("orderId");
     const redirectStatus = params.get("redirect_status");
