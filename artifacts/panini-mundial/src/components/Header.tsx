@@ -77,12 +77,14 @@ export function Header() {
       </div>
 
       {/* ── Trust strip ── */}
-      <div className="w-full bg-[#F8F8F8] border-b border-gray-100 py-1.5 px-4 flex items-center justify-center gap-1.5 text-[10px] text-gray-500">
-        <Package className="w-3 h-3 text-[#0B8A43]" />
-        <span className="text-[#0B8A43] font-bold">{sold} vendidos hoy</span>
-        <span className="text-gray-300 mx-1">·</span>
+      <div className="w-full bg-[#F8F8F8] border-b border-gray-100 py-1.5 px-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-[10px] text-gray-500">
+        <span className="flex items-center gap-1">
+          <Package className="w-3 h-3 text-[#0B8A43]" />
+          <span className="text-[#0B8A43] font-bold">{sold} vendidos hoy</span>
+        </span>
+        <span className="text-gray-300">·</span>
         <span>Envío gratis en todos los pedidos</span>
-        <span className="text-gray-300 mx-1">·</span>
+        <span className="text-gray-300">·</span>
         <span>Pago 100% seguro</span>
       </div>
 
