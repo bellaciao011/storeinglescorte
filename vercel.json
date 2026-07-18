@@ -1,23 +1,12 @@
 {
   "framework": "vite",
   "installCommand": "npm i -g pnpm && pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm --filter @workspace/api-server run build:vercel && pnpm --filter @workspace/panini-mundial run build",
-  "outputDirectory": "artifacts/panini-mundial/dist/public",
+  "buildCommand": "pnpm --filter @workspace/api-server run build:vercel && pnpm --filter @workspace/panini-mundial run build:vercel",
+  "outputDirectory": "dist",
   "functions": {
     "api/index.js": {
       "includeFiles": "artifacts/api-server/dist/vercel/**",
       "maxDuration": 30
     }
-  },
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/update-tracking",
-      "schedule": "0 10 * * *"
-    }
-  ]
+  }
 }
