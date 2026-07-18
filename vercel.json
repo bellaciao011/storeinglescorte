@@ -1,4 +1,6 @@
 {
+  "framework": "vite",
   "installCommand": "npm i -g pnpm && pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm --filter @workspace/api-server run build:vercel && pnpm --filter @workspace/panini-mundial run build && node scripts/build-vercel.mjs"
+  "buildCommand": "pnpm --filter @workspace/api-server run build:vercel && pnpm --filter @workspace/panini-mundial run build:vercel && node scripts/build-vercel.mjs",
+  "outputDirectory": "dist"
 }
