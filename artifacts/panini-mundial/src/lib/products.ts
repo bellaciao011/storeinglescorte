@@ -1202,6 +1202,42 @@ export const products: Product[] = [
     ],
     eciUrl: "https://www.elcorteingles.es/deportes/",
   },
+  {
+    id: "spain-26-home-kids-winner-jersey",
+    ref: "A200300003",
+    brand: "adidas",
+    name: "Spain 26 Home Kids Winner Jersey — Camiseta infantil oficial selección española FIFA World Cup 2026",
+    shortName: "Spain 26 Home Kids Winner Jersey",
+    category: "Fútbol",
+    price: 100,
+    oldPrice: 1250,
+    img: "/assets/products/spain-26-home-kids-1.png",
+    images: [
+      "/assets/products/spain-26-home-kids-1.png",
+      "/assets/products/spain-26-home-kids-2.png",
+      "/assets/products/spain-26-home-kids-3.png",
+    ],
+    badge: "FIFA 2026",
+    color: "Rojo / Azul marino",
+    description: "Football jersey with Climacool technology for cool, fresh comfort. The Spain 26 Home Winner Jersey brings bold style and match-ready comfort to young supporters. Channelling Spanish elegance, it's a go-to for play, school, and team celebrations. This piece is crafted with a lightweight interlock construction. Designed with a regular fit and classic crew neck, it's built to help energetic players feel comfortable. Climacool wicks and disperses sweat for a cool, dry, and distraction-free performance. Faster sweat release and absorbency aid cooling, while fast-dry fibres provide a fresh skin feel. adidas' iconic branding and an embroidered club crest add an extra touch of authenticity, connecting everyday moments to footballing heritage.",
+    features: [
+      "adidas Climacool — transpirable y de secado rápido",
+      "Construcción interlock ligera y suave",
+      "Corte regular fit y cuello redondo clásico",
+      "Escudo bordado de la selección española",
+      "Parche oficial FIFA World Cup 2026™",
+      "2 estrellas de campeones bordadas",
+    ],
+    specs: [
+      { label: "Competición", value: "FIFA World Cup 2026™" },
+      { label: "Tecnología", value: "adidas Climacool" },
+      { label: "Corte", value: "Regular fit" },
+      { label: "Tejido", value: "Interlock ligero" },
+      { label: "Selección", value: "España" },
+      { label: "Licencia", value: "Oficial RFEF / FIFA" },
+    ],
+    eciUrl: "https://www.elcorteingles.es/deportes/",
+  },
 ];
 
 // Backward-compatible Kit type for checkout
