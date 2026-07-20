@@ -131,15 +131,15 @@ export default function Quiz() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start px-4 py-8 bg-white">
+    <div className="min-h-screen flex flex-col items-center justify-start px-4 py-3 bg-white">
 
       {/* Logo */}
-      <div className="mb-6">
-        <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-10 w-auto object-contain" />
+      <div className="mb-3">
+        <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-8 w-auto object-contain" />
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-sm rounded-[20px] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
+      <div className="w-full max-w-sm rounded-[20px] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.4)]">
 
         <AnimatePresence mode="wait">
 
@@ -154,17 +154,10 @@ export default function Quiz() {
             >
               {/* Hero rojo con patrón */}
               <div
-                className="relative px-6 pt-8 pb-7 flex flex-col items-center text-center overflow-hidden"
-                style={{
-                  background: "linear-gradient(160deg, #C8102E 0%, #A50020 60%, #8B001A 100%)",
-                }}
+                className="relative px-6 pt-5 pb-4 flex flex-col items-center text-center overflow-hidden"
+                style={{ background: "linear-gradient(160deg, #C8102E 0%, #A50020 60%, #8B001A 100%)" }}
               >
-                {/* Patrón geométrico de fondo */}
-                <svg
-                  className="absolute inset-0 w-full h-full opacity-[0.12]"
-                  xmlns="http://www.w3.org/2000/svg"
-                  preserveAspectRatio="xMidYMid slice"
-                >
+                <svg className="absolute inset-0 w-full h-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
                   <defs>
                     <pattern id="tri" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
                       <polygon points="20,0 40,40 0,40" fill="none" stroke="#fff" strokeWidth="0.8" />
@@ -174,85 +167,72 @@ export default function Quiz() {
                   <rect width="100%" height="100%" fill="url(#tri)" />
                 </svg>
 
-                {/* Estrellas doradas */}
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.15, type: "spring", stiffness: 300 }}
-                  className="flex gap-3 mb-4 relative z-10"
+                  className="flex gap-2 mb-2 relative z-10"
                 >
                   {[0, 1].map((i) => (
-                    <motion.svg
-                      key={i}
-                      width="36" height="36" viewBox="0 0 24 24" fill="#F5C518"
+                    <motion.svg key={i} width="28" height="28" viewBox="0 0 24 24" fill="#F5C518"
                       initial={{ rotate: -20, opacity: 0 }}
                       animate={{ rotate: 0, opacity: 1 }}
                       transition={{ delay: 0.2 + i * 0.12, type: "spring", stiffness: 280 }}
-                      style={{ filter: "drop-shadow(0 2px 8px rgba(245,197,24,0.7))" }}
+                      style={{ filter: "drop-shadow(0 2px 6px rgba(245,197,24,0.7))" }}
                     >
                       <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
                     </motion.svg>
                   ))}
                 </motion.div>
 
-                <p className="text-[11px] font-semibold text-red-200 tracking-[0.15em] uppercase mb-1 relative z-10">
+                <p className="text-[10px] font-semibold text-red-200 tracking-[0.15em] uppercase mb-0.5 relative z-10">
                   Siempre con vosotros
                 </p>
-                <h1 className="text-2xl font-black text-white leading-tight mb-2 relative z-10">
-                  ¡ENHORABUENA<br />CAMPEONES!
+                <h1 className="text-xl font-black text-white leading-tight mb-1 relative z-10">
+                  ¡ENHORABUENA CAMPEONES!
                 </h1>
-                <p className="text-sm text-red-100 font-semibold relative z-10">
+                <p className="text-xs text-red-100 font-semibold relative z-10">
                   España · Campeones del Mundo 2026 🏆
                 </p>
               </div>
 
               {/* Cuerpo blanco */}
-              <div className="bg-white px-6 py-6 flex flex-col">
-                <div className="text-center mb-4">
-                  <h2 className="text-base font-black text-gray-900 leading-snug mb-2">
-                    Campaña Especial de Celebración
-                    <br />
-                    <span className="text-[#C8102E]">El Corte Inglés</span>
+              <div className="bg-white px-5 py-4 flex flex-col">
+                <div className="text-center mb-3">
+                  <h2 className="text-sm font-black text-gray-900 leading-snug mb-1">
+                    Campaña Especial · <span className="text-[#C8102E]">El Corte Inglés</span>
                   </h2>
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    En honor al título mundial de la{" "}
-                    <strong className="text-gray-800">Selección Española</strong>, lanzamos
-                    una campaña exclusiva con{" "}
-                    <strong className="text-[#C8102E]">hasta un 95% de descuento</strong> en
-                    productos seleccionados.
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Por el título mundial de la <strong className="text-gray-800">Selección Española</strong>,
+                    {" "}<strong className="text-[#C8102E]">hasta un 95% de descuento</strong> en productos seleccionados.
                   </p>
                 </div>
 
-                <p className="text-xs text-gray-400 text-center mb-5">
-                  Miles de aficionados ya están participando en esta campaña conmemorativa exclusiva.
-                </p>
-
                 {/* Perks */}
-                <div className="flex flex-col gap-2.5 mb-5">
+                <div className="flex flex-col gap-1.5 mb-3">
                   {[
-                    { icon: <Trophy className="w-4 h-4 text-[#C8102E]" />, text: "Campaña especial por el Título Mundial" },
-                    { icon: <Zap className="w-4 h-4 text-[#C8102E]" />, text: "Hasta 95% de descuento en productos" },
-                    { icon: <Check className="w-4 h-4 text-[#C8102E]" />, text: "Solo 5 preguntas rápidas para participar" },
+                    { icon: <Trophy className="w-3.5 h-3.5 text-[#C8102E]" />, text: "Campaña especial por el Título Mundial" },
+                    { icon: <Zap className="w-3.5 h-3.5 text-[#C8102E]" />, text: "Hasta 95% de descuento en productos" },
+                    { icon: <Check className="w-3.5 h-3.5 text-[#C8102E]" />, text: "Solo 5 preguntas rápidas para participar" },
                   ].map((p, i) => (
-                    <div key={i} className="flex items-center gap-2.5">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: "#FEE8EB" }}>
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#FEE8EB" }}>
                         {p.icon}
                       </div>
-                      <span className="text-sm font-medium text-gray-700">{p.text}</span>
+                      <span className="text-xs font-medium text-gray-700">{p.text}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2 justify-center mb-5">
-                  <Timer className="w-4 h-4 text-gray-400" />
-                  <span className="text-xs text-gray-400">Tiempo estimado: menos de 1 minuto.</span>
+                <div className="flex items-center gap-1.5 justify-center mb-3">
+                  <Timer className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-[11px] text-gray-400">Menos de 1 minuto.</span>
                 </div>
 
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={startQuiz}
-                  className="w-full py-4 rounded-xl font-black text-sm text-white tracking-wider uppercase"
+                  className="w-full py-3 rounded-xl font-black text-sm text-white tracking-wider uppercase"
                   style={{ background: "linear-gradient(135deg, #C8102E, #A50020)" }}
                 >
                   COMENZAR AHORA
