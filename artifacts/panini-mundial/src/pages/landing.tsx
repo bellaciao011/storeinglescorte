@@ -18,7 +18,7 @@ const reviews = [
   { avatar: "/assets/avatar-rita.png", name: "Rita Martínez", city: "Zaragoza", title: "Muy recomendable", text: "Llevaba meses buscando este precio. Llegó en 3 días. ¡Súper recomendado!", verified: "Compra verificada — hace 1 día" },
 ];
 
-const categories = ["Todo", "Televisores", "Móviles", "Electrodomésticos", "Wearables", "Videojuegos", "Tablets", "Fotografía", "Climatización", "Pequeño electrodoméstico", "Cuidado personal", "Audio", "Informática"];
+const categories = ["Todo", "Fútbol", "Televisores", "Móviles", "Electrodomésticos", "Wearables", "Videojuegos", "Tablets", "Fotografía", "Climatización", "Pequeño electrodoméstico", "Cuidado personal", "Audio", "Informática"];
 
 const stagger = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 280, damping: 22 } } };
