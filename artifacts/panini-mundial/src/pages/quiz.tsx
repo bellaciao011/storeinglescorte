@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Timer, Zap } from "lucide-react";
+import { Check, Timer, Zap, Trophy } from "lucide-react";
 
 const questions = [
   {
@@ -131,15 +131,16 @@ export default function Quiz() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-start px-4 py-8">
+    <div className="min-h-screen flex flex-col items-center justify-start px-4 py-8"
+      style={{ background: "linear-gradient(160deg, #1a0a0a 0%, #2c0b0b 50%, #1a0a0a 100%)" }}>
 
       {/* Logo */}
       <div className="mb-6">
-        <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-12 w-auto object-contain" />
+        <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-12 w-auto object-contain brightness-0 invert" />
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-sm bg-white rounded-[20px] border border-gray-200 shadow-[0_4px_24px_rgba(0,0,0,0.08)] overflow-hidden">
+      <div className="w-full max-w-sm rounded-[20px] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
 
         <AnimatePresence mode="wait">
 
@@ -151,60 +152,113 @@ export default function Quiz() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.3 }}
-              className="px-6 py-7 flex flex-col"
             >
-              <div className="text-center mb-5">
-                <img
-                  src="/assets/gift-box.png"
-                  alt="Regalo"
-                  className="w-16 h-16 object-contain mx-auto mb-3"
-                />
-                <h1 className="text-lg font-black text-gray-900 leading-snug">
-                  Campaña Especial de Clientes
-                  <br />
-                  <span className="text-[#0B8A43]">El Corte Inglés</span>
-                </h1>
-              </div>
-
-              <p className="text-sm text-gray-500 text-center leading-relaxed mb-5">
-                Responde 5 preguntas rápidas y descubre si calificas para recibir{" "}
-                <strong className="text-[#0B8A43]">hasta un 92% de descuento</strong> en
-                productos seleccionados.
-              </p>
-
-              <p className="text-xs text-gray-400 text-center mb-5">
-                Miles de clientes ya están participando en esta campaña promocional exclusiva.
-              </p>
-
-              {/* Perks */}
-              <div className="flex flex-col gap-2.5 mb-6">
-                {[
-                  { icon: <img src="/assets/gift-box.png" alt="" className="w-4 h-4 object-contain" />, text: "Participación gratuita" },
-                  { icon: <Zap className="w-4 h-4 text-[#0B8A43]" />, text: "Descuentos exclusivos" },
-                  { icon: <Check className="w-4 h-4 text-[#0B8A43]" />, text: "Selección inmediata al finalizar" },
-                ].map((p, i) => (
-                  <div key={i} className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-full bg-[#E8F8EF] flex items-center justify-center flex-shrink-0">
-                      {p.icon}
-                    </div>
-                    <span className="text-sm font-medium text-gray-700">{p.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 justify-center mb-6">
-                <Timer className="w-4 h-4 text-gray-400" />
-                <span className="text-xs text-gray-400">Tiempo estimado: menos de 1 minuto.</span>
-              </div>
-
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={startQuiz}
-                className="w-full py-4 rounded-xl font-black text-sm text-white tracking-wider uppercase"
-                style={{ background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
+              {/* Hero rojo con patrón */}
+              <div
+                className="relative px-6 pt-8 pb-7 flex flex-col items-center text-center overflow-hidden"
+                style={{
+                  background: "linear-gradient(160deg, #C8102E 0%, #A50020 60%, #8B001A 100%)",
+                }}
               >
-                Comenzar ahora
-              </motion.button>
+                {/* Patrón geométrico de fondo */}
+                <svg
+                  className="absolute inset-0 w-full h-full opacity-[0.12]"
+                  xmlns="http://www.w3.org/2000/svg"
+                  preserveAspectRatio="xMidYMid slice"
+                >
+                  <defs>
+                    <pattern id="tri" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <polygon points="20,0 40,40 0,40" fill="none" stroke="#fff" strokeWidth="0.8" />
+                      <polygon points="0,0 20,40 40,0" fill="none" stroke="#fff" strokeWidth="0.8" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#tri)" />
+                </svg>
+
+                {/* Estrellas doradas */}
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.15, type: "spring", stiffness: 300 }}
+                  className="flex gap-3 mb-4 relative z-10"
+                >
+                  {[0, 1].map((i) => (
+                    <motion.svg
+                      key={i}
+                      width="36" height="36" viewBox="0 0 24 24" fill="#F5C518"
+                      initial={{ rotate: -20, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 + i * 0.12, type: "spring", stiffness: 280 }}
+                      style={{ filter: "drop-shadow(0 2px 8px rgba(245,197,24,0.7))" }}
+                    >
+                      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+                    </motion.svg>
+                  ))}
+                </motion.div>
+
+                <p className="text-[11px] font-semibold text-red-200 tracking-[0.15em] uppercase mb-1 relative z-10">
+                  Siempre con vosotros
+                </p>
+                <h1 className="text-2xl font-black text-white leading-tight mb-2 relative z-10">
+                  ¡ENHORABUENA<br />CAMPEONES!
+                </h1>
+                <p className="text-sm text-red-100 font-semibold relative z-10">
+                  España · Campeones del Mundo 2026 🏆
+                </p>
+              </div>
+
+              {/* Cuerpo blanco */}
+              <div className="bg-white px-6 py-6 flex flex-col">
+                <div className="text-center mb-4">
+                  <h2 className="text-base font-black text-gray-900 leading-snug mb-2">
+                    Campaña Especial de Celebración
+                    <br />
+                    <span className="text-[#C8102E]">El Corte Inglés</span>
+                  </h2>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    En honor al título mundial de la{" "}
+                    <strong className="text-gray-800">Selección Española</strong>, lanzamos
+                    una campaña exclusiva con{" "}
+                    <strong className="text-[#C8102E]">hasta un 95% de descuento</strong> en
+                    productos seleccionados.
+                  </p>
+                </div>
+
+                <p className="text-xs text-gray-400 text-center mb-5">
+                  Miles de aficionados ya están participando en esta campaña conmemorativa exclusiva.
+                </p>
+
+                {/* Perks */}
+                <div className="flex flex-col gap-2.5 mb-5">
+                  {[
+                    { icon: <Trophy className="w-4 h-4 text-[#C8102E]" />, text: "Campaña especial por el Título Mundial" },
+                    { icon: <Zap className="w-4 h-4 text-[#C8102E]" />, text: "Hasta 95% de descuento en productos" },
+                    { icon: <Check className="w-4 h-4 text-[#C8102E]" />, text: "Solo 5 preguntas rápidas para participar" },
+                  ].map((p, i) => (
+                    <div key={i} className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: "#FEE8EB" }}>
+                        {p.icon}
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">{p.text}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 justify-center mb-5">
+                  <Timer className="w-4 h-4 text-gray-400" />
+                  <span className="text-xs text-gray-400">Tiempo estimado: menos de 1 minuto.</span>
+                </div>
+
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={startQuiz}
+                  className="w-full py-4 rounded-xl font-black text-sm text-white tracking-wider uppercase"
+                  style={{ background: "linear-gradient(135deg, #C8102E, #A50020)" }}
+                >
+                  COMENZAR AHORA
+                </motion.button>
+              </div>
             </motion.div>
           )}
 
@@ -216,14 +270,20 @@ export default function Quiz() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -32 }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="px-6 py-5"
+              className="px-6 py-5 bg-white"
             >
               {/* Benefit strip */}
-              <div className="bg-[#E8F8EF] rounded-xl px-3 py-2 mb-4 text-center flex items-center justify-center gap-1.5">
-                <img src="/assets/gift-box.png" alt="" className="w-4 h-4 object-contain" />
-                <span className="text-[11px] font-black text-[#0B8A43] tracking-wide">
-                  Hasta un 92% de descuento en productos seleccionados
+              <div className="rounded-xl px-3 py-2 mb-4 text-center flex items-center justify-center gap-1.5"
+                style={{ background: "#FEE8EB" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#C8102E">
+                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+                </svg>
+                <span className="text-[11px] font-black tracking-wide" style={{ color: "#C8102E" }}>
+                  Hasta un 95% de descuento · Campaña FIFA World Cup 2026™
                 </span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#C8102E">
+                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+                </svg>
               </div>
 
               {/* Progress */}
@@ -231,14 +291,14 @@ export default function Quiz() {
                 <span className="text-[11px] text-gray-400 font-medium">
                   Pregunta {current + 1} de {questions.length}
                 </span>
-                <span className="text-[11px] font-bold text-[#0B8A43]">
+                <span className="text-[11px] font-bold" style={{ color: "#C8102E" }}>
                   {Math.round(((current + 1) / questions.length) * 100)}%
                 </span>
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-5">
                 <motion.div
                   className="h-full rounded-full"
-                  style={{ background: "linear-gradient(90deg, #0B8A43, #23B05C)" }}
+                  style={{ background: "linear-gradient(90deg, #C8102E, #E8304A)" }}
                   initial={false}
                   animate={{ width: `${((current + 1) / questions.length) * 100}%` }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
@@ -258,7 +318,7 @@ export default function Quiz() {
                     className="w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200"
                     style={
                       selected === idx
-                        ? { background: "#E8F8EF", border: "2px solid #0B8A43", color: "#0B8A43" }
+                        ? { background: "#FEE8EB", border: "2px solid #C8102E", color: "#C8102E" }
                         : { background: "#fff", border: "2px solid #E5E5E5", color: "#374151" }
                     }
                   >
@@ -267,7 +327,7 @@ export default function Quiz() {
                         className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[9px] font-black transition-all"
                         style={
                           selected === idx
-                            ? { background: "#0B8A43", color: "#fff" }
+                            ? { background: "#C8102E", color: "#fff" }
                             : { background: "#F3F4F6", color: "#9CA3AF" }
                         }
                       >
@@ -288,9 +348,9 @@ export default function Quiz() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="px-6 py-8 flex flex-col items-center"
+              className="px-6 py-8 flex flex-col items-center bg-white"
             >
-              <p className="text-xs font-black text-[#0B8A43] uppercase tracking-widest mb-1">
+              <p className="text-xs font-black uppercase tracking-widest mb-1" style={{ color: "#C8102E" }}>
                 Un momento
               </p>
               <h3 className="text-base font-black text-gray-900 mb-6 text-center">
@@ -300,7 +360,7 @@ export default function Quiz() {
               <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-7">
                 <motion.div
                   className="h-full rounded-full"
-                  style={{ background: "linear-gradient(90deg, #0B8A43, #23B05C)" }}
+                  style={{ background: "linear-gradient(90deg, #C8102E, #E8304A)" }}
                   animate={{ width: `${loadingProgress}%` }}
                   transition={{ ease: "linear", duration: 0.1 }}
                 />
@@ -321,16 +381,17 @@ export default function Quiz() {
                         className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300"
                         style={
                           done
-                            ? { background: "#0B8A43" }
+                            ? { background: "#C8102E" }
                             : active
-                            ? { background: "#E8F8EF", border: "2px solid #0B8A43" }
+                            ? { background: "#FEE8EB", border: "2px solid #C8102E" }
                             : { background: "#E5E5E5" }
                         }
                       >
                         {done && <Check className="w-3 h-3 text-white" />}
                         {active && (
                           <motion.div
-                            className="w-2 h-2 rounded-full bg-[#0B8A43]"
+                            className="w-2 h-2 rounded-full"
+                            style={{ background: "#C8102E" }}
                             animate={{ scale: [1, 1.3, 1] }}
                             transition={{ repeat: Infinity, duration: 0.8 }}
                           />
@@ -356,62 +417,88 @@ export default function Quiz() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="px-6 py-8 flex flex-col items-center text-center"
             >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 400, damping: 20 }}
-                className="mb-4"
+              {/* Hero resultado */}
+              <div
+                className="relative px-6 pt-7 pb-6 flex flex-col items-center text-center overflow-hidden"
+                style={{ background: "linear-gradient(160deg, #C8102E 0%, #A50020 100%)" }}
               >
-                <img src="/assets/gift-box.png" alt="Regalo" className="w-20 h-20 object-contain mx-auto" />
-              </motion.div>
-
-              <p className="text-[10px] font-black text-[#0B8A43] uppercase tracking-widest mb-1">
-                ¡Resultado listo!
-              </p>
-              <h2 className="text-2xl font-black text-gray-900 mb-2">
-                ¡Enhorabuena!
-              </h2>
-              <p className="text-sm font-bold text-gray-800 mb-3">
-                Tus respuestas han sido aceptadas.
-              </p>
-              <p className="text-sm text-gray-500 leading-relaxed mb-3">
-                Según nuestro sistema, has sido{" "}
-                <strong className="text-gray-800">preseleccionado</strong> para participar en la
-                campaña promocional actual de El Corte Inglés.
-              </p>
-              <p className="text-sm text-gray-500 leading-relaxed mb-5">
-                Ahora puedes comprobar si hay{" "}
-                <strong className="text-[#0B8A43]">descuentos disponibles</strong> para tu
-                perfil y consultar los productos participantes.
-              </p>
-
-              <div className="w-full bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-left">
-                <p className="text-xs text-amber-700 leading-relaxed">
-                  ⚠️ La disponibilidad puede variar según la demanda y el stock promocional.
+                <svg className="absolute inset-0 w-full h-full opacity-[0.10]" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                  <defs>
+                    <pattern id="tri2" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <polygon points="20,0 40,40 0,40" fill="none" stroke="#fff" strokeWidth="0.8" />
+                      <polygon points="0,0 20,40 40,0" fill="none" stroke="#fff" strokeWidth="0.8" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#tri2)" />
+                </svg>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 400, damping: 20 }}
+                  className="flex gap-3 mb-3 relative z-10"
+                >
+                  {[0, 1].map((i) => (
+                    <svg key={i} width="32" height="32" viewBox="0 0 24 24" fill="#F5C518"
+                      style={{ filter: "drop-shadow(0 2px 8px rgba(245,197,24,0.7))" }}>
+                      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+                    </svg>
+                  ))}
+                </motion.div>
+                <p className="text-[10px] font-black text-red-200 uppercase tracking-widest mb-1 relative z-10">
+                  ¡Resultado listo!
+                </p>
+                <h2 className="text-2xl font-black text-white mb-1 relative z-10">
+                  ¡Enhorabuena!
+                </h2>
+                <p className="text-sm text-red-100 font-medium relative z-10">
+                  Has sido preseleccionado
                 </p>
               </div>
 
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={goToStore}
-                className="w-full py-4 rounded-xl font-black text-sm text-white tracking-wide uppercase"
-                style={{ background: "linear-gradient(135deg, #0B8A43, #23B05C)" }}
-              >
-                Comprobar descuentos disponibles
-              </motion.button>
+              {/* Cuerpo */}
+              <div className="bg-white px-6 py-6 flex flex-col">
+                <p className="text-sm font-bold text-gray-800 mb-3 text-center">
+                  Tus respuestas han sido aceptadas.
+                </p>
+                <p className="text-sm text-gray-500 leading-relaxed mb-3 text-center">
+                  Según nuestro sistema, has sido{" "}
+                  <strong className="text-gray-800">preseleccionado</strong> para participar en la
+                  campaña conmemorativa del Título Mundial de la Selección Española.
+                </p>
+                <p className="text-sm text-gray-500 leading-relaxed mb-5 text-center">
+                  Comprueba ahora los{" "}
+                  <strong style={{ color: "#C8102E" }}>descuentos de hasta 95%</strong> disponibles
+                  para tu perfil y consulta los productos participantes.
+                </p>
 
-              <p className="text-[10px] text-gray-300 mt-4">
-                Oferta sujeta a disponibilidad · El Corte Inglés
-              </p>
+                <div className="rounded-xl px-4 py-3 mb-6 text-left border"
+                  style={{ background: "#FFF8E1", borderColor: "#F5C518" }}>
+                  <p className="text-xs leading-relaxed" style={{ color: "#92600A" }}>
+                    ⚠️ La disponibilidad puede variar según la demanda y el stock promocional.
+                  </p>
+                </div>
+
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={goToStore}
+                  className="w-full py-4 rounded-xl font-black text-sm text-white tracking-wide uppercase"
+                  style={{ background: "linear-gradient(135deg, #C8102E, #A50020)" }}
+                >
+                  Comprobar descuentos disponibles
+                </motion.button>
+
+                <p className="text-[10px] text-gray-300 mt-4 text-center">
+                  Oferta sujeta a disponibilidad · El Corte Inglés
+                </p>
+              </div>
             </motion.div>
           )}
 
         </AnimatePresence>
       </div>
 
-      <p className="text-[10px] text-gray-400 mt-6 text-center">
+      <p className="text-[10px] text-gray-500 mt-6 text-center">
         Encuesta oficial · El Corte Inglés · Datos protegidos
       </p>
     </div>
