@@ -131,11 +131,10 @@ export default function Quiz() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start px-4 py-8"
-      style={{ background: "linear-gradient(160deg, #1a0a0a 0%, #2c0b0b 50%, #1a0a0a 100%)" }}>
+    <div className="min-h-screen flex flex-col items-center justify-start px-4 py-8 bg-white">
 
       {/* Logo */}
-      <div className="mb-6 bg-white rounded-2xl px-6 py-3 shadow-md">
+      <div className="mb-6">
         <img src="/assets/eci-logo.png" alt="El Corte Inglés" className="h-10 w-auto object-contain" />
       </div>
 
